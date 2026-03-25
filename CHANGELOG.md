@@ -9,7 +9,28 @@
 ## [Unreleased]
 
 ### 規劃中
-- P3~P8.5 完整開發計劃（詳見 TODO.md）
+- P4~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.2.6] - 2026-03-25
+
+### Added (Sprint P3: 3D 互動預覽)
+- `viz/model_3d.py` — BuildingPlan → PyVista mesh assembly
+  - `build_model()` — full building with ground slab, walls, floor slabs, roof
+  - `build_model_by_floor()` — grouped by floor name for section switching
+  - `clip_model_at_elevation()` — section cut at any Z elevation
+  - `story_meshes()` — per-story wall + slab mesh generation
+  - Material color mapping from `bim/materials.py` to hex colors
+- `gui/model_view.py` — pyvistaqt QtInteractor embedded in PySide6
+  - Floor section switching via combo box (All Floors / per-floor / section cut)
+  - `set_plan()` API for loading BuildingPlan from other GUI components
+- `viz/site_plan.py` — 2D matplotlib site plan (land + building footprint overlay)
+  - Land boundary, buildable area, building footprint, per-story outlines
+  - BCR/FAR annotation on building footprint
+- `gui/main_window.py` — integrated 3D Model tab + Site Plan tab
+  - `set_building_plan()` method for programmatic building display
+- 19 new tests (127 total), xcodebuild BUILD SUCCEEDED
 
 ---
 

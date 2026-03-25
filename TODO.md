@@ -21,7 +21,7 @@
 | P1 | 土地匯入 + 2D 視圖 | 3 | ✅ | P0 |
 | P2 | IFC + USD 生成核心 | 3 | ✅ | P0 |
 | P2.5 | 建築零件庫 | 3 | ✅ | P2 |
-| P3 | 3D 互動預覽 | 2 | ⬜ | P2 |
+| P3 | 3D 互動預覽 | 2 | ✅ | P2 |
 | P4 | AI Agent Pipeline | 3 | ⬜ | P1, P2 |
 | P4.5 | 台灣法規引擎 | 3 | ⬜ | P4 |
 | P4.8 | 互動式修改引擎 | 2 | ⬜ | P4 |
@@ -121,11 +121,11 @@
 
 ## P3: 3D 互動預覽 (~2 天)
 
-- ⬜ `viz/model_3d.py` — BuildingPlan → PyVista mesh 組裝
-- ⬜ `gui/model_view.py` — pyvistaqt 嵌入 Qt
-- ⬜ 樓層剖面切換
-- ⬜ `viz/site_plan.py` — 2D 配置圖 (土地+建築疊合)
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `viz/model_3d.py` — BuildingPlan → PyVista mesh 組裝
+- ✅ `gui/model_view.py` — pyvistaqt 嵌入 Qt
+- ✅ 樓層剖面切換
+- ✅ `viz/site_plan.py` — 2D 配置圖 (土地+建築疊合)
+- ✅ 測試 + xcodebuild 通過 (127 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 生成後 3D Tab 自動顯示可旋轉的建築模型
 

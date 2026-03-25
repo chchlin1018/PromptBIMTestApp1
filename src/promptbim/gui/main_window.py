@@ -17,10 +17,13 @@ from PySide6.QtCore import Qt
 from promptbim import __version__
 from promptbim.gui.land_panel import LandPanel
 from promptbim.gui.map_view import MapView
+from promptbim.gui.model_view import ModelView
 from promptbim.gui.dialogs.import_land import ImportLandDialog
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
+from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
+from promptbim.viz.site_plan import SitePlanView
 
 
 class MainWindow(QMainWindow):
@@ -52,7 +55,10 @@ class MainWindow(QMainWindow):
         self._tabs = QTabWidget()
         self._map_view = MapView()
         self._tabs.addTab(self._map_view, "2D Map")
-        self._tabs.addTab(QLabel("3D Model - Building preview"), "3D Model")
+        self._model_view = ModelView()
+        self._tabs.addTab(self._model_view, "3D Model")
+        self._site_plan = SitePlanView()
+        self._tabs.addTab(self._site_plan, "Site Plan")
         splitter.addWidget(self._tabs)
 
         # Bottom chat panel
@@ -84,9 +90,20 @@ class MainWindow(QMainWindow):
 
         buildable = compute_setback(parcel, self._zoning)
         self._map_view.set_parcel(parcel, buildable)
+        self._site_plan.set_data(parcel=parcel, buildable_area=buildable)
         self._tabs.setCurrentIndex(0)  # switch to 2D Map tab
         self.statusBar().showMessage(
             f"Loaded: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)"
+        )
+
+    def set_building_plan(self, plan: BuildingPlan):
+        """Display a generated building plan in 3D and site plan views."""
+        self._model_view.set_plan(plan)
+        self._site_plan.set_data(plan=plan)
+        self._tabs.setCurrentIndex(1)  # switch to 3D Model tab
+        self.statusBar().showMessage(
+            f"Building: {plan.name} | {len(plan.stories)} floors | "
+            f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f}"
         )
 
     def dragEnterEvent(self, event):
