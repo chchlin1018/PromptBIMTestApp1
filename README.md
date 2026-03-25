@@ -98,7 +98,7 @@ output/
 |--------|:----:|------|
 | P0 骨架+Xcode+環境 | ✅ | Xcode project + Python skeleton + 29 tests |
 | P1 土地匯入+2D | ✅ | GeoJSON/Shapefile/DXF parsers + setback + projection + 2D map view (48 tests) |
-| P2 IFC+USD 核心 | ⬜ | — |
+| P2 IFC+USD 核心 | ✅ | IFCGenerator + USDGenerator + geometry + materials (82 tests) |
 | P2.5 零件庫 | ⬜ | — |
 | P3 3D 預覽 | ⬜ | — |
 | P4 AI Agent | ⬜ | — |

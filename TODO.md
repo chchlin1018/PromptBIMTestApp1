@@ -19,7 +19,7 @@
 |--------|------|:--------:|:----:|------|
 | P0 | 專案骨架 + Xcode + 環境 | 1 | ✅ | — |
 | P1 | 土地匯入 + 2D 視圖 | 3 | ✅ | P0 |
-| P2 | IFC + USD 生成核心 | 3 | ⬜ | P0 |
+| P2 | IFC + USD 生成核心 | 3 | ✅ | P0 |
 | P2.5 | 建築零件庫 | 3 | ⬜ | P2 |
 | P3 | 3D 互動預覽 | 2 | ⬜ | P2 |
 | P4 | AI Agent Pipeline | 3 | ⬜ | P1, P2 |
@@ -90,16 +90,16 @@
 
 ## P2: IFC + USD 生成核心 (~3 天)
 
-- ⬜ `bim/geometry.py` — 牆/板/屋頂 mesh 生成
-- ⬜ `bim/ifc_generator.py` — IfcOpenShell 高階封裝
-- ⬜ `bim/usd_generator.py` — pxr USD 封裝
-- ⬜ `bim/materials.py` — 材質定義 (IFC + USD 雙映射)
-- ⬜ `schemas/plan.py` — BuildingPlan 完整 schema
-- ⬜ `examples/01_simple_box.py` — 硬編碼方盒 → .ifc + .usda
-- ⬜ `examples/02_l_shaped_office.py` — L型辦公樓
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/geometry.py` — 牆/板/屋頂 mesh 生成 (wall_mesh, slab_mesh, flat_roof_mesh, gable_roof_mesh)
+- ✅ `bim/ifc_generator.py` — IfcOpenShell 高階封裝 (IFCGenerator, 只用 ifcopenshell.api.run())
+- ✅ `bim/usd_generator.py` — pxr USD 封裝 (USDGenerator, pxr.Usd/UsdGeom/UsdShade)
+- ✅ `bim/materials.py` — 材質定義 (IFC + USD 雙映射, 9 種內建材質)
+- ✅ `schemas/plan.py` — BuildingPlan 完整 schema (P0 已完成，P2 驗證通過)
+- ✅ `examples/01_simple_box.py` — 硬編碼方盒 → .ifc + .usda
+- ✅ `examples/02_l_shaped_office.py` — L型辦公樓 2 層 → .ifc + .usda
+- ✅ 測試 + xcodebuild 通過 (82 tests passed, BUILD SUCCEEDED)
 
-**驗收標準:** `python examples/01_simple_box.py` → .ifc + .usda 都可開啟
+**驗收標準:** `python examples/01_simple_box.py` → .ifc + .usda 都可開啟 ✅
 
 ---
 

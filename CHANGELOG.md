@@ -9,7 +9,23 @@
 ## [Unreleased]
 
 ### 規劃中
-- P2~P8.5 完整開發計劃（詳見 TODO.md）
+- P2.5~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.2.0] - 2026-03-25
+
+### Added (Sprint P2: IFC + USD 生成核心)
+- `bim/geometry.py` — wall/slab/roof mesh generation (wall_mesh, slab_mesh, flat_roof_mesh, gable_roof_mesh)
+- `bim/ifc_generator.py` — IfcOpenShell high-level wrapper (IFCGenerator class)
+  - Walls with placement/rotation, slabs with polyline profile, roof, materials
+  - Only uses `ifcopenshell.api.run()` — no low-level entity manipulation
+- `bim/usd_generator.py` — OpenUSD wrapper (USDGenerator class)
+  - Triangle mesh generation, Z-up, metres-per-unit, PBR materials via UsdPreviewSurface
+- `bim/materials.py` — 9 built-in materials with dual IFC surface style + USD PBR mapping
+- `examples/01_simple_box.py` — Single-storey 10x8m box → .ifc + .usda
+- `examples/02_l_shaped_office.py` — 2-storey L-shaped office → .ifc + .usda
+- 34 new BIM tests (82 total), xcodebuild BUILD SUCCEEDED
 
 ---
 
