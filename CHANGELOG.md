@@ -6,6 +6,24 @@
 
 ---
 
+## [1.2.0] - 2026-03-25
+
+### Added (Sprint P10.3: Startup Health Check + AI Validation)
+
+- `startup/health_check.py` — HealthChecker engine running 12 checks across 4 categories
+  - Python environment: version >= 3.11, conda env active
+  - Core dependencies: ifcopenshell, pxr, PySide6, anthropic, shapely+pyproj, pyvista+pyvistaqt
+  - AI services: API key validation, Claude API ping test, model availability
+  - Filesystem: .env exists, output/ writable
+- `startup/ai_check.py` — Claude AI connection validation with timeout, error classification, response timing
+- `startup/auto_fix.py` — Auto-fix suggestion engine with fix commands for all dependency checks
+- `gui/startup_check_view.py` — GUI startup health check dialog with real-time updates, progress bar, category grouping
+- CLI `check` subcommand: `python -m promptbim check [--json] [--ai] [--fix]`
+- Config settings: `startup_check_enabled`, `startup_check_skip_ai`, `ai_ping_timeout_seconds`, `ai_model`
+- 42 new tests for health check, AI check, auto-fix, and CLI
+
+---
+
 ## [1.1.0] - 2026-03-25
 
 ### Added (Sprint P10.2: Debug Logging System)

@@ -207,6 +207,18 @@ def launch_main_window():
     import sys
 
     app = QApplication(sys.argv)
+
+    # Startup health check
+    from promptbim.config import get_settings
+    settings = get_settings()
+
+    if settings.startup_check_enabled:
+        from promptbim.gui.startup_check_view import StartupCheckView
+
+        check_dialog = StartupCheckView()
+        check_dialog.start_checks(settings)
+        check_dialog.exec()
+
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

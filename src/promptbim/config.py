@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     # Debug
     debug_mode: bool = Field(default=False, description="Enable debug logging")
 
+    # Startup check
+    startup_check_enabled: bool = Field(default=True, description="Run health check on startup")
+    startup_check_skip_ai: bool = Field(default=False, description="Skip AI checks (offline mode)")
+    ai_ping_timeout_seconds: float = Field(default=10.0, description="AI ping timeout in seconds")
+    ai_model: str = Field(default="claude-sonnet-4-20250514", description="Default AI model")
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

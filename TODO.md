@@ -33,8 +33,9 @@
 | P9 | AI 土地圖像辨識 + Backlog | 3 | ✅ | P1, P4 |
 | P10 | Polish + Remaining Backlog | 2 | ✅ | P0~P9 |
 | P10.2 | Debug Logging System | 1 | ✅ | All |
+| P10.3 | Startup Health Check + AI Validation | 1 | ✅ | P0, P4, P10.2 |
 
-**預估總開發時間: ~40 天**
+**預估總開發時間: ~41 天**
 
 ---
 
@@ -308,6 +309,21 @@
 - ✅ 測試 + 整合 (12 tests for debug system, 603 total tests passed, xcodebuild BUILD SUCCEEDED)
 
 **驗收標準:** PROMPTBIM_DEBUG=1 顯示完整 debug log, =0 無 debug 輸出, --debug CLI 參數
+
+---
+
+## P10.3: Startup Health Check + AI Validation (~1 天)
+
+- ✅ `src/promptbim/startup/health_check.py` — HealthChecker engine (12 checks, 4 categories)
+- ✅ `src/promptbim/startup/ai_check.py` — Claude AI connection validation (key, ping, model, vision)
+- ✅ `src/promptbim/startup/auto_fix.py` — Auto-fix suggestions + execution engine
+- ✅ `src/promptbim/gui/startup_check_view.py` — GUI startup check panel (real-time updates, progress bar)
+- ✅ `src/promptbim/gui/main_window.py` — Integrated startup check on app launch
+- ✅ `src/promptbim/__main__.py` — CLI `check` subcommand (--json, --ai, --fix)
+- ✅ `src/promptbim/config.py` — New settings: startup_check_enabled, startup_check_skip_ai, ai_ping_timeout_seconds, ai_model
+- ✅ Tests (42 new tests: health_check, ai_check, auto_fix, cli_check) — 645 total passed, xcodebuild BUILD SUCCEEDED
+
+**驗收標準:** `python -m promptbim check` 顯示 12 項檢查; GUI 啟動時顯示檢查面板; --json/--ai/--fix 子選項
 
 ---
 
