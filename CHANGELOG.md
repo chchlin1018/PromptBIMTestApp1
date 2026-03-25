@@ -9,7 +9,36 @@
 ## [Unreleased]
 
 ### 規劃中
-- P7~P8.5 完整開發計劃（詳見 TODO.md）
+- P8~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.7.0] - 2026-03-25
+
+### Added (Sprint P7: MEP Auto Routing)
+- `bim/mep/pathfinder.py` — 3D orthogonal A* pathfinding engine
+  - Grid-based voxelisation, turn penalty, collinear path simplification
+  - Obstacle generation from wall/slab bounding boxes
+- `bim/mep/systems.py` — MEP system definition templates
+  - Office + residential templates for HVAC, plumbing, electrical, fire protection
+  - Ceiling layer Z-offset allocation, system colours, labels
+- `bim/mep/planner.py` — Deterministic MEP planner (no LLM)
+  - Equipment positioning (risers, panels, AHU connections)
+  - Terminal distribution (sprinkler heads, grilles, outlets, plumbing fixtures)
+  - A* route planning from equipment to terminals per floor
+- `bim/mep/ifc_mep.py` — IFC MEP output
+  - IfcPipeSegment (plumbing, fire), IfcDuctSegment (HVAC), IfcCableCarrierSegment (electrical)
+  - Per-system material colours, storey assignment
+- `bim/mep/usd_mep.py` — USD MEP output
+  - Cube-based segment geometry with PBR materials
+  - Per-system Xform hierarchy under /MEP
+- `bim/mep/clash_detect.py` — AABB-based cross-system clash detection
+  - ClashReport with overlap point, severity, system pair counts
+- `viz/mep_overlay.py` — Four-colour PyVista tube mesh overlay
+  - Blue (plumbing), Red (electrical), Green (HVAC), Yellow (fire protection)
+- `gui/mep_toggle.py` — MEP system show/hide toggle panel
+  - Per-system QCheckBox with colour coding, Show All / Hide All buttons
+- 45 new tests (338 total), xcodebuild BUILD SUCCEEDED
 
 ---
 

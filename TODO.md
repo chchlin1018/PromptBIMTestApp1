@@ -27,7 +27,7 @@
 | P4.8 | 互動式修改引擎 | 2 | ✅ | P4 |
 | P5 | 語音 + 匯出 | 2 | ✅ | P4 |
 | P6 | 成本估算 (5D) | 2 | ✅ | P2.5 |
-| P7 | MEP 管線自動生成 | 4 | ⬜ | P4 |
+| P7 | MEP 管線自動生成 | 4 | ✅ | P4 |
 | P8 | 施工模擬 (4D) | 3 | ⬜ | P2 |
 | P8.5 | 智慧監控點自動配置 | 3 | ⬜ | P4, P7 |
 
@@ -203,14 +203,14 @@
 
 ## P7: MEP 管線自動生成 (~4 天)
 
-- ⬜ `bim/mep/pathfinder.py` — 3D 正交 A* 尋路
-- ⬜ `bim/mep/systems.py` — MEP 系統定義模板
-- ⬜ `bim/mep/planner.py` — AI MEP 規劃
-- ⬜ `bim/mep/ifc_mep.py` + `usd_mep.py` — 雙輸出
-- ⬜ `bim/mep/clash_detect.py` — 基本碰撞偵測
-- ⬜ `viz/mep_overlay.py` — 四色管線 3D 疊合
-- ⬜ `gui/mep_toggle.py` — 系統顯示開關
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/mep/pathfinder.py` — 3D 正交 A* 尋路 (orthogonal pathfinding, turn penalty, obstacle voxelisation)
+- ✅ `bim/mep/systems.py` — MEP 系統定義模板 (office + residential, 4 systems, ceiling layer offsets)
+- ✅ `bim/mep/planner.py` — MEP 規劃 (deterministic equipment/terminal placement, A* routing)
+- ✅ `bim/mep/ifc_mep.py` + `usd_mep.py` — 雙輸出 (IfcPipeSegment/IfcDuctSegment/IfcCableCarrierSegment + USD cubes)
+- ✅ `bim/mep/clash_detect.py` — 基本碰撞偵測 (AABB cross-system clash detection)
+- ✅ `viz/mep_overlay.py` — 四色管線 3D 疊合 (PyVista tube meshes, blue/red/green/yellow)
+- ✅ `gui/mep_toggle.py` — 系統顯示開關 (QCheckBox per system, show/hide all)
+- ✅ 測試 + xcodebuild 通過 (338 passed, BUILD SUCCEEDED)
 
 **驗收標準:** 一鍵 Auto MEP → 四大系統管線 + IFC/USD 含 MEP
 
