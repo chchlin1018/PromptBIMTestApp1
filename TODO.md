@@ -18,7 +18,7 @@
 | Sprint | 名稱 | 預估天數 | 狀態 | 依賴 |
 |--------|------|:--------:|:----:|------|
 | P0 | 專案骨架 + Xcode + 環境 | 1 | ✅ | — |
-| P1 | 土地匯入 + 2D 視圖 | 3 | ⬜ | P0 |
+| P1 | 土地匯入 + 2D 視圖 | 3 | ✅ | P0 |
 | P2 | IFC + USD 生成核心 | 3 | ⬜ | P0 |
 | P2.5 | 建築零件庫 | 3 | ⬜ | P2 |
 | P3 | 3D 互動預覽 | 2 | ⬜ | P2 |
@@ -71,18 +71,18 @@
 
 ## P1: 土地匯入 + 2D 視圖 (~3 天)
 
-- ⬜ `land/parsers/geojson.py` — GeoJSON 讀取
-- ⬜ `land/parsers/shapefile.py` — Shapefile 讀取
-- ⬜ `land/parsers/dxf.py` — DXF 讀取
-- ⬜ `land/parsers/manual.py` — 手動座標輸入
-- ⬜ `schemas/land.py` — LandParcel Pydantic model
-- ⬜ `schemas/zoning.py` — ZoningRules model
-- ⬜ `land/setback.py` — 退縮線計算 (shapely buffer)
-- ⬜ `land/projection.py` — 座標系轉換 (pyproj)
-- ⬜ `gui/map_view.py` — matplotlib 嵌入 Qt 顯示土地
-- ⬜ `gui/land_panel.py` — 土地資訊面板
-- ⬜ `gui/dialogs/import_land.py` — 拖放/選檔匯入
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `land/parsers/geojson.py` — GeoJSON 讀取
+- ✅ `land/parsers/shapefile.py` — Shapefile 讀取
+- ✅ `land/parsers/dxf.py` — DXF 讀取
+- ✅ `land/parsers/manual.py` — 手動座標輸入
+- ✅ `schemas/land.py` — LandParcel Pydantic model (P0 已完成，P1 驗證通過)
+- ✅ `schemas/zoning.py` — ZoningRules model (P0 已完成，P1 驗證通過)
+- ✅ `land/setback.py` — 退縮線計算 (shapely buffer + per-side)
+- ✅ `land/projection.py` — 座標系轉換 (pyproj, WGS84→TWD97)
+- ✅ `gui/map_view.py` — matplotlib 嵌入 Qt 顯示土地
+- ✅ `gui/land_panel.py` — 土地資訊面板
+- ✅ `gui/dialogs/import_land.py` — 拖放/選檔匯入
+- ✅ 測試 + xcodebuild 通過 (48 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 拖放 sample_parcel.geojson → 顯示土地輪廓 + 面積 + 退縮線
 

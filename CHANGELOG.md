@@ -9,7 +9,27 @@
 ## [Unreleased]
 
 ### 規劃中
-- P1~P8.5 完整開發計劃（詳見 TODO.md）
+- P2~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.1.1] - 2026-03-25
+
+### Added (Sprint P1: 土地匯入 + 2D 視圖)
+- Land parsers: GeoJSON, Shapefile, DXF, Manual coordinate input
+  - `land/parsers/geojson.py` — FeatureCollection/Feature/bare Polygon support
+  - `land/parsers/shapefile.py` — fiona-based Shapefile reader
+  - `land/parsers/dxf.py` — ezdxf LWPOLYLINE/POLYLINE extraction
+  - `land/parsers/manual.py` — manual coordinate entry with validation
+- `land/setback.py` — uniform + per-side setback calculation (shapely buffer)
+- `land/projection.py` — WGS84 ↔ TWD97 (EPSG:3826) coordinate projection (pyproj)
+- `gui/map_view.py` — matplotlib FigureCanvas embedded in Qt for 2D parcel display
+- `gui/land_panel.py` — land info + zoning rules display panel
+- `gui/dialogs/import_land.py` — file picker + drag-and-drop import dialog
+- `gui/main_window.py` — integrated land import, map view, and info panel
+- Test fixture: `tests/fixtures/sample_parcel.geojson`
+- 19 new land tests (48 total), xcodebuild BUILD SUCCEEDED
+- Conda env `promptbim` (Python 3.11) with all GIS dependencies
 
 ---
 

@@ -9,14 +9,18 @@ from PySide6.QtWidgets import (
     QLabel,
     QSplitter,
     QTabWidget,
-    QTextEdit,
     QLineEdit,
     QPushButton,
-    QStatusBar,
 )
 from PySide6.QtCore import Qt
 
 from promptbim import __version__
+from promptbim.gui.land_panel import LandPanel
+from promptbim.gui.map_view import MapView
+from promptbim.gui.dialogs.import_land import ImportLandDialog
+from promptbim.land.setback import compute_setback
+from promptbim.schemas.land import LandParcel
+from promptbim.schemas.zoning import ZoningRules
 
 
 class MainWindow(QMainWindow):
@@ -24,6 +28,10 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(f"PromptBIM v{__version__} - AI-Powered BIM Generator")
         self.setMinimumSize(1200, 800)
+        self.setAcceptDrops(True)
+
+        self._parcel: LandParcel | None = None
+        self._zoning = ZoningRules()
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -34,20 +42,18 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         layout.addWidget(splitter, stretch=1)
 
-        # Left panel
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.addWidget(QLabel("Project Tree"))
-        left_layout.addWidget(QLabel("No land data loaded"))
-        left_layout.addStretch()
-        left_panel.setMaximumWidth(350)
-        splitter.addWidget(left_panel)
+        # Left panel — land info
+        self._land_panel = LandPanel()
+        self._land_panel.setMaximumWidth(350)
+        self._land_panel.import_button.clicked.connect(self._show_import_dialog)
+        splitter.addWidget(self._land_panel)
 
         # Center tab view
-        tabs = QTabWidget()
-        tabs.addTab(QLabel("2D Map - Land parcel view"), "2D Map")
-        tabs.addTab(QLabel("3D Model - Building preview"), "3D Model")
-        splitter.addWidget(tabs)
+        self._tabs = QTabWidget()
+        self._map_view = MapView()
+        self._tabs.addTab(self._map_view, "2D Map")
+        self._tabs.addTab(QLabel("3D Model - Building preview"), "3D Model")
+        splitter.addWidget(self._tabs)
 
         # Bottom chat panel
         chat_widget = QWidget()
@@ -65,6 +71,43 @@ class MainWindow(QMainWindow):
 
         # Status bar
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
+
+    def _show_import_dialog(self):
+        dialog = ImportLandDialog(self)
+        dialog.parcel_imported.connect(self._on_parcel_imported)
+        dialog.exec()
+
+    def _on_parcel_imported(self, parcel: LandParcel):
+        self._parcel = parcel
+        self._land_panel.update_parcel(parcel)
+        self._land_panel.update_zoning(self._zoning)
+
+        buildable = compute_setback(parcel, self._zoning)
+        self._map_view.set_parcel(parcel, buildable)
+        self._tabs.setCurrentIndex(0)  # switch to 2D Map tab
+        self.statusBar().showMessage(
+            f"Loaded: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)"
+        )
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        from pathlib import Path
+        from promptbim.gui.dialogs.import_land import SUPPORTED_EXTENSIONS, _parse_file
+
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+            path = Path(file_path)
+            if path.suffix.lower() in SUPPORTED_EXTENSIONS:
+                try:
+                    parcels = _parse_file(path, path.suffix.lower())
+                    if parcels:
+                        self._on_parcel_imported(parcels[0])
+                except Exception as e:
+                    self.statusBar().showMessage(f"Import error: {e}")
+                return
 
 
 def launch_main_window():
