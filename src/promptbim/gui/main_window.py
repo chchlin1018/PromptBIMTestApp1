@@ -19,6 +19,7 @@ from promptbim.gui.chat_panel import ChatPanel
 from promptbim.gui.land_panel import LandPanel
 from promptbim.gui.map_view import MapView
 from promptbim.gui.model_view import ModelView
+from promptbim.gui.modification_panel import ModificationPanel
 from promptbim.gui.dialogs.import_land import ImportLandDialog
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
@@ -62,10 +63,17 @@ class MainWindow(QMainWindow):
         self._tabs.addTab(self._site_plan, "Site Plan")
         splitter.addWidget(self._tabs)
 
+        # Modification impact panel
+        self._mod_panel = ModificationPanel()
+        layout.addWidget(self._mod_panel)
+
         # Bottom chat panel
         self._chat_panel = ChatPanel()
         self._chat_panel.plan_ready.connect(self.set_building_plan)
         self._chat_panel.generation_finished.connect(self._on_generation_finished)
+        self._chat_panel.modification_done.connect(self._on_modification_done)
+        self._chat_panel.undo_done.connect(self._on_undo_done)
+        self._mod_panel.undo_requested.connect(self._chat_panel.request_undo)
         layout.addWidget(self._chat_panel)
 
         # Status bar
@@ -109,6 +117,20 @@ class MainWindow(QMainWindow):
             f"Building: {plan.name} | {len(plan.stories)} floors | "
             f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f}"
         )
+
+    def _on_modification_done(self, plan, record):
+        """Handle a completed modification."""
+        self.set_building_plan(plan)
+        history_count = len(self._chat_panel._orchestrator.modification_history.records)
+        self._mod_panel.show_record(record, history_count)
+
+    def _on_undo_done(self, plan):
+        """Handle an undo operation."""
+        self.set_building_plan(plan)
+        history_count = len(self._chat_panel._orchestrator.modification_history.records)
+        self._mod_panel.update_history_count(history_count)
+        if history_count == 0:
+            self._mod_panel.clear_panel()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():

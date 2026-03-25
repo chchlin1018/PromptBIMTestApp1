@@ -9,7 +9,30 @@
 ## [Unreleased]
 
 ### 規劃中
-- P4.8~P8.5 完整開發計劃（詳見 TODO.md）
+- P5~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.4.8] - 2026-03-25
+
+### Added (Sprint P4.8: Interactive Modification Engine)
+- `agents/modifier.py` — Modifier Agent (Agent 5)
+  - Claude-powered intent parsing (stories/height/footprint/roof/rooms/materials/openings)
+  - Keyword-based fallback parser for offline (Chinese + English)
+  - Deterministic plan modification with zoning constraint enforcement
+  - Version history with full undo capability
+- `schemas/modification.py` — Modification data models
+  - ModificationType enum (8 types), ImpactLevel enum (4 levels)
+  - ModificationIntent, ModificationRecord, ModificationHistory, ImpactItem
+- Impact propagation matrix — 8 modification types × affected components
+  - `compute_impacts()` compares old/new plans to generate diff report
+- Incremental recalculation — `_recalculate_metrics()` updates BCR/FAR from geometry
+- `gui/modification_panel.py` — Impact summary panel
+  - Color-coded impact table (high=red, medium=orange, low=green)
+  - Undo button + history count display
+- Integrated into Orchestrator — `modify()` and `undo()` methods
+- ChatPanel auto-detects modification vs generation commands
+- 24 new modifier tests (235 total), xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -201,6 +224,7 @@
 | 0.2.5 | P2.5 完成 | 建築零件庫 (76 種) |
 | 0.3.0 | P3+P4 完成 | AI Agent + 3D 預覽 |
 | 0.4.0 | P4.5 完成 | 法規引擎 |
+| 0.4.8 | P4.8 完成 | 互動式修改引擎 |
 | 0.5.0 | P5+P6 完成 | 語音 + 成本估算 |
 | 0.6.0 | P7 完成 | MEP 管線 |
 | 0.7.0 | P8 完成 | 施工模擬 |

@@ -42,28 +42,48 @@ class _PipelineWorker(QThread):
         prompt: str,
         land: "LandParcel",
         zoning: "ZoningRules",
-        output_dir: str | None = None,
+        orchestrator: "Orchestrator",
     ) -> None:
         super().__init__()
         self._prompt = prompt
         self._land = land
         self._zoning = zoning
-        self._output_dir = output_dir
+        self._orch = orchestrator
 
     def run(self) -> None:
-        from promptbim.agents.orchestrator import Orchestrator, PipelineStatus
+        from promptbim.agents.orchestrator import PipelineStatus
 
-        def on_status(status: PipelineStatus) -> None:
-            self.status_update.emit(status.message, status.progress)
+        result = self._orch.generate(self._prompt, self._land, self._zoning)
 
-        orch = Orchestrator(output_dir=self._output_dir, on_status=on_status)
-        result = orch.generate(self._prompt, self._land, self._zoning)
-
-        # Emit plan so the GUI can display it before build finishes
-        if orch.plan is not None:
-            self.plan_ready.emit(orch.plan)
+        if self._orch.plan is not None:
+            self.plan_ready.emit(self._orch.plan)
 
         self.finished.emit(result)
+
+
+class _ModifyWorker(QThread):
+    """Runs a modification in a background thread."""
+
+    finished = Signal(object, object)  # (BuildingPlan, ModificationRecord)
+    status_update = Signal(str, float)
+    plan_ready = Signal(object)
+
+    def __init__(
+        self,
+        command: str,
+        orchestrator: "Orchestrator",
+        zoning: "ZoningRules | None" = None,
+    ) -> None:
+        super().__init__()
+        self._command = command
+        self._orch = orchestrator
+        self._zoning = zoning
+
+    def run(self) -> None:
+        new_plan, record = self._orch.modify(self._command, self._zoning)
+        if new_plan is not None:
+            self.plan_ready.emit(new_plan)
+        self.finished.emit(new_plan, record)
 
 
 class ChatPanel(QWidget):
@@ -71,10 +91,19 @@ class ChatPanel(QWidget):
 
     generation_finished = Signal(object)  # GenerationResult
     plan_ready = Signal(object)  # BuildingPlan
+    modification_done = Signal(object, object)  # (BuildingPlan, ModificationRecord)
+    undo_done = Signal(object)  # BuildingPlan
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._worker: _PipelineWorker | None = None
+        self._modify_worker: _ModifyWorker | None = None
+
+        from promptbim.agents.orchestrator import Orchestrator, PipelineStatus
+
+        self._orchestrator = Orchestrator(
+            on_status=lambda s: self._on_status(s.message, s.progress)
+        )
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -97,7 +126,7 @@ class ChatPanel(QWidget):
         input_row = QHBoxLayout()
         self._input = QLineEdit()
         self._input.setPlaceholderText("Describe the building you want to create...")
-        self._input.returnPressed.connect(self._on_generate)
+        self._input.returnPressed.connect(self._on_send)
         input_row.addWidget(self._input, stretch=1)
 
         self._mic_btn = QPushButton("Mic")
@@ -105,7 +134,7 @@ class ChatPanel(QWidget):
         input_row.addWidget(self._mic_btn)
 
         self._gen_btn = QPushButton("Generate")
-        self._gen_btn.clicked.connect(self._on_generate)
+        self._gen_btn.clicked.connect(self._on_send)
         input_row.addWidget(self._gen_btn)
 
         layout.addLayout(input_row)
@@ -113,6 +142,7 @@ class ChatPanel(QWidget):
         # State
         self._land: LandParcel | None = None
         self._zoning: ZoningRules | None = None
+        self._has_plan = False
 
     def set_context(
         self, land: "LandParcel", zoning: "ZoningRules | None" = None
@@ -124,7 +154,7 @@ class ChatPanel(QWidget):
             f"Land loaded: {land.name} ({land.area_sqm:.1f} m\u00b2). Ready to generate!"
         )
 
-    def _on_generate(self) -> None:
+    def _on_send(self) -> None:
         prompt = self._input.text().strip()
         if not prompt:
             return
@@ -133,12 +163,24 @@ class ChatPanel(QWidget):
             self._append_system("Please import a land parcel first.")
             return
 
-        if self._worker is not None and self._worker.isRunning():
-            self._append_system("Generation already in progress...")
+        busy = (
+            (self._worker is not None and self._worker.isRunning())
+            or (self._modify_worker is not None and self._modify_worker.isRunning())
+        )
+        if busy:
+            self._append_system("Already in progress...")
             return
 
         self._append_user(prompt)
         self._input.clear()
+
+        # If we already have a plan, treat as modification
+        if self._has_plan and self._orchestrator is not None:
+            self._start_modify(prompt)
+        else:
+            self._start_generate(prompt)
+
+    def _start_generate(self, prompt: str) -> None:
         self._gen_btn.setEnabled(False)
         self._progress.setVisible(True)
         self._progress.setValue(0)
@@ -147,11 +189,58 @@ class ChatPanel(QWidget):
 
         zoning = self._zoning or ZoningRules()
 
-        self._worker = _PipelineWorker(prompt, self._land, zoning)
+        self._worker = _PipelineWorker(prompt, self._land, zoning, self._orchestrator)
         self._worker.status_update.connect(self._on_status)
         self._worker.plan_ready.connect(self._on_plan_ready)
         self._worker.finished.connect(self._on_finished)
         self._worker.start()
+
+    def _start_modify(self, command: str) -> None:
+        self._gen_btn.setEnabled(False)
+        self._progress.setVisible(True)
+        self._progress.setValue(0)
+        self._append_system("Analyzing modification...")
+
+        from promptbim.schemas.zoning import ZoningRules
+
+        zoning = self._zoning or ZoningRules()
+
+        self._modify_worker = _ModifyWorker(command, self._orchestrator, zoning)
+        self._modify_worker.status_update.connect(self._on_status)
+        self._modify_worker.plan_ready.connect(self._on_plan_ready)
+        self._modify_worker.finished.connect(self._on_modify_finished)
+        self._modify_worker.start()
+
+    def _on_modify_finished(self, plan, record) -> None:
+        self._gen_btn.setEnabled(True)
+        self._progress.setVisible(False)
+        self._modify_worker = None
+
+        if plan is not None and record is not None and record.success:
+            changed = sum(1 for i in record.impacts if i.before_value != i.after_value)
+            self._append_ai(
+                f"Modified: {record.command}\n"
+                f"  {changed} component(s) affected | "
+                f"Stories: {len(plan.stories)} | "
+                f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.2f}"
+            )
+            self.modification_done.emit(plan, record)
+        else:
+            error = record.error if record else "No plan to modify"
+            self._append_system(f"Modification failed: {error}")
+
+    def request_undo(self) -> None:
+        """Called externally (e.g., from modification panel) to undo."""
+        if self._orchestrator is None:
+            return
+        restored, record = self._orchestrator.undo()
+        if restored is not None:
+            self._has_plan = True
+            self._append_system(f"Undo: reverted '{record.command}'")
+            self.plan_ready.emit(restored)
+            self.undo_done.emit(restored)
+        else:
+            self._append_system("Nothing to undo.")
 
     def _on_status(self, message: str, progress: float) -> None:
         self._progress.setValue(int(progress * 100))
@@ -166,6 +255,7 @@ class ChatPanel(QWidget):
         self._worker = None
 
         if result.success:
+            self._has_plan = True
             summary = result.summary
             self._append_ai(
                 f"Building generated: {result.building_name}\n"

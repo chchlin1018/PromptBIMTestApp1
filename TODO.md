@@ -24,7 +24,7 @@
 | P3 | 3D 互動預覽 | 2 | ✅ | P2 |
 | P4 | AI Agent Pipeline | 3 | ✅ | P1, P2 |
 | P4.5 | 台灣法規引擎 | 3 | ✅ | P4 |
-| P4.8 | 互動式修改引擎 | 2 | ⬜ | P4 |
+| P4.8 | 互動式修改引擎 | 2 | ✅ | P4 |
 | P5 | 語音 + 匯出 | 2 | ⬜ | P4 |
 | P6 | 成本估算 (5D) | 2 | ⬜ | P2.5 |
 | P7 | MEP 管線自動生成 | 4 | ⬜ | P4 |
@@ -165,12 +165,12 @@
 
 ## P4.8: 互動式修改引擎 (~2 天)
 
-- ⬜ `agents/modifier.py` — Modifier Agent (Claude 分析修改意圖)
-- ⬜ 影響傳播矩陣邏輯
-- ⬜ 版本歷史 + 差異比較 (ModificationRecord)
-- ⬜ GUI: 修改影響摘要面板 + 確認/撤銷
-- ⬜ 增量重算（只重算受影響部分）
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `agents/modifier.py` — Modifier Agent (Claude 分析修改意圖)
+- ✅ 影響傳播矩陣邏輯
+- ✅ 版本歷史 + 差異比較 (ModificationRecord)
+- ✅ GUI: 修改影響摘要面板 + 確認/撤銷
+- ✅ 增量重算（只重算受影響部分）
+- ✅ 測試 + xcodebuild 通過 (235 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 用戶說「改為9層」→ 即時更新所有關聯數據 + 顯示比較
 

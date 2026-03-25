@@ -13,9 +13,11 @@ from pathlib import Path
 from promptbim.agents.builder import BuilderAgent, BuildResult
 from promptbim.agents.checker import CheckerAgent, CheckResult
 from promptbim.agents.enhancer import EnhancerAgent
+from promptbim.agents.modifier import ModifierAgent
 from promptbim.agents.planner import PlannerAgent
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
+from promptbim.schemas.modification import ModificationRecord
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
 from promptbim.schemas.result import GenerationResult
@@ -52,6 +54,7 @@ class Orchestrator:
         self._planner = PlannerAgent()
         self._builder = BuilderAgent(output_dir=output_dir)
         self._checker = CheckerAgent()
+        self._modifier = ModifierAgent()
         self._max_iterations = max_iterations
         self._on_status = on_status
 
@@ -154,6 +157,59 @@ class Orchestrator:
             errors=self.build_result.errors,
             warnings=warnings,
         )
+
+    def modify(
+        self,
+        command: str,
+        zoning: ZoningRules | None = None,
+    ) -> tuple[BuildingPlan | None, ModificationRecord | None]:
+        """Apply a modification to the current plan.
+
+        Returns (new_plan, record) or (None, None) if no plan exists.
+        """
+        if self.plan is None:
+            logger.warning("Cannot modify — no plan exists")
+            return None, None
+
+        self._emit("modifier", f"Analyzing: {command}", 0.1)
+        new_plan, record = self._modifier.modify(command, self.plan, zoning)
+
+        if record.success:
+            self.plan = new_plan
+            self._emit("modifier", "Modification applied", 0.5)
+
+            # Rebuild IFC/USD with the modified plan
+            self._emit("builder", "Rebuilding IFC + USD...", 0.7)
+            self.build_result = self._builder.build(new_plan)
+            self._emit("builder", "Done!", 1.0)
+        else:
+            self._emit("modifier", f"Modification failed: {record.error}", 1.0)
+
+        return new_plan, record
+
+    def undo(self) -> tuple[BuildingPlan | None, ModificationRecord | None]:
+        """Undo the last modification.
+
+        Returns (restored_plan, undone_record) or (None, None).
+        """
+        if self.plan is None:
+            return None, None
+
+        restored, record = self._modifier.undo(self.plan)
+        if restored is not None:
+            self.plan = restored
+            self._emit("modifier", "Undo complete", 0.5)
+
+            # Rebuild
+            self._emit("builder", "Rebuilding IFC + USD...", 0.7)
+            self.build_result = self._builder.build(restored)
+            self._emit("builder", "Done!", 1.0)
+
+        return restored, record
+
+    @property
+    def modification_history(self):
+        return self._modifier.history
 
     def _emit(self, stage: str, message: str, progress: float) -> None:
         logger.info("[%s] %s (%.0f%%)", stage, message, progress * 100)
