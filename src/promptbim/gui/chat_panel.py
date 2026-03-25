@@ -7,7 +7,6 @@ responsive.
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QThread, Signal, Qt
@@ -27,7 +26,8 @@ if TYPE_CHECKING:
     from promptbim.schemas.result import GenerationResult
     from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+logger = get_logger("gui.chat_panel")
 
 
 class _PipelineWorker(QThread):
@@ -172,6 +172,7 @@ class ChatPanel(QWidget):
         prompt = self._input.text().strip()
         if not prompt:
             return
+        logger.debug("User input: %s", prompt)
 
         if self._land is None:
             self._append_system("Please import a land parcel first.")
@@ -195,6 +196,7 @@ class ChatPanel(QWidget):
             self._start_generate(prompt)
 
     def _start_generate(self, prompt: str) -> None:
+        logger.debug("Pipeline start: generate — prompt=%r", prompt)
         self._gen_btn.setEnabled(False)
         self._progress.setVisible(True)
         self._progress.setValue(0)
@@ -210,6 +212,7 @@ class ChatPanel(QWidget):
         self._worker.start()
 
     def _start_modify(self, command: str) -> None:
+        logger.debug("Pipeline start: modify — command=%r", command)
         self._gen_btn.setEnabled(False)
         self._progress.setVisible(True)
         self._progress.setValue(0)
@@ -226,6 +229,7 @@ class ChatPanel(QWidget):
         self._modify_worker.start()
 
     def _on_modify_finished(self, plan, record) -> None:
+        logger.debug("Modify complete: plan=%s, success=%s", plan is not None, record.success if record else False)
         self._gen_btn.setEnabled(True)
         self._progress.setVisible(False)
         self._modify_worker = None
@@ -297,6 +301,7 @@ class ChatPanel(QWidget):
         self.plan_ready.emit(plan)
 
     def _on_finished(self, result: "GenerationResult") -> None:
+        logger.debug("Pipeline complete: success=%s", result.success)
         self._gen_btn.setEnabled(True)
         self._progress.setVisible(False)
         self._worker = None
@@ -316,6 +321,7 @@ class ChatPanel(QWidget):
             if result.usd_path:
                 self._append_system(f"USD: {result.usd_path}")
         else:
+            logger.error("Generation failed: %s", ", ".join(result.errors))
             self._append_system(f"Generation failed: {', '.join(result.errors)}")
 
         if result.warnings:

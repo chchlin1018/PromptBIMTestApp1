@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import base64
 import io
-import logging
 from pathlib import Path
 
 from PIL import Image
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+
+logger = get_logger("land.image_preprocess")
 
 SUPPORTED_IMAGE_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".heic", ".heif", ".pdf",
@@ -89,8 +90,11 @@ def prepare_for_vision_api(
     Returns:
         (base64_data, media_type) tuple ready for API call.
     """
+    logger.debug("Preparing image for Vision API: %s", file_path)
     img = load_image(file_path)
+    original_size = img.size
     img = normalize_image(img, max_dimension=max_dimension)
+    logger.debug("Image: original=%dx%d, processed=%dx%d", original_size[0], original_size[1], img.size[0], img.size[1])
 
     suffix = Path(file_path).suffix.lower()
     if suffix == ".png":
@@ -100,6 +104,7 @@ def prepare_for_vision_api(
         b64 = image_to_base64(img, format="JPEG")
         media_type = "image/jpeg"
 
+    logger.debug("Encoded: format=%s, base64_len=%d", media_type, len(b64))
     return b64, media_type
 
 

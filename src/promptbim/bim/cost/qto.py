@@ -11,8 +11,12 @@ import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from promptbim.debug import get_logger
+
 if TYPE_CHECKING:
     from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
+
+logger = get_logger("cost.qto")
 
 
 @dataclass
@@ -32,6 +36,7 @@ class QuantityTakeOff:
     """Extract construction quantities from a BuildingPlan."""
 
     def extract(self, plan: BuildingPlan) -> list[QTOItem]:
+        logger.debug("Extracting QTO from plan: %s (%d stories)", plan.name, len(plan.stories))
         items: list[QTOItem] = []
         total_floor_area = 0.0
 
@@ -101,6 +106,9 @@ class QuantityTakeOff:
                 quantity=site_area,
             ))
 
+        for item in items:
+            logger.debug("QTO: %s — %.2f %s", item.name, item.quantity, item.unit)
+        logger.debug("QTO total: %d items", len(items))
         return items
 
     def _extract_walls(self, story: StoryPlan) -> list[QTOItem]:

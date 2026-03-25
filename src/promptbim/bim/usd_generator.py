@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, Vt
 
+from promptbim.debug import get_logger
 from promptbim.bim.geometry import (
     Mesh,
     flat_roof_mesh,
@@ -26,6 +27,8 @@ from promptbim.bim.materials import (
 )
 from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
 
+_logger = get_logger("bim.usd")
+
 
 class USDGenerator:
     """Build an OpenUSD stage from a :class:`BuildingPlan`."""
@@ -40,6 +43,9 @@ class USDGenerator:
 
     def generate(self, plan: BuildingPlan, output_path: str | Path) -> Path:
         """Generate a ``.usda`` file from *plan*."""
+        import time as _time
+        _t0 = _time.time()
+
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -64,6 +70,16 @@ class USDGenerator:
                 self._add_roof(plan.roof.roof_type, boundary, roof_z)
 
         self._stage.GetRootLayer().Save()
+        _elapsed = _time.time() - _t0
+
+        # Count prims and materials
+        prim_count = sum(1 for _ in self._stage.TraverseAll())
+        mat_count = len(self._material_cache)
+        file_size = output_path.stat().st_size / 1024
+        _logger.debug(
+            "USD written: %s (%d prims, %d materials, %.0f KB, %.2fs)",
+            output_path, prim_count, mat_count, file_size, _elapsed,
+        )
         return output_path
 
     # ------------------------------------------------------------------

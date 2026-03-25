@@ -6,6 +6,9 @@ Supports GIS formats (GeoJSON, Shapefile, DXF) and AI image recognition
 
 from __future__ import annotations
 
+from promptbim.debug import get_logger
+logger = get_logger("gui.import_land")
+
 from pathlib import Path
 
 from PySide6.QtCore import Signal
@@ -114,6 +117,7 @@ class ImportLandDialog(QDialog):
     def _import_gis_file(self, file_path: str):
         path = Path(file_path)
         suffix = path.suffix.lower()
+        logger.debug("Importing GIS file: %s (format=%s)", path.name, suffix)
         try:
             parcels = _parse_file(path, suffix)
             if parcels:
@@ -128,6 +132,7 @@ class ImportLandDialog(QDialog):
             self._gis_label.setText(f"Error: {e}")
 
     def _import_image_file(self, file_path: str):
+        logger.debug("Importing image file for AI recognition: %s", file_path)
         self._progress.setVisible(True)
         self._progress.setRange(0, 0)  # indeterminate
         self._img_label.setText("AI is analysing the image...")
@@ -184,6 +189,7 @@ class ImportLandDialog(QDialog):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             suffix = Path(file_path).suffix.lower()
+            logger.debug("File dropped: %s (detected format=%s)", file_path, suffix)
             if suffix in SUPPORTED_EXTENSIONS:
                 self._import_gis_file(file_path)
                 return
@@ -195,6 +201,7 @@ class ImportLandDialog(QDialog):
 
 def _parse_file(path: Path, suffix: str) -> list[LandParcel]:
     """Route to appropriate parser based on file extension."""
+    logger.debug("_parse_file: %s (suffix=%s)", path, suffix)
     if suffix in (".geojson", ".json"):
         from promptbim.land.parsers.geojson import parse_geojson
         return parse_geojson(path)

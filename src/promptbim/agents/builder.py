@@ -6,15 +6,15 @@ This agent is **pure Python** — no LLM calls.
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 from promptbim.bim.ifc_generator import IFCGenerator
 from promptbim.bim.usd_generator import USDGenerator
 from promptbim.config import get_settings
+from promptbim.debug import get_logger
 from promptbim.schemas.plan import BuildingPlan
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.builder")
 
 
 class BuilderAgent:
@@ -33,6 +33,7 @@ class BuilderAgent:
         """
         self._output_dir.mkdir(parents=True, exist_ok=True)
         safe_name = _safe_filename(plan.name)
+        logger.debug("Building IFC+USD: name=%s, output=%s", safe_name, self._output_dir)
 
         ifc_path = self._output_dir / f"{safe_name}.ifc"
         usd_path = self._output_dir / f"{safe_name}.usda"
@@ -59,11 +60,17 @@ class BuilderAgent:
             errors.append(f"USD: {exc}")
             usd_path = None
 
-        return BuildResult(
-            ifc_path=ifc_path,
-            usd_path=usd_path,
-            errors=errors,
-        )
+        result = BuildResult(ifc_path=ifc_path, usd_path=usd_path, errors=errors)
+        if result.ok:
+            sizes = []
+            if ifc_path:
+                sizes.append(f"IFC={ifc_path.stat().st_size/1024:.0f}KB")
+            if usd_path:
+                sizes.append(f"USD={usd_path.stat().st_size/1024:.0f}KB")
+            logger.debug("Build complete: %s", ", ".join(sizes))
+        else:
+            logger.debug("Build failed: %s", errors)
+        return result
 
 
 class BuildResult:

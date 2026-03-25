@@ -5,8 +5,11 @@ from __future__ import annotations
 from shapely.geometry import Polygon
 from shapely.ops import orient
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.zoning import ZoningRules
+
+logger = get_logger("land.setback")
 
 
 def compute_setback(
@@ -33,12 +36,17 @@ def compute_setback(
         + zoning.setback_right_m
     ) / 4.0
 
+    logger.debug("Uniform setback=%.1fm, original area=%.1f sqm", avg_setback, poly.area)
+
     buffered = poly.buffer(-avg_setback, join_style="mitre")
 
     if buffered.is_empty or not isinstance(buffered, Polygon):
+        logger.debug("Setback eliminated all buildable area")
         return []
 
-    return list(buffered.exterior.coords[:-1])
+    result = list(buffered.exterior.coords[:-1])
+    logger.debug("Result area=%.1f sqm, vertices=%d", Polygon(result).area, len(result))
+    return result
 
 
 def compute_setback_per_side(

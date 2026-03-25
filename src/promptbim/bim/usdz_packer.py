@@ -6,14 +6,15 @@ with a fallback to manual ZIP-based packaging.
 
 from __future__ import annotations
 
-import logging
 import os
 import shutil
 import tempfile
 import zipfile
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+
+logger = get_logger("bim.usdz_packer")
 
 
 def pack_usdz(
@@ -42,14 +43,23 @@ def pack_usdz(
     else:
         output_path = Path(output_path)
 
+    input_size = usda_path.stat().st_size / 1024
+    logger.debug("Packing USDZ: input=%s (%.0f KB)", usda_path, input_size)
+
     # Try pxr UsdUtils first
     try:
-        return _pack_with_usdutils(usda_path, output_path)
+        result = _pack_with_usdutils(usda_path, output_path)
+        output_size = result.stat().st_size / 1024
+        logger.debug("Packed USDZ (UsdUtils): output=%.0f KB", output_size)
+        return result
     except (ImportError, Exception) as e:
-        logger.info("UsdUtils not available (%s), using ZIP fallback", e)
+        logger.debug("UsdUtils not available (%s), using ZIP fallback", e)
 
     # Fallback: manual ZIP packaging (USDZ is a ZIP with specific structure)
-    return _pack_with_zip(usda_path, output_path)
+    result = _pack_with_zip(usda_path, output_path)
+    output_size = result.stat().st_size / 1024
+    logger.debug("Packed USDZ (ZIP fallback): output=%.0f KB", output_size)
+    return result
 
 
 def _pack_with_usdutils(usda_path: Path, output_path: Path) -> Path:

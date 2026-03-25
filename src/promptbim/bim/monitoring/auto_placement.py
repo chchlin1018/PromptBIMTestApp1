@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from promptbim.debug import get_logger
 from promptbim.bim.monitoring.monitor_types import (
     MONITOR_TYPES,
     MonitorType,
@@ -16,6 +17,8 @@ from promptbim.bim.monitoring.monitor_types import (
 )
 from promptbim.bim.monitoring.rules_engine import PLACEMENT_RULES, RulesEngine
 from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan
+
+_logger = get_logger("monitoring.auto_placement")
 
 
 @dataclass
@@ -105,6 +108,10 @@ class AutoMonitorPlacer:
         # Per-building placements
         placements.extend(self._per_building_placements(plan))
 
+        type_counts = MonitorPlan(placements=placements).by_type()
+        for tid, cnt in type_counts.items():
+            _logger.debug("Monitor type %s: %d placed", tid, cnt)
+        _logger.debug("Total monitor points: %d", len(placements))
         return MonitorPlan(placements=placements)
 
     def _distribute_in_space(

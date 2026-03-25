@@ -7,7 +7,7 @@ Uses contextily when available, with a lightweight fallback.
 
 from __future__ import annotations
 
-import logging
+from promptbim.debug import get_logger as _get_logger
 import math
 from typing import TYPE_CHECKING
 
@@ -16,7 +16,7 @@ import numpy as np
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
-logger = logging.getLogger(__name__)
+logger = _get_logger("viz.basemap")
 
 # Tile provider URLs (free, no API key required)
 OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -10,13 +10,13 @@ This module is optional — Omniverse is not required for the core workflow.
 from __future__ import annotations
 
 import json
-import logging
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+logger = get_logger("bim.omniverse")
 
 DEFAULT_NUCLEUS_URL = "omniverse://localhost"
 DEFAULT_PROJECT_PATH = "/Projects/PromptBIM"

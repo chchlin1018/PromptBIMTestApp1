@@ -15,6 +15,7 @@ import ifcopenshell.api
 import ifcopenshell.api.owner
 import ifcopenshell.util.placement
 
+from promptbim.debug import get_logger
 from promptbim.bim.materials import (
     MaterialDef,
     roof_material,
@@ -22,6 +23,8 @@ from promptbim.bim.materials import (
     wall_material,
 )
 from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
+
+_logger = get_logger("bim.ifc")
 
 
 class IFCGenerator:
@@ -42,8 +45,17 @@ class IFCGenerator:
 
     def generate(self, plan: BuildingPlan, output_path: str | Path) -> Path:
         """Generate an IFC file from *plan* and write it to *output_path*."""
+        import time as _time
+        _t0 = _time.time()
+
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        total_walls = sum(len(s.walls) for s in plan.stories)
+        _logger.debug(
+            "Generating IFC4: %d stories, %d walls, %d slabs, roof=%s",
+            len(plan.stories), total_walls, len(plan.stories), plan.roof.roof_type,
+        )
 
         self._init_file()
         self._create_project(plan.name)
@@ -62,6 +74,9 @@ class IFCGenerator:
                 self._add_roof(plan.roof.roof_type, boundary, roof_z)
 
         self._file.write(str(output_path))
+        _elapsed = _time.time() - _t0
+        file_size = output_path.stat().st_size / 1024
+        _logger.debug("IFC written: %s (%.0f KB, %.2fs)", output_path, file_size, _elapsed)
         return output_path
 
     # ------------------------------------------------------------------

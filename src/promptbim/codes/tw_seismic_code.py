@@ -6,6 +6,9 @@ Source: Seismic Design Specifications and Commentary for Buildings (2024 edition
 from __future__ import annotations
 
 from promptbim.codes.base import BaseRule, CheckResult
+from promptbim.debug import get_logger
+
+logger = get_logger("codes.tw_seismic_code")
 
 # -- Simplified seismic zone coefficients -----------------------------------
 
@@ -70,7 +73,10 @@ def get_min_column_cm(num_stories: int) -> int:
 
 
 def get_seismic_params(city: str) -> dict:
-    return SEISMIC_ZONES.get(city, DEFAULT_SEISMIC)
+    params = SEISMIC_ZONES.get(city, DEFAULT_SEISMIC)
+    logger.debug("get_seismic_params: city=%r → Ss=%.2f, S1=%.2f, site=%s",
+                  city, params["Ss"], params["S1"], params["site_class"])
+    return params
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +90,7 @@ class SeismicDesignRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = len(plan.stories)
+        logger.debug("SeismicDesignRule: num_stories=%d", num)
         if num == 0:
             return [self._pass("無樓層，不適用")]
 
@@ -105,6 +112,7 @@ class SeismicDesignRule(BaseRule):
 
         # Minimum column size recommendation
         min_col = get_min_column_cm(num)
+        logger.debug("SeismicDesignRule: min_column=%dcm for %d stories", min_col, num)
         results.append(self._info(
             f"建築 {num} 層，RC柱建議最小 {min_col}cm x {min_col}cm",
             actual=num,

@@ -7,7 +7,6 @@ delivery package.
 from __future__ import annotations
 
 import json
-import logging
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -31,7 +30,8 @@ if TYPE_CHECKING:
     from promptbim.schemas.plan import BuildingPlan
     from promptbim.schemas.result import GenerationResult
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+logger = get_logger("gui.export_dialog")
 
 
 class _ExportWorker(QThread):

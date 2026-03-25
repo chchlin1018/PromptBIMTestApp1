@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from promptbim.codes.base import BaseRule, CheckResult, Severity
+from promptbim.debug import get_logger
+
+logger = get_logger("codes.registry")
 from promptbim.codes.tw_building_code import (
     BCRRule,
     CeilingHeightRule,
@@ -51,12 +54,15 @@ ALL_RULES: list[BaseRule] = [
 
 def run_all_checks(plan, land, zoning) -> list[CheckResult]:
     """Run every registered rule against *plan*. Returns flat list of results."""
+    logger.debug("run_all_checks: starting with %d registered rules", len(ALL_RULES))
     results: list[CheckResult] = []
     for rule in ALL_RULES:
         try:
             rule_results = rule.check(plan, land, zoning)
             results.extend(rule_results)
-        except Exception:
+            logger.debug("rule %s: returned %d result(s)", rule.rule_id, len(rule_results))
+        except Exception as exc:
+            logger.debug("rule %s: ERROR during check — %s", rule.rule_id, exc)
             results.append(CheckResult(
                 rule_id=rule.rule_id,
                 rule_name_zh=rule.rule_name_zh,
@@ -74,6 +80,11 @@ def get_compliance_summary(results: list[CheckResult]) -> dict:
     passes = [r for r in results if r.severity == Severity.PASS]
     infos = [r for r in results if r.severity == Severity.INFO]
     total = len(results)
+
+    logger.debug(
+        "get_compliance_summary: total=%d pass=%d warn=%d fail=%d info=%d",
+        total, len(passes), len(warnings), len(fails), len(infos),
+    )
 
     return {
         "total_rules": total,

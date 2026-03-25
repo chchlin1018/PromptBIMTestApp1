@@ -8,15 +8,17 @@ faster-whisper is unavailable.  Audio is captured via ``sounddevice``
 from __future__ import annotations
 
 import io
-import logging
 import struct
 import tempfile
 import threading
+import time
 import wave
 from pathlib import Path
 from typing import Callable
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+
+logger = get_logger("voice.stt")
 
 # ---------------------------------------------------------------------------
 # Lightweight WAV helpers (no external deps)
@@ -64,6 +66,8 @@ class AudioRecorder:
             return
         self._frames = []
         self._recording = True
+        self._start_time = time.monotonic()
+        logger.debug("Recording started (sample_rate=%d)", self._sample_rate)
         try:
             import sounddevice as sd
 
@@ -80,6 +84,8 @@ class AudioRecorder:
 
     def stop(self) -> bytes:
         """Stop recording and return WAV bytes."""
+        duration = time.monotonic() - getattr(self, "_start_time", time.monotonic())
+        logger.debug("Recording stopped (duration=%.2fs, frames=%d)", duration, len(self._frames))
         self._recording = False
         if self._stream is not None:
             try:
@@ -119,11 +125,14 @@ class Transcriber:
         try:
             from faster_whisper import WhisperModel
 
+            logger.debug("Loading faster-whisper model '%s'...", self._model_size)
+            t0 = time.monotonic()
             self._model = WhisperModel(
                 self._model_size, device="cpu", compute_type="int8"
             )
+            elapsed = time.monotonic() - t0
             self._backend = "faster-whisper"
-            logger.info("Loaded faster-whisper model: %s", self._model_size)
+            logger.info("Loaded faster-whisper model: %s (%.2fs)", self._model_size, elapsed)
         except ImportError:
             logger.warning(
                 "faster-whisper not installed; speech recognition unavailable. "
@@ -145,23 +154,38 @@ class Transcriber:
 
     def _transcribe_whisper(self, wav_bytes: bytes) -> str:
         """Transcribe using faster-whisper."""
+        logger.debug("Transcribing WAV data (%d bytes)", len(wav_bytes))
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp.write(wav_bytes)
             tmp_path = tmp.name
 
         try:
+            t0 = time.monotonic()
             segments, info = self._model.transcribe(
                 tmp_path,
                 language=None,  # auto-detect
                 beam_size=5,
                 vad_filter=True,
             )
-            text = " ".join(seg.text.strip() for seg in segments)
+            seg_list = list(segments)
+            text = " ".join(seg.text.strip() for seg in seg_list)
+            elapsed = time.monotonic() - t0
+            avg_confidence = (
+                sum(seg.avg_log_prob for seg in seg_list) / len(seg_list)
+                if seg_list else 0.0
+            )
             logger.info(
-                "Transcribed (%s, %.1fs): %s",
+                "Transcribed (%s, %.1fs audio, %.2fs processing): %s",
                 info.language,
                 info.duration,
+                elapsed,
                 text[:100],
+            )
+            logger.debug(
+                "Transcription details: language_prob=%.3f, avg_log_prob=%.3f, segments=%d",
+                info.language_probability,
+                avg_confidence,
+                len(seg_list),
             )
             return text.strip()
         except Exception as exc:

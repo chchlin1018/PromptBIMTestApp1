@@ -23,13 +23,15 @@ Usage (Claude Desktop config):
 from __future__ import annotations
 
 import json
-import logging
 import tempfile
+import time
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+
+logger = get_logger("mcp.server")
 
 mcp = FastMCP(
     "PromptBIM",
@@ -76,6 +78,9 @@ def import_land(
     """
     from promptbim.schemas.land import LandParcel
 
+    logger.debug("import_land called: name=%s, vertices=%d, area_sqm=%s", name, len(boundary), area_sqm)
+    t0 = time.monotonic()
+
     coords = [(pt[0], pt[1]) for pt in boundary]
 
     if area_sqm is None:
@@ -88,6 +93,7 @@ def import_land(
         source_type="mcp",
     )
     _state["land"] = parcel.model_dump()
+    logger.debug("import_land completed in %.3fs: area=%.1f m²", time.monotonic() - t0, parcel.area_sqm)
     return json.dumps({
         "status": "ok",
         "name": parcel.name,
@@ -121,6 +127,9 @@ def set_zoning(
     """
     from promptbim.schemas.zoning import ZoningRules
 
+    logger.debug("set_zoning called: type=%s, FAR=%.2f, BCR=%.2f, height=%.1fm", zone_type, far_limit, bcr_limit, height_limit_m)
+    t0 = time.monotonic()
+
     zoning = ZoningRules(
         zone_type=zone_type,
         far_limit=far_limit,
@@ -132,6 +141,7 @@ def set_zoning(
         setback_right_m=setback_right_m,
     )
     _state["zoning"] = zoning.model_dump()
+    logger.debug("set_zoning completed in %.3fs", time.monotonic() - t0)
     return json.dumps({"status": "ok", "zoning": _state["zoning"]})
 
 
@@ -145,9 +155,12 @@ def generate_building(prompt: str) -> str:
     Args:
         prompt: Natural language building description (e.g., "3-story office with rooftop garden").
     """
+    logger.debug("generate_building called: prompt='%s'", prompt[:100])
     if _state["land"] is None:
+        logger.warning("generate_building: no land imported")
         return json.dumps({"error": "No land imported. Call import_land() first."})
 
+    t0 = time.monotonic()
     from promptbim.schemas.land import LandParcel
     from promptbim.schemas.zoning import ZoningRules
 
@@ -159,6 +172,9 @@ def generate_building(prompt: str) -> str:
 
     _state["plan"] = orch.plan.model_dump() if orch.plan else None
     _state["result"] = result.model_dump(mode="json") if result else None
+
+    elapsed = time.monotonic() - t0
+    logger.info("generate_building completed in %.2fs: success=%s, name=%s", elapsed, result.success, result.building_name)
 
     return json.dumps({
         "status": "ok" if result.success else "error",
@@ -180,9 +196,12 @@ def modify_building(command: str) -> str:
     Args:
         command: Modification instruction (e.g., "change to 5 stories", "add swimming pool").
     """
+    logger.debug("modify_building called: command='%s'", command[:100])
     if _state["plan"] is None:
+        logger.warning("modify_building: no building generated")
         return json.dumps({"error": "No building generated. Call generate_building() first."})
 
+    t0 = time.monotonic()
     from promptbim.schemas.zoning import ZoningRules
 
     zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else None
@@ -197,6 +216,9 @@ def modify_building(command: str) -> str:
     if new_plan:
         _state["plan"] = new_plan.model_dump()
 
+    elapsed = time.monotonic() - t0
+    logger.info("modify_building completed in %.2fs: success=%s", elapsed, record.success if record else False)
+
     return json.dumps({
         "status": "ok" if record and record.success else "failed",
         "modification_type": record.modification_type if record else None,
@@ -207,11 +229,13 @@ def modify_building(command: str) -> str:
 @mcp.tool()
 def check_compliance() -> str:
     """Run Taiwan building code compliance check on the current building."""
+    logger.debug("check_compliance called")
     if _state["plan"] is None:
         return json.dumps({"error": "No building generated."})
     if _state["land"] is None:
         return json.dumps({"error": "No land imported."})
 
+    t0 = time.monotonic()
     from promptbim.agents.checker import CheckerAgent
     from promptbim.schemas.land import LandParcel
     from promptbim.schemas.plan import BuildingPlan
@@ -223,6 +247,8 @@ def check_compliance() -> str:
 
     checker = CheckerAgent()
     result = checker.check(plan, land, zoning)
+
+    logger.info("check_compliance completed in %.2fs: passed=%s, violations=%d", time.monotonic() - t0, result.passed, len(result.violations))
 
     return json.dumps({
         "passed": result.passed,
@@ -239,9 +265,11 @@ def check_compliance() -> str:
 @mcp.tool()
 def estimate_cost() -> str:
     """Estimate construction cost for the current building (Taiwan market prices)."""
+    logger.debug("estimate_cost called")
     if _state["plan"] is None:
         return json.dumps({"error": "No building generated."})
 
+    t0 = time.monotonic()
     from promptbim.bim.cost.estimator import CostEstimator
     from promptbim.schemas.plan import BuildingPlan
 
@@ -250,6 +278,7 @@ def estimate_cost() -> str:
     estimate = estimator.estimate(plan)
 
     result = estimate.to_dict()
+    logger.info("estimate_cost completed in %.2fs: total_twd=%s", time.monotonic() - t0, result.get("total_twd", 0))
     return json.dumps({
         "total_twd": result.get("total_twd", 0),
         "total_usd_approx": result.get("total_twd", 0) / 32,
@@ -261,15 +290,19 @@ def estimate_cost() -> str:
 @mcp.tool()
 def auto_monitor() -> str:
     """Automatically place smart monitoring points on the current building."""
+    logger.debug("auto_monitor called")
     if _state["plan"] is None:
         return json.dumps({"error": "No building generated."})
 
+    t0 = time.monotonic()
     from promptbim.bim.monitoring.auto_placement import AutoPlacement
     from promptbim.schemas.plan import BuildingPlan
 
     plan = BuildingPlan(**_state["plan"])
     placer = AutoPlacement()
     monitor_plan = placer.place(plan)
+
+    logger.info("auto_monitor completed in %.2fs: total_monitors=%d", time.monotonic() - t0, monitor_plan.total_count)
 
     return json.dumps({
         "total_monitors": monitor_plan.total_count,
@@ -338,6 +371,7 @@ def _shoelace_area(coords: list[tuple[float, float]]) -> float:
 
 def main():
     """Run the MCP server via stdio transport."""
+    logger.info("Starting PromptBIM MCP server (stdio transport)")
     mcp.run(transport="stdio")
 
 

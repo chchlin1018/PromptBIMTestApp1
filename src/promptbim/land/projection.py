@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pyproj import Transformer
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
+
+logger = get_logger("land.projection")
 
 
 def to_local_meters(parcel: LandParcel, target_crs: str = "EPSG:3826") -> LandParcel:
@@ -15,7 +18,9 @@ def to_local_meters(parcel: LandParcel, target_crs: str = "EPSG:3826") -> LandPa
 
     Returns a new LandParcel with coordinates in meters and updated CRS.
     """
+    logger.debug("Projecting: source=%s -> target=%s", parcel.crs, target_crs)
     if parcel.crs == target_crs or parcel.crs == "LOCAL":
+        logger.debug("No projection needed (already %s)", parcel.crs)
         return parcel
 
     transformer = Transformer.from_crs(parcel.crs, target_crs, always_xy=True)
@@ -38,6 +43,14 @@ def to_local_meters(parcel: LandParcel, target_crs: str = "EPSG:3826") -> LandPa
     from shapely.geometry import Polygon
 
     poly = Polygon(local_coords)
+
+    logger.debug(
+        "Projected %d coords: before=(%.4f,%.4f), after=(%.4f,%.4f), origin=(%.2f,%.2f)",
+        len(parcel.boundary),
+        parcel.boundary[0][0], parcel.boundary[0][1],
+        local_coords[0][0], local_coords[0][1],
+        local_origin[0], local_origin[1],
+    )
 
     return LandParcel(
         name=parcel.name,

@@ -8,14 +8,14 @@ features, and constraints.
 from __future__ import annotations
 
 import json
-import logging
 
 from promptbim.agents.base import AgentResponse, BaseAgent
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.requirement import BuildingRequirement
 from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.enhancer")
 
 ENHANCER_SYSTEM_PROMPT = """\
 You are an expert architecture consultant. Your job is to take a user's
@@ -79,8 +79,11 @@ class EnhancerAgent(BaseAgent):
             f"left={zoning.setback_left_m}m, right={zoning.setback_right_m}m"
         )
 
+        logger.debug("Enhancing prompt: '%s'", raw_prompt[:100])
         response = self.run(user_msg)
-        return self._to_requirement(raw_prompt, response, land_area, zoning)
+        req = self._to_requirement(raw_prompt, response, land_area, zoning)
+        logger.debug("Enhanced: type=%s, stories=%d, features=%s", req.building_type, req.num_stories, req.features)
+        return req
 
     def _to_requirement(
         self,

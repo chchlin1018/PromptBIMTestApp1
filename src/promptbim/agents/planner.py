@@ -8,16 +8,16 @@ agent — it must place a valid building on the real land parcel.
 from __future__ import annotations
 
 import json
-import logging
 
 from promptbim.agents.base import AgentResponse, BaseAgent
 from promptbim.codes.tw_seismic_code import get_min_column_cm, get_seismic_params
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
 from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.planner")
 
 PLANNER_SYSTEM_PROMPT = """\
 You are an expert architect and urban planner. Your task is to generate a
@@ -104,9 +104,13 @@ class PlannerAgent(BaseAgent):
         Returns a :class:`BuildingPlan`. Falls back to a simple box if
         the API call fails.
         """
+        logger.debug("Planning: land=%.1f sqm, buildable=%d pts, stories=%d", land.area_sqm, len(buildable_area), requirement.num_stories)
         user_msg = self._build_user_message(requirement, land, zoning, buildable_area)
         response = self.run(user_msg)
-        return self._to_plan(response, land, zoning, buildable_area, requirement)
+        plan = self._to_plan(response, land, zoning, buildable_area, requirement)
+        total_walls = sum(len(s.walls) for s in plan.stories)
+        logger.debug("Plan: %d stories, footprint=%d pts, %d walls", len(plan.stories), len(plan.building_footprint), total_walls)
+        return plan
 
     def _build_user_message(
         self,

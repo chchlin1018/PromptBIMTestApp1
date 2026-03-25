@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from promptbim.debug import get_logger
 from promptbim.bim.mep.planner import MEPPlan, MEPRoute
+
+logger = get_logger("mep.clash_detect")
 
 
 @dataclass
@@ -87,6 +90,10 @@ def detect_clashes(
                     overlap_point=overlap,
                 ))
                 pair_counts[pair_key] = pair_counts.get(pair_key, 0) + 1
+
+    logger.debug("Clash detection: %d segments checked, %d clashes found", len(seg_list), len(clashes))
+    for pair, cnt in pair_counts.items():
+        logger.debug("  %s: %d clashes", pair, cnt)
 
     return ClashSummary(
         total_clashes=len(clashes),

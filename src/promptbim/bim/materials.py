@@ -7,6 +7,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from promptbim.debug import get_logger
+
+logger = get_logger("bim.materials")
+
 
 @dataclass
 class MaterialDef:
@@ -89,7 +93,11 @@ MATERIALS: dict[str, MaterialDef] = {
 
 def get_material(name: str) -> MaterialDef:
     """Return a built-in material by key, falling back to concrete."""
-    return MATERIALS.get(name, MATERIALS["concrete"])
+    if name in MATERIALS:
+        logger.debug("Material lookup: '%s' -> hit", name)
+        return MATERIALS[name]
+    logger.debug("Material lookup: '%s' -> miss, fallback to concrete", name)
+    return MATERIALS["concrete"]
 
 
 def wall_material(wall_type: str) -> MaterialDef:

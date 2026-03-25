@@ -14,19 +14,32 @@ def app():
     parser.add_argument(
         "--version", action="version", version=f"promptbim {__version__}"
     )
+    parser.add_argument(
+        "--debug", action="store_true", help="Enable debug logging output"
+    )
 
     subparsers = parser.add_subparsers(dest="command")
 
     # gui subcommand
-    subparsers.add_parser("gui", help="Launch the desktop GUI")
+    gui_parser = subparsers.add_parser("gui", help="Launch the desktop GUI")
+    gui_parser.add_argument(
+        "--debug", action="store_true", help="Enable debug logging output"
+    )
 
     # generate subcommand
     gen_parser = subparsers.add_parser("generate", help="Generate building from prompt")
     gen_parser.add_argument("prompt", help="Building description prompt")
     gen_parser.add_argument("--land", help="Path to land data file (GeoJSON/SHP/DXF)")
     gen_parser.add_argument("--output", "-o", default="./output", help="Output directory")
+    gen_parser.add_argument(
+        "--debug", action="store_true", help="Enable debug logging output"
+    )
 
     args = parser.parse_args()
+
+    if args.debug:
+        from promptbim.debug import enable_debug
+        enable_debug()
 
     if args.command == "gui":
         _launch_gui()

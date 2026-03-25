@@ -6,6 +6,9 @@ Source: Building Technical Regulations, Articles 167-177.
 from __future__ import annotations
 
 from promptbim.codes.base import BaseRule, CheckResult
+from promptbim.debug import get_logger
+
+logger = get_logger("codes.tw_accessibility_code")
 
 
 class AccessibilityRule(BaseRule):
@@ -17,9 +20,10 @@ class AccessibilityRule(BaseRule):
         results: list[CheckResult] = []
         zone = zoning.zone_type
         num = len(plan.stories)
+        is_public = zone in ("commercial", "office", "public", "mixed")
+        logger.debug("AccessibilityRule: zone=%s, stories=%d, is_public=%s", zone, num, is_public)
 
         # Public / commercial buildings must have accessibility facilities
-        is_public = zone in ("commercial", "office", "public", "mixed")
 
         if not is_public:
             results.append(self._info(

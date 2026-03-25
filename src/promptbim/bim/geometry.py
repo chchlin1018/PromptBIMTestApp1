@@ -11,6 +11,10 @@ from dataclasses import dataclass
 import mapbox_earcut
 import numpy as np
 
+from promptbim.debug import get_logger
+
+logger = get_logger("bim.geometry")
+
 
 @dataclass
 class Mesh:
@@ -64,6 +68,7 @@ def wall_mesh(
         dtype=np.float64,
     )
     faces = _box_faces()
+    logger.debug("wall_mesh: length=%.2f, height=%.2f, thickness=%.2f, verts=%d, faces=%d", length, height, thickness, len(verts), len(faces))
     return Mesh(vertices=verts, faces=faces)
 
 
@@ -112,7 +117,9 @@ def slab_mesh(
         faces.append([bi, bj, tj])
         faces.append([bi, tj, ti])
 
-    return Mesh(vertices=verts, faces=np.array(faces, dtype=np.int32))
+    result = Mesh(vertices=verts, faces=np.array(faces, dtype=np.int32))
+    logger.debug("slab_mesh: boundary_pts=%d, verts=%d, faces=%d", len(boundary), len(result.vertices), len(result.faces))
+    return result
 
 
 # ---------------------------------------------------------------------------

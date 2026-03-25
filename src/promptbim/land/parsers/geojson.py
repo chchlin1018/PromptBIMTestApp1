@@ -7,7 +7,10 @@ from pathlib import Path
 
 from shapely.geometry import shape, Polygon
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
+
+logger = get_logger("land.geojson")
 
 
 def parse_geojson(file_path: str | Path) -> list[LandParcel]:
@@ -16,19 +19,30 @@ def parse_geojson(file_path: str | Path) -> list[LandParcel]:
     Supports both FeatureCollection and single Feature/Geometry.
     """
     file_path = Path(file_path)
+    logger.debug("Loading GeoJSON: %s", file_path)
+
     with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
 
     features = _extract_features(data)
+    logger.debug("Found %d feature(s)", len(features))
     parcels: list[LandParcel] = []
 
     for i, feature in enumerate(features):
         geom = shape(feature.get("geometry", feature))
         if not isinstance(geom, Polygon):
+            logger.debug("Feature %d: skipped (type=%s, not Polygon)", i, geom.geom_type)
             continue
 
         props = feature.get("properties", {}) or {}
         coords = list(geom.exterior.coords[:-1])  # remove closing duplicate
+
+        xs = [c[0] for c in coords]
+        ys = [c[1] for c in coords]
+        logger.debug(
+            "Feature %d: type=Polygon, vertices=%d, X[%.4f, %.4f] Y[%.4f, %.4f]",
+            i, len(coords), min(xs), max(xs), min(ys), max(ys),
+        )
 
         parcel = LandParcel(
             name=props.get("name", props.get("NAME", f"Parcel {i + 1}")),
@@ -41,6 +55,7 @@ def parse_geojson(file_path: str | Path) -> list[LandParcel]:
         )
         parcels.append(parcel)
 
+    logger.debug("Parsed %d parcel(s) from GeoJSON", len(parcels))
     return parcels
 
 

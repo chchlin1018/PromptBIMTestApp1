@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
 from shapely.geometry import Polygon
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 
-logger = logging.getLogger(__name__)
+logger = get_logger("land.kml")
 
 KML_NS = "{http://www.opengis.net/kml/2.2}"
 

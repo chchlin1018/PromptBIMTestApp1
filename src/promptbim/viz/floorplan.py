@@ -7,14 +7,14 @@ and openings (doors/windows) are marked.
 
 from __future__ import annotations
 
-import logging
 import math
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from promptbim.schemas.plan import BuildingPlan, OpeningDef, StoryPlan, WallDef
 
-logger = logging.getLogger(__name__)
+from promptbim.debug import get_logger
+logger = get_logger("viz.floorplan")
 
 # ---------------------------------------------------------------------------
 # Constants

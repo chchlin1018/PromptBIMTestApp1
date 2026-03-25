@@ -12,14 +12,21 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import streamlit as st
+
+from promptbim.debug import get_logger
+
+logger = get_logger("web.app")
 
 # Ensure src is on path
 _src = str(Path(__file__).resolve().parent.parent.parent)
 if _src not in sys.path:
     sys.path.insert(0, _src)
+
+logger.debug("Streamlit app module loaded")
 
 st.set_page_config(
     page_title="PromptBIM",
@@ -66,8 +73,10 @@ with st.sidebar:
                     source_type="manual",
                 )
                 st.session_state["land"] = land_parcel
+                logger.info("Land imported (manual): name=%s, area=%.1f m², vertices=%d", land_name, area, len(coords))
                 st.success(f"Imported: {land_name} ({area:.1f} m²)")
             except Exception as e:
+                logger.error("Land import failed: %s", e)
                 st.error(f"Error: {e}")
 
     elif land_method == "GeoJSON Upload":
@@ -83,10 +92,13 @@ with st.sidebar:
                 parcels = parse_geojson(tmp_path)
                 if parcels:
                     st.session_state["land"] = parcels[0]
+                    logger.info("Land imported (GeoJSON): name=%s, area=%.1f m²", parcels[0].name, parcels[0].area_sqm)
                     st.success(f"Imported: {parcels[0].name} ({parcels[0].area_sqm:.1f} m²)")
                 else:
+                    logger.warning("GeoJSON upload: no valid parcels found")
                     st.warning("No valid parcels found")
             except Exception as e:
+                logger.error("GeoJSON import failed: %s", e)
                 st.error(f"Error: {e}")
 
     elif land_method == "AI Image":
@@ -135,10 +147,12 @@ with col_chat:
         elif not prompt.strip():
             st.warning("Please enter a building description.")
         else:
+            logger.info("Generation requested: prompt='%s'", prompt[:100])
             with st.spinner("AI is generating your building..."):
                 try:
                     from promptbim.agents.orchestrator import Orchestrator
 
+                    t0 = time.monotonic()
                     output_dir = tempfile.mkdtemp(prefix="promptbim_web_")
                     orch = Orchestrator(output_dir=output_dir)
                     result = orch.generate(prompt, land, zoning)
@@ -147,11 +161,15 @@ with col_chat:
                     st.session_state["plan"] = orch.plan
                     st.session_state["output_dir"] = output_dir
 
+                    elapsed = time.monotonic() - t0
                     if result.success:
+                        logger.info("Generation succeeded in %.2fs: name=%s", elapsed, result.building_name)
                         st.success(f"Generated: {result.building_name}")
                     else:
+                        logger.error("Generation failed in %.2fs: %s", elapsed, "; ".join(result.errors))
                         st.error(f"Generation failed: {'; '.join(result.errors)}")
                 except Exception as e:
+                    logger.error("Generation exception: %s", e)
                     st.error(f"Error: {e}")
 
 with col_result:

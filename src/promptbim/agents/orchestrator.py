@@ -6,7 +6,7 @@ Planner is re-invoked with the fix suggestions (up to ``max_iterations``).
 
 from __future__ import annotations
 
-import logging
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -21,9 +21,10 @@ from promptbim.schemas.modification import ModificationRecord
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
 from promptbim.schemas.result import GenerationResult
+from promptbim.debug import get_logger
 from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.orchestrator")
 
 
 @dataclass
@@ -77,6 +78,7 @@ class Orchestrator:
         if zoning is None:
             zoning = ZoningRules()
 
+        _pipeline_start = time.time()
         buildable_area = compute_setback(land, zoning)
 
         # --- Stage 1: Enhance ---
@@ -129,6 +131,8 @@ class Orchestrator:
         self.build_result = self._builder.build(self.plan)
 
         # --- Result ---
+        _pipeline_elapsed = time.time() - _pipeline_start
+        logger.debug("Pipeline complete: %.2fs total", _pipeline_elapsed)
         self._emit("builder", "Done!", 1.0)
         warnings = [
             f"[{v.severity}] {v.rule}: {v.message}"

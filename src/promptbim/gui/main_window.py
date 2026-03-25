@@ -1,5 +1,8 @@
 """PySide6 main window for PromptBIM desktop application."""
 
+from promptbim.debug import get_logger
+logger = get_logger("gui.main_window")
+
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -33,6 +36,7 @@ from promptbim.viz.site_plan import SitePlanView
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        logger.debug("MainWindow.__init__ starting")
         self.setWindowTitle(f"PromptBIM v{__version__} - AI-Powered BIM Generator")
         self.setMinimumSize(1200, 800)
         self.setAcceptDrops(True)
@@ -85,6 +89,7 @@ class MainWindow(QMainWindow):
 
         # Status bar
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
+        logger.debug("MainWindow.__init__ complete — %d tabs", self._tabs.count())
 
     def _show_import_dialog(self):
         dialog = ImportLandDialog(self)
@@ -92,6 +97,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _on_parcel_imported(self, parcel: LandParcel):
+        logger.debug("Parcel imported: %s (%.1f m²)", parcel.name, parcel.area_sqm)
         self._parcel = parcel
         self._land_panel.update_parcel(parcel)
         self._land_panel.update_zoning(self._zoning)
@@ -117,6 +123,7 @@ class MainWindow(QMainWindow):
 
     def set_building_plan(self, plan: BuildingPlan):
         """Display a generated building plan in 3D, site plan, cost, and 4D views."""
+        logger.debug("set_building_plan: %s, %d stories", plan.name, len(plan.stories))
         self._model_view.set_plan(plan)
         self._site_plan.set_data(plan=plan)
         estimate = self._cost_panel.estimate_from_plan(plan)
@@ -126,6 +133,7 @@ class MainWindow(QMainWindow):
         self._setup_simulation(plan)
 
         self._tabs.setCurrentIndex(1)  # switch to 3D Model tab
+        logger.debug("Tab switched to 3D Model (index 1)")
         self.statusBar().showMessage(
             f"Building: {plan.name} | {len(plan.stories)} floors | "
             f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f} | "
@@ -159,12 +167,14 @@ class MainWindow(QMainWindow):
 
     def _on_modification_done(self, plan, record):
         """Handle a completed modification."""
+        logger.debug("Modification done: %s (success=%s)", record.command, record.success)
         self.set_building_plan(plan)
         history_count = len(self._chat_panel._orchestrator.modification_history.records)
         self._mod_panel.show_record(record, history_count)
 
     def _on_undo_done(self, plan):
         """Handle an undo operation."""
+        logger.debug("Undo done: plan=%s", plan.name)
         self.set_building_plan(plan)
         history_count = len(self._chat_panel._orchestrator.modification_history.records)
         self._mod_panel.update_history_count(history_count)
@@ -181,6 +191,7 @@ class MainWindow(QMainWindow):
 
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
+            logger.debug("File dropped on main window: %s", file_path)
             path = Path(file_path)
             if path.suffix.lower() in SUPPORTED_EXTENSIONS:
                 try:

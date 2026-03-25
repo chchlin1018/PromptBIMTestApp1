@@ -6,17 +6,17 @@ and uses the LandReaderAgent to extract land boundary polygons.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from promptbim.debug import get_logger
 from promptbim.land.parsers.image_preprocess import (
     is_supported_image,
     prepare_for_vision_api,
 )
 from promptbim.schemas.land import LandParcel
 
-logger = logging.getLogger(__name__)
+logger = get_logger("land.image_ai")
 
 
 @dataclass
@@ -48,6 +48,7 @@ def parse_image_ai(
         AIRecognitionResult with extracted LandParcel(s).
     """
     path = Path(file_path)
+    logger.debug("parse_image_ai: file=%s, context=%s", path, context)
 
     if not path.exists():
         return AIRecognitionResult(error=f"File not found: {path}")
@@ -57,14 +58,19 @@ def parse_image_ai(
 
     try:
         b64_data, media_type = prepare_for_vision_api(path)
+        logger.debug("Image preprocessed: base64_size=%d bytes, media_type=%s", len(b64_data), media_type)
     except Exception as exc:
         return AIRecognitionResult(error=f"Image preprocessing failed: {exc}")
 
     try:
+        import time as _time
         from promptbim.agents.land_reader import LandReaderAgent
 
         agent = LandReaderAgent()
+        _t0 = _time.time()
         response = agent.analyse_image(b64_data, media_type, context=context)
+        _elapsed = _time.time() - _t0
+        logger.debug("AI response: %.2fs, ok=%s", _elapsed, response.ok)
     except Exception as exc:
         return AIRecognitionResult(error=f"AI agent error: {exc}")
 
@@ -77,7 +83,9 @@ def parse_image_ai(
             notes=response.text,
         )
 
-    return _build_result(response.json_data, path)
+    result = _build_result(response.json_data, path)
+    logger.debug("Recognition result: confidence=%.2f, parcels=%d", result.confidence, len(result.parcels))
+    return result
 
 
 def parse_image_ai_from_b64(

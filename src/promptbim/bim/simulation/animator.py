@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pyvista as pv
 
+from promptbim.debug import get_logger
 from promptbim.bim.simulation.scheduler import (
     ConstructionSchedule,
     get_visible_components,
@@ -21,6 +22,8 @@ from promptbim.bim.simulation.scheduler import (
 
 if TYPE_CHECKING:
     pass
+
+_logger = get_logger("simulation.animator")
 
 
 # Colours for rendering states
@@ -112,6 +115,8 @@ class ConstructionAnimator:
         plotter.write_frame()
 
         plotter.close()
+        gif_size = output_path.stat().st_size / 1024
+        _logger.debug("GIF exported: %s (%.0f KB, %d frames)", output_path, gif_size, num_frames)
         return output_path
 
     def get_frame_meshes(self, day: int) -> list[tuple[pv.PolyData, str, float]]:

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from promptbim.debug import get_logger
+logger = get_logger("viz.model_3d")
+
 import numpy as np
 import pyvista as pv
 
@@ -70,6 +73,8 @@ def build_model(plan: BuildingPlan) -> list[tuple[pv.PolyData, str, str]]:
 
     Returns list of (polydata, color_hex, label) tuples for all elements.
     """
+    import time as _time
+    t0 = _time.perf_counter()
     all_meshes: list[tuple[pv.PolyData, str, str]] = []
 
     # Ground slab (under first floor)
@@ -112,6 +117,12 @@ def build_model(plan: BuildingPlan) -> list[tuple[pv.PolyData, str, str]]:
             mat = roof_material(plan.roof.roof_type)
             all_meshes.append((pd, _color_from_material(mat), "roof"))
 
+    total_verts = sum(pd.n_points for pd, _, _ in all_meshes)
+    total_faces = sum(pd.n_cells for pd, _, _ in all_meshes)
+    logger.debug(
+        "build_model complete: %d meshes, %d vertices, %d faces in %.3fs",
+        len(all_meshes), total_verts, total_faces, _time.perf_counter() - t0,
+    )
     return all_meshes
 
 

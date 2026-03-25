@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from shapely.geometry import Polygon
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
+
+logger = get_logger("land.manual")
 
 
 def parse_manual(
@@ -21,6 +24,8 @@ def parse_manual(
         name: Name for the parcel.
         crs: Coordinate reference system string.
     """
+    logger.debug("Manual input: %d coordinates, name=%s, crs=%s", len(coordinates), name, crs)
+
     if len(coordinates) < 3:
         raise ValueError("At least 3 coordinate points are required")
 
@@ -34,6 +39,8 @@ def parse_manual(
     poly = Polygon(coordinates)
     if not poly.is_valid:
         raise ValueError(f"Invalid polygon: {poly}")
+
+    logger.debug("Validated: area=%.2f sqm, perimeter=%.2f m", poly.area, poly.length)
 
     return LandParcel(
         name=name,

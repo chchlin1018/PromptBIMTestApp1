@@ -8,6 +8,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from promptbim.debug import get_logger
+
+logger = get_logger("cost.unit_prices")
+
 
 @dataclass(frozen=True)
 class UnitPrice:
@@ -80,7 +84,11 @@ CATEGORY_LABELS: dict[str, str] = {
 def get_price(key: str) -> float:
     """Return the TWD unit price for *key*, or 0 if not found."""
     entry = UNIT_PRICES_TWD.get(key)
-    return entry["price"] if entry else 0
+    if entry:
+        logger.debug("Price lookup: '%s' -> NT$%.0f/%s", key, entry["price"], entry["unit"])
+        return entry["price"]
+    logger.debug("Price lookup: '%s' -> miss", key)
+    return 0
 
 
 def get_category(key: str) -> str:

@@ -32,8 +32,9 @@
 | P8.5 | 智慧監控點自動配置 | 3 | ✅ | P4, P7 |
 | P9 | AI 土地圖像辨識 + Backlog | 3 | ✅ | P1, P4 |
 | P10 | Polish + Remaining Backlog | 2 | ✅ | P0~P9 |
+| P10.2 | Debug Logging System | 1 | ✅ | All |
 
-**預估總開發時間: ~39 天**
+**預估總開發時間: ~40 天**
 
 ---
 
@@ -289,6 +290,24 @@
 - ✅ 測試 + xcodebuild 通過 (591 passed, BUILD SUCCEEDED)
 
 **驗收標準:** 所有 backlog 項目完成 + 全部測試通過
+
+---
+
+## P10.2: Debug Logging System (~1 天)
+
+- ✅ `src/promptbim/debug.py` — 統一 Logger 系統 (get_logger, enable/disable_debug, 彩色 console)
+- ✅ `config.py` 加入 `debug_mode` + `__main__.py` 加入 `--debug` 參數
+- ✅ 土地匯入模組 debug log (geojson, shapefile, dxf, manual, image_ai, image_preprocess, setback, projection, boundary_confirm)
+- ✅ BIM 生成模組 debug log (geometry, ifc_generator, usd_generator, materials, usdz_packer)
+- ✅ 零件庫 + 成本 debug log (components/registry, cost/qto, cost/estimator, cost/unit_prices_tw)
+- ✅ MEP + 施工模擬 + 監控點 debug log (pathfinder, planner, clash_detect, scheduler, animator, auto_placement, rules_engine)
+- ✅ AI Agent Pipeline debug log (base, enhancer, planner, builder, checker, modifier, orchestrator, land_reader)
+- ✅ 法規引擎 debug log (registry, tw_building_code, tw_seismic_code, tw_fire_code, tw_accessibility_code)
+- ✅ GUI + Viz debug log (main_window, chat_panel, model_view, import_land, confirm_boundary, model_3d, mep_overlay, cost_charts)
+- ✅ 語音 + MCP + Web debug log (stt, server, app)
+- ✅ 測試 + 整合 (12 tests for debug system, 603 total tests passed, xcodebuild BUILD SUCCEEDED)
+
+**驗收標準:** PROMPTBIM_DEBUG=1 顯示完整 debug log, =0 無 debug 輸出, --debug CLI 參數
 
 ---
 

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
-import logging
+import time
 from dataclasses import dataclass, field
 
 from promptbim.config import get_settings
+from promptbim.debug import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.base")
 
 
 @dataclass
@@ -56,18 +57,27 @@ class BaseAgent:
     def run(self, user_message: str) -> AgentResponse:
         """Send *user_message* to Claude and return an :class:`AgentResponse`."""
         try:
+            logger.debug("API request: model=%s, max_tokens=%d", self._model, self._max_tokens)
+            t0 = time.time()
             message = self.client.messages.create(
                 model=self._model,
                 max_tokens=self._max_tokens,
                 system=self.SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_message}],
             )
+            elapsed = time.time() - t0
             text = message.content[0].text
             usage = {
                 "input_tokens": message.usage.input_tokens,
                 "output_tokens": message.usage.output_tokens,
             }
-            return self._parse_response(text, usage)
+            logger.debug(
+                "API response: %.2fs, input_tokens=%d, output_tokens=%d",
+                elapsed, usage["input_tokens"], usage["output_tokens"],
+            )
+            resp = self._parse_response(text, usage)
+            logger.debug("JSON parse: %s", "OK" if resp.json_data else "no JSON")
+            return resp
         except Exception as exc:
             logger.exception("Agent API call failed")
             return AgentResponse(error=str(exc))

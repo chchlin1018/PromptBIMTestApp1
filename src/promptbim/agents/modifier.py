@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import copy
 import json
-import logging
 
 from promptbim.agents.base import BaseAgent
+from promptbim.debug import get_logger
 from promptbim.schemas.modification import (
     ImpactItem,
     ImpactLevel,
@@ -30,7 +30,7 @@ from promptbim.schemas.plan import (
 )
 from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.modifier")
 
 # ---------------------------------------------------------------------------
 # Impact propagation matrix
@@ -227,7 +227,9 @@ class ModifierAgent(BaseAgent):
         old_snapshot = current_plan.model_dump()
 
         # Parse intent via Claude
+        logger.debug("Parsing modification: '%s'", command)
         intent = self._parse_intent(command, current_plan)
+        logger.debug("Intent: type=%s, params=%s, confidence=%.2f", intent.modification_type.value, intent.parameters, intent.confidence)
 
         # Apply modification deterministically
         try:

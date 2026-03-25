@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from promptbim.bim.components.base import ComponentCategory, ComponentDef
+from promptbim.debug import get_logger
+
+logger = get_logger("bim.components.registry")
 
 
 class ComponentRegistry:
@@ -33,6 +36,7 @@ class ComponentRegistry:
             searchable = " ".join(comp.ai_keywords + [comp.name_zh, comp.name_en, comp.id]).lower()
             if any(kw.lower() in searchable for kw in keywords):
                 results.append(comp)
+        logger.debug("search(%s, category=%s) -> %d results: %s", keywords, category, len(results), [r.id for r in results])
         return results
 
     @classmethod

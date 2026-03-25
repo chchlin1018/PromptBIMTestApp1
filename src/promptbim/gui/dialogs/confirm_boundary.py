@@ -7,6 +7,9 @@ or confirm/reject the result.
 
 from __future__ import annotations
 
+from promptbim.debug import get_logger
+logger = get_logger("gui.confirm_boundary")
+
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
@@ -49,6 +52,7 @@ class ConfirmBoundaryDialog(QDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
+        logger.debug("ConfirmBoundaryDialog init — %d candidates", len(confirmation.candidates))
         self.setWindowTitle("Confirm Land Boundary")
         self.setMinimumSize(700, 550)
 
@@ -185,6 +189,7 @@ class ConfirmBoundaryDialog(QDialog):
         self._canvas.draw()
 
     def _on_candidate_changed(self, index: int) -> None:
+        logger.debug("User switched to candidate #%d", index + 1)
         self._confirmation.select(index)
         self._update_display()
 
@@ -212,6 +217,7 @@ class ConfirmBoundaryDialog(QDialog):
             return
         candidate = self._confirmation.selected
         if candidate:
+            logger.debug("User adjusting vertex %d to (%.2f, %.2f)", self._dragging_vertex, event.xdata, event.ydata)
             new_parcel = adjust_vertex(
                 candidate.parcel, self._dragging_vertex, event.xdata, event.ydata
             )
@@ -222,6 +228,7 @@ class ConfirmBoundaryDialog(QDialog):
         self._dragging_vertex = None
 
     def _on_confirm(self) -> None:
+        logger.debug("User confirmed boundary")
         candidate = self._confirmation.selected
         if candidate:
             self.boundary_confirmed.emit(candidate.parcel)

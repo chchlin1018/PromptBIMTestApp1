@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from promptbim.debug import get_logger
 from promptbim.bim.cost.qto import QTOItem, QuantityTakeOff
 from promptbim.bim.cost.unit_prices_tw import (
     CATEGORY_LABELS,
@@ -15,6 +16,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from promptbim.bim.monitoring.auto_placement import MonitorPlan
+
+logger = get_logger("cost.estimator")
 
 
 @dataclass
@@ -152,6 +155,12 @@ class CostEstimator:
             ))
 
         cost_per_sqm = total / total_floor_area if total_floor_area > 0 else 0
+
+        for li in line_items:
+            logger.debug("Cost: %s — %.0f %s x NT$%.0f = NT$%.0f", li.name, li.quantity, li.unit, li.unit_price_twd, li.total_twd)
+        for b in breakdown:
+            logger.debug("Breakdown: %s — NT$%.0f (%.1f%%)", b.label, b.cost_twd, b.ratio * 100)
+        logger.debug("Total cost: NT$%.0f (NT$%.0f/sqm)", total, cost_per_sqm)
 
         return CostEstimate(
             project_name=plan.name,

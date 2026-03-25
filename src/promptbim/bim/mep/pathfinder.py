@@ -11,6 +11,10 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from promptbim.debug import get_logger
+
+logger = get_logger("mep.pathfinder")
+
 
 @dataclass
 class PathSegment:
@@ -142,6 +146,7 @@ class MEPPathfinder:
         Returns a :class:`RoutePath` with world-coordinate waypoints
         (empty if no path found).
         """
+        logger.debug("find_path: grid=%.2f, obstacles=%d, start=%s, end=%s", self.grid, len(self.obstacles), start, end)
         start_g = self._to_grid(start)
         end_g = self._to_grid(end)
 
@@ -168,7 +173,9 @@ class MEPPathfinder:
                 world_pts = [self._to_world(p) for p in path]
                 # Simplify: merge collinear segments
                 simplified = _simplify_path(world_pts)
-                return RoutePath.from_waypoints(simplified, self.grid)
+                route = RoutePath.from_waypoints(simplified, self.grid)
+                logger.debug("Path found: %d iterations, length=%.2fm, segments=%d", iterations, route.total_length_m, len(route.segments))
+                return route
 
             for dx, dy, dz in self.DIRECTIONS:
                 neighbor = (current[0] + dx, current[1] + dy, current[2] + dz)
@@ -189,6 +196,7 @@ class MEPPathfinder:
                     came_from[neighbor] = current
                     direction_at[neighbor] = curr_dir
 
+        logger.debug("No path found after %d iterations", iterations)
         return RoutePath(waypoints=[])  # no path found
 
     @staticmethod

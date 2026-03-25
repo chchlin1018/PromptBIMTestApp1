@@ -9,7 +9,10 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
+
+logger = get_logger("land.boundary_confirm")
 
 
 @dataclass
@@ -49,6 +52,11 @@ class BoundaryConfirmation:
     def sort_by_confidence(self) -> None:
         self.candidates.sort(key=lambda c: c.confidence, reverse=True)
         self.selected_index = 0
+        logger.debug(
+            "Sorted %d candidates by confidence: %s",
+            len(self.candidates),
+            [f"{c.confidence:.2f}" for c in self.candidates],
+        )
 
 
 def adjust_vertex(
@@ -65,7 +73,9 @@ def adjust_vertex(
     if not (0 <= vertex_index < len(boundary)):
         return parcel
 
+    old = boundary[vertex_index]
     boundary[vertex_index] = (new_x, new_y)
+    logger.debug("Adjusted vertex %d: (%.4f,%.4f) -> (%.4f,%.4f)", vertex_index, old[0], old[1], new_x, new_y)
 
     area = _shoelace_area(boundary)
     perimeter = _polygon_perimeter(boundary)

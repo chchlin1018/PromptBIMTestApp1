@@ -8,6 +8,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from promptbim.debug import get_logger
+
+logger = get_logger("monitoring.rules_engine")
+
 
 @dataclass(frozen=True)
 class PlacementRule:
@@ -129,4 +133,6 @@ class RulesEngine:
         else:
             count = 1
 
-        return min(count, rule.max_per_space)
+        result = min(count, rule.max_per_space)
+        logger.debug("Rule %s (mode=%s, area=%.1f): count=%d", monitor_type_id, mode, area_sqm, result)
+        return result

@@ -7,7 +7,6 @@ to suggest fixes when violations are found.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 
 from promptbim.agents.base import BaseAgent
@@ -15,11 +14,12 @@ from promptbim.codes.base import Severity
 from promptbim.codes.base import CheckResult as CodeCheckResult
 from promptbim.codes.registry import run_all_checks, get_compliance_summary
 from promptbim.codes.report import generate_report_table
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.checker")
 
 
 @dataclass
@@ -110,7 +110,9 @@ class CheckerAgent(BaseAgent):
             suggestions = self._get_suggestions(result.violations, code_results)
             result.suggestions = suggestions
 
-        logger.info(
+        for v in result.violations:
+            logger.debug("Violation [%s] %s: %s", v.severity, v.rule, v.message)
+        logger.debug(
             "Compliance: %d passed, %d warnings, %d failed (rate: %.1f%%)",
             compliance.get("passed", 0),
             compliance.get("warnings", 0),

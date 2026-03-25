@@ -6,6 +6,34 @@
 
 ---
 
+## [1.1.0] - 2026-03-25
+
+### Added (Sprint P10.2: Debug Logging System)
+
+- `debug.py` — Unified debug logging system for the entire project
+  - `get_logger(module_name)` — Module-specific colored console loggers
+  - `enable_debug()` / `disable_debug()` — Runtime debug mode toggle
+  - `setup_file_logging()` — Optional file-based log output
+  - ANSI color coding by module category (land=green, bim=blue, agents=magenta, etc.)
+- Debug mode activation via 3 methods:
+  - CLI: `python -m promptbim gui --debug`
+  - Environment variable: `PROMPTBIM_DEBUG=1`
+  - .env file: `PROMPTBIM_DEBUG=1`
+- Debug logging added to all 50+ modules across the project:
+  - Land parsers: file paths, feature counts, coordinate ranges
+  - BIM generators: entity counts, file sizes, generation times
+  - Cost engine: QTO items, line items, category breakdowns
+  - MEP planner: grid sizes, A* iterations, route lengths, clash detection
+  - AI agents: API requests/responses, token counts, response times, JSON parsing
+  - Code engine: rule pass/fail stats, input values, compliance rates
+  - GUI: window init, tab switches, user interactions
+  - Voice/MCP/Web: session events, tool calls, generation requests
+- `config.py` — Added `debug_mode: bool` setting
+- `__main__.py` — Added `--debug` CLI flag for all subcommands
+- `tests/test_debug.py` — 12 tests covering logger creation, mode toggle, env vars, production mode
+
+---
+
 ## [1.0.0] - 2026-03-25
 
 ### Added (Sprint P10: Polish + Remaining Backlog)

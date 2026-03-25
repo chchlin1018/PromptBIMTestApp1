@@ -9,6 +9,9 @@ Each MEP system is rendered in a distinct colour:
 
 from __future__ import annotations
 
+from promptbim.debug import get_logger
+logger = get_logger("viz.mep_overlay")
+
 import numpy as np
 import pyvista as pv
 
@@ -49,6 +52,10 @@ def build_mep_meshes(
                 result.setdefault(route.system, []).append((mesh, color, label))
             seg_counter += 1
 
+    for sys_name, meshes in result.items():
+        if meshes:
+            logger.debug("MEP system '%s': %d pipe segments", sys_name, len(meshes))
+    logger.debug("build_mep_meshes complete: %d total segments", seg_counter)
     return result
 
 

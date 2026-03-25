@@ -6,6 +6,9 @@ Source: Building Technical Regulations (Design & Construction), Articles 69-108.
 from __future__ import annotations
 
 from promptbim.codes.base import BaseRule, CheckResult
+from promptbim.debug import get_logger
+
+logger = get_logger("codes.tw_fire_code")
 
 
 def _total_floor_area(plan) -> float:
@@ -32,9 +35,11 @@ class FireConstructionRule(BaseRule):
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = _num_stories(plan)
         total_area = _total_floor_area(plan)
+        logger.debug("FireConstructionRule: stories=%d, total_area=%.1f", num, total_area)
         results: list[CheckResult] = []
 
         if num > 15:
+            logger.debug("FireConstructionRule: >15F → fire rating 2hr required")
             results.append(self._info(
                 f"建築 {num} 層 > 15 層，主要構造應為防火時效 2hr 以上",
                 actual=num,
@@ -63,9 +68,11 @@ class FireCompartmentRule(BaseRule):
     law_reference = "建築技術規則建築設計施工編 第79條"
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
+        logger.debug("FireCompartmentRule: checking %d stories", len(plan.stories))
         results: list[CheckResult] = []
         for story in plan.stories:
             floor_area = sum(s.area_sqm for s in story.spaces) if story.spaces else 0
+            logger.debug("FireCompartmentRule: %s floor_area=%.1f sqm", story.name, floor_area)
             if floor_area > 1500:
                 compartments_needed = int(floor_area / 1500)
                 results.append(self._warning(
@@ -93,6 +100,7 @@ class FireEscapeRule(BaseRule):
         max_dist = 50.0
         if num > 15:
             max_dist = 40.0
+        logger.debug("FireEscapeRule: stories=%d, max_egress_dist=%.1fm", num, max_dist)
 
         results: list[CheckResult] = []
         # Estimate max distance from building dimensions
@@ -102,6 +110,8 @@ class FireEscapeRule(BaseRule):
             diagonal = ((max(xs) - min(xs)) ** 2 + (max(ys) - min(ys)) ** 2) ** 0.5
             # Worst-case egress ≈ half diagonal (stair at one end)
             est_egress = diagonal / 2
+            logger.debug("FireEscapeRule: diagonal=%.1fm, est_egress=%.1fm vs limit=%.1fm",
+                          diagonal, est_egress, max_dist)
 
             if est_egress > max_dist:
                 results.append(self._fail(
@@ -140,6 +150,7 @@ class TwoStairsRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = _num_stories(plan)
+        logger.debug("TwoStairsRule: stories=%d", num)
         if num < 6:
             return [self._pass(f"建築 {num} 層 < 6 層，不強制兩座直通樓梯")]
 
@@ -168,6 +179,7 @@ class SafetyStairRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = _num_stories(plan)
+        logger.debug("SafetyStairRule: stories=%d (threshold=15)", num)
         if num >= 15:
             return [self._info(
                 f"建築 {num} 層 >= 15 層，應設特別安全梯（排煙室面積 >= 5㎡）",

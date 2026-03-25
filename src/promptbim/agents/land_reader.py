@@ -7,11 +7,11 @@ sketches to extract land boundary polygons and metadata.
 from __future__ import annotations
 
 import json
-import logging
 
 from promptbim.agents.base import AgentResponse, BaseAgent, _try_extract_json
+from promptbim.debug import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.land_reader")
 
 LAND_READER_SYSTEM_PROMPT = """\
 You are an expert land surveyor and GIS analyst. Your task is to analyse an
@@ -86,6 +86,9 @@ class LandReaderAgent(BaseAgent):
             user_text += f"\n\nAdditional context: {context}"
 
         try:
+            import time as _time
+            logger.debug("Vision API request: model=%s, media=%s", self._model, media_type)
+            _t0 = _time.time()
             message = self.client.messages.create(
                 model=self._model,
                 max_tokens=self._max_tokens,
@@ -107,12 +110,15 @@ class LandReaderAgent(BaseAgent):
                     }
                 ],
             )
+            _elapsed = _time.time() - _t0
             text = message.content[0].text
             usage = {
                 "input_tokens": message.usage.input_tokens,
                 "output_tokens": message.usage.output_tokens,
             }
             json_data = _try_extract_json(text)
+            confidence = json_data.get("confidence", 0) if json_data else 0
+            logger.debug("Vision API response: %.2fs, tokens=%d/%d, confidence=%.2f", _elapsed, usage["input_tokens"], usage["output_tokens"], confidence)
             return AgentResponse(text=text, json_data=json_data, usage=usage)
         except Exception as exc:
             logger.exception("LandReaderAgent Vision API call failed")

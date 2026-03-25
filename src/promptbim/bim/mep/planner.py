@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from promptbim.debug import get_logger
 from promptbim.bim.mep.pathfinder import MEPPathfinder, RoutePath
 from promptbim.bim.mep.systems import (
     CEILING_LAYER_Z_OFFSET,
@@ -22,6 +23,8 @@ from promptbim.bim.mep.systems import (
     get_template,
 )
 from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan
+
+_logger = get_logger("mep.planner")
 
 
 @dataclass
@@ -109,6 +112,10 @@ class MEPPlanner:
             )
             result.routes.extend(routes)
 
+        _logger.debug(
+            "MEP plan: %d equipment, %d terminals, %d routes",
+            len(result.equipment), len(result.terminals), len(result.routes),
+        )
         return result
 
     # ---- equipment placement ----

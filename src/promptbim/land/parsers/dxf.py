@@ -6,7 +6,10 @@ from pathlib import Path
 
 from shapely.geometry import Polygon
 
+from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
+
+logger = get_logger("land.dxf")
 
 
 def parse_dxf(file_path: str | Path) -> list[LandParcel]:
@@ -14,9 +17,18 @@ def parse_dxf(file_path: str | Path) -> list[LandParcel]:
     import ezdxf
 
     file_path = Path(file_path)
+    logger.debug("Loading DXF: %s", file_path)
     doc = ezdxf.readfile(str(file_path))
     msp = doc.modelspace()
     parcels: list[LandParcel] = []
+
+    layers = set()
+    entity_types: dict[str, int] = {}
+    for e in msp:
+        layers.add(e.dxf.layer)
+        entity_types[e.dxftype()] = entity_types.get(e.dxftype(), 0) + 1
+    logger.debug("Layers: %s", sorted(layers))
+    logger.debug("Entity types: %s", entity_types)
 
     idx = 0
     for entity in msp:
@@ -61,4 +73,5 @@ def parse_dxf(file_path: str | Path) -> list[LandParcel]:
             )
         )
 
+    logger.debug("Parsed %d parcel(s) from DXF", len(parcels))
     return parcels

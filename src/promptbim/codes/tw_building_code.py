@@ -7,6 +7,9 @@ and parking requirements.
 from __future__ import annotations
 
 from promptbim.codes.base import BaseRule, CheckResult
+from promptbim.debug import get_logger
+
+logger = get_logger("codes.tw_building_code")
 
 
 # ---------------------------------------------------------------------------
@@ -64,10 +67,13 @@ class BCRRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         fp_area = _footprint_area(plan)
+        logger.debug("BCRRule: footprint_area=%.2f, land_area=%.2f", fp_area, land.area_sqm)
         if land.area_sqm <= 0:
             return [self._info("土地面積為零，無法計算建蔽率")]
         actual_bcr = fp_area / land.area_sqm
         limit = zoning.bcr_limit
+        logger.debug("BCRRule: actual_bcr=%.4f, limit=%.4f → %s", actual_bcr, limit,
+                      "FAIL" if actual_bcr > limit else "PASS")
 
         if actual_bcr > limit:
             return [self._fail(
@@ -100,10 +106,13 @@ class FARRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         total_area = _total_floor_area(plan)
+        logger.debug("FARRule: total_floor_area=%.2f, land_area=%.2f", total_area, land.area_sqm)
         if land.area_sqm <= 0:
             return [self._info("土地面積為零，無法計算容積率")]
         actual_far = total_area / land.area_sqm
         limit = zoning.far_limit
+        logger.debug("FARRule: actual_far=%.4f, limit=%.4f → %s", actual_far, limit,
+                      "FAIL" if actual_far > limit else "PASS")
 
         if actual_far > limit:
             return [self._fail(
@@ -137,6 +146,8 @@ class HeightLimitRule(BaseRule):
     def check(self, plan, land, zoning) -> list[CheckResult]:
         height = _building_height(plan)
         limit = zoning.height_limit_m
+        logger.debug("HeightLimitRule: height=%.2fm, limit=%.2fm → %s", height, limit,
+                      "FAIL" if height > limit else "PASS")
 
         if height > limit:
             return [self._fail(
@@ -169,11 +180,13 @@ class StairRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = _num_stories(plan)
+        logger.debug("StairRule: num_stories=%d", num)
         if num <= 1:
             return [self._pass("單層建築無樓梯要求")]
 
         total_area = _total_floor_area(plan)
         area_per_floor = total_area / num if num else 0
+        logger.debug("StairRule: area_per_floor=%.1f sqm", area_per_floor)
 
         results: list[CheckResult] = []
         if area_per_floor > 200:
@@ -202,6 +215,7 @@ class CorridorRule(BaseRule):
     law_reference = "建築技術規則建築設計施工編 第92條"
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
+        logger.debug("CorridorRule: checking %d stories", len(plan.stories))
         results: list[CheckResult] = []
         for story in plan.stories:
             for space in story.spaces:
@@ -212,6 +226,7 @@ class CorridorRule(BaseRule):
                         xs = [p[0] for p in space.boundary]
                         ys = [p[1] for p in space.boundary]
                         w = min(max(xs) - min(xs), max(ys) - min(ys))
+                        logger.debug("CorridorRule: %s/%s width=%.2fm", story.name, space.name, w)
                         if w < 1.2:
                             results.append(self._fail(
                                 f"{story.name} 走廊「{space.name}」寬 {w:.2f}m < 1.2m (單側居室最低)",
@@ -234,10 +249,13 @@ class CeilingHeightRule(BaseRule):
     law_reference = "建築技術規則建築設計施工編 第26條"
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
+        logger.debug("CeilingHeightRule: checking %d stories", len(plan.stories))
         results: list[CheckResult] = []
         for story in plan.stories:
             # Net ceiling height = story height - slab thickness
             net_height = story.height_m - story.slab_thickness_m
+            logger.debug("CeilingHeightRule: %s net_height=%.2fm (h=%.2f - slab=%.2f)",
+                          story.name, net_height, story.height_m, story.slab_thickness_m)
             if net_height < 2.1:
                 results.append(self._fail(
                     f"{story.name} 淨高 {net_height:.2f}m < 2.1m (居室最低)",
@@ -261,6 +279,7 @@ class ElevatorRule(BaseRule):
 
     def check(self, plan, land, zoning) -> list[CheckResult]:
         num = _num_stories(plan)
+        logger.debug("ElevatorRule: num_stories=%d", num)
         if num < 6:
             return [self._pass(f"建築 {num} 層 < 6 層，不強制設電梯")]
 
@@ -302,6 +321,8 @@ class ParkingRule(BaseRule):
         zone = zoning.zone_type
         threshold = PARKING_THRESHOLDS.get(zone, 150)
         required_spaces = max(1, int(total_area / threshold)) if total_area >= threshold else 0
+        logger.debug("ParkingRule: total_area=%.1f, zone=%s, threshold=%d, required=%d",
+                      total_area, zone, threshold, required_spaces)
 
         if required_spaces == 0:
             return [self._pass(

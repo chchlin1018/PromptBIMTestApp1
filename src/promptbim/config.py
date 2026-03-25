@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     default_city: str = Field(default="Taipei", description="Default city for zoning lookup")
     log_level: str = Field(default="INFO", description="Log level")
 
+    # Debug
+    debug_mode: bool = Field(default=False, description="Enable debug logging")
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
