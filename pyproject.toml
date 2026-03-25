@@ -1,6 +1,6 @@
 [project]
 name = "promptbim"
-version = "0.1.0"
+version = "1.4.0"
 description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -57,3 +57,8 @@ line-length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integration: end-to-end integration tests",
+    "api: tests requiring external API access",
+    "benchmark: performance benchmark tests",
+]

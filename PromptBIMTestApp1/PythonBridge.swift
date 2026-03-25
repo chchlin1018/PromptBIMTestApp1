@@ -15,6 +15,7 @@ class PythonBridge: ObservableObject {
     init() {
         self.projectRoot = PythonBridge.findProjectRoot()
         self.pythonPath = PythonBridge.findCondaPython()
+        NSLog("[PythonBridge] init — single instance created (python: \(self.pythonPath))")
         checkPython()
     }
 
@@ -57,12 +58,18 @@ class PythonBridge: ObservableObject {
             return cwd
         }
 
-        // Try 3: Well-known project path
+        // Try 3: Well-known project paths (including macOS lowercase variants)
         let home = NSHomeDirectory()
-        let knownPath = URL(fileURLWithPath: "\(home)/Documents/MyProjects/PromptBIMTestApp1")
-        let knownPyproject = knownPath.appendingPathComponent("pyproject.toml")
-        if FileManager.default.fileExists(atPath: knownPyproject.path) {
-            return knownPath
+        let knownPaths = [
+            "\(home)/Documents/MyProjects/PromptBIMTestApp1",
+            "\(home)/documents/myprojects/PromptBIMTestApp1",
+        ]
+        for path in knownPaths {
+            let knownURL = URL(fileURLWithPath: path)
+            let knownPyproject = knownURL.appendingPathComponent("pyproject.toml")
+            if FileManager.default.fileExists(atPath: knownPyproject.path) {
+                return knownURL
+            }
         }
 
         // Fallback to current directory
@@ -73,12 +80,13 @@ class PythonBridge: ObservableObject {
 
     /// Load .env file and parse key=value pairs into a dictionary.
     func loadDotEnv() -> [String: String]? {
+        let home = NSHomeDirectory()
         let candidates = [
             projectRoot.appendingPathComponent(".env"),
             URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 .appendingPathComponent(".env"),
-            URL(fileURLWithPath: NSHomeDirectory())
-                .appendingPathComponent("Documents/MyProjects/PromptBIMTestApp1/.env"),
+            URL(fileURLWithPath: "\(home)/Documents/MyProjects/PromptBIMTestApp1/.env"),
+            URL(fileURLWithPath: "\(home)/documents/myprojects/PromptBIMTestApp1/.env"),
         ]
 
         for url in candidates {
@@ -145,11 +153,11 @@ class PythonBridge: ObservableObject {
             }
             env["PROMPTBIM_DEBUG"] = "1"
             // Ensure Python can find the src package
-            let pythonPath = projectRoot.appendingPathComponent("src").path
+            let srcPath = projectRoot.appendingPathComponent("src").path
             if let existing = env["PYTHONPATH"] {
-                env["PYTHONPATH"] = "\(pythonPath):\(existing)"
+                env["PYTHONPATH"] = "\(srcPath):\(existing)"
             } else {
-                env["PYTHONPATH"] = pythonPath
+                env["PYTHONPATH"] = srcPath
             }
             process.environment = env
 
@@ -171,6 +179,7 @@ class PythonBridge: ObservableObject {
             }
 
             do {
+                ProcessInfo.processInfo.disableSuddenTermination()
                 try process.run()
                 DispatchQueue.main.async {
                     self.guiProcess = process
@@ -178,6 +187,7 @@ class PythonBridge: ObservableObject {
                     self.statusMessage = "PySide6 GUI launched"
                 }
             } catch {
+                ProcessInfo.processInfo.enableSuddenTermination()
                 DispatchQueue.main.async {
                     self.statusMessage = "Failed to launch PySide6 GUI: \(error.localizedDescription)"
                 }
@@ -192,6 +202,7 @@ class PythonBridge: ObservableObject {
             guiProcess = nil
             guiLaunched = false
             statusMessage = "PySide6 GUI terminated"
+            ProcessInfo.processInfo.enableSuddenTermination()
         }
     }
 

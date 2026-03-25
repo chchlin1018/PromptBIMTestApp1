@@ -28,6 +28,7 @@ TEST_LAND = LandParcel(
 TEST_BUILDABLE = [(5, 5), (45, 5), (45, 35), (5, 35)]
 
 
+@pytest.mark.integration
 class TestE2EPipeline:
     """Test the full pipeline: land -> template -> IFC -> USD -> USDZ -> export."""
 

@@ -28,6 +28,7 @@ def _find_env_file() -> str | None:
         Path.cwd() / ".env",
         Path(__file__).parent.parent.parent / ".env",
         Path.home() / "Documents" / "MyProjects" / "PromptBIMTestApp1" / ".env",
+        Path.home() / "documents" / "myprojects" / "PromptBIMTestApp1" / ".env",
     ]
 
     # Also check env var for explicit path

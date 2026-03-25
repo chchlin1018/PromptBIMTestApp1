@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v1.1.0 | **更新:** 2026-03-25 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v1.4.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -35,8 +35,9 @@
 | P10.2 | Debug Logging System | 1 | ✅ | All |
 | P10.3 | Startup Health Check + AI Validation | 1 | ✅ | P0, P4, P10.2 |
 | P11 | Xcode ↔ PySide6 GUI 整合 + E2E | 1 | ✅ | P0~P10.3 |
+| P12 | 品質修復 + 效能優化 + Demo 準備 | 1 | ✅ | P0~P11 |
 
-**預估總開發時間: ~42 天**
+**預估總開發時間: ~43 天**
 
 ---
 
@@ -343,6 +344,31 @@
 - ✅ 測試 + xcodebuild 通過 (668 passed, BUILD SUCCEEDED)
 
 **驗收標準:** Xcode Cmd+R → 自動啟動 PySide6 GUI; E2E 6 類測試通過; 向下相容 python -m promptbim gui
+
+---
+
+## P12: 品質修復 + 效能優化 + Demo 準備 (~1 天)
+
+### Part A: 品質修復 (Critical + Medium)
+- ✅ T1: 修復 PythonBridge 雙實例問題 (C1) — `@EnvironmentObject` 注入
+- ✅ T2: 修復 App 關閉未終止 Python Process (C2) — `AppDelegate.applicationWillTerminate`
+- ✅ T3: 修復 NSSupportsSuddenTermination 衝突 (C3) — Info.plist + programmatic management
+- ✅ T4: 修復 MacBook 小寫路徑問題 (M1) — `config.py` + `PythonBridge.swift`
+- ✅ T5: 修復 process.launch() 棄用 + 變數名衝突 (M5+L4) — `srcPath` rename
+
+### Part B: 效能優化
+- ✅ T6: Python 啟動速度優化 — `--version` 0.026s (已達標)
+- ✅ T7: Pipeline 效能基準 — IFC<3s, USD<3s, cost<1s, compliance<1s, full<5s
+- ✅ T8: Health Check 效能 — `check` ~4s (已達標), `check --ai` ~4s
+
+### Part C: Demo 準備 + 最終 Polish
+- ✅ T9: Demo 影片腳本 — `docs/DEMO_SCRIPT.md` (8 場景)
+- ✅ T10: 文件版本同步 — CHANGELOG/TODO/README/pyproject.toml → v1.4.0
+
+### Part D: 收尾驗證
+- ✅ T11: 全面驗證 + Tag — 675 passed, BUILD SUCCEEDED, git tag v1.4.0
+
+**驗收標準:** 3 Critical 修復; Pipeline < 5s; 8 場景 Demo 腳本; 675+ tests passed; git tag v1.4.0
 
 ---
 

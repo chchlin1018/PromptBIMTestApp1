@@ -6,6 +6,39 @@
 
 ---
 
+## [1.4.0] - 2026-03-26
+
+### Fixed (Sprint P12: Quality Fixes + Performance + Demo Prep)
+
+#### Critical Fixes
+- **C1: PythonBridge dual instance** — App now holds single `@StateObject` bridge, injected via `.environmentObject()` to ContentView
+- **C2: App close not terminating Python Process** — Added `AppDelegate` with `applicationWillTerminate` calling `bridge.terminateGUI()`
+- **C3: NSSupportsSuddenTermination conflict** — Set both `NSSupportsAutomaticTermination` and `NSSupportsSuddenTermination` to false in Info.plist; managed programmatically in PythonBridge
+
+#### Medium Fixes
+- **M1: MacBook lowercase path** — Added `~/documents/myprojects/` to search paths in both `config.py` and `PythonBridge.swift`
+- **M5+L4: process.launch() deprecation + variable name conflict** — Renamed shadowing `pythonPath` to `srcPath` in `launchPySide6GUI()`
+
+### Added
+- `docs/DEMO_SCRIPT.md` — 8-scene demo video script with narration, steps, and expected screens
+- `tests/test_integration/test_smoke.py` — Non-mock smoke tests (CLI version, health check, core imports)
+- Performance benchmarks with `@pytest.mark.benchmark`: IFC < 3s, USD < 3s, cost < 1s, compliance < 1s, full pipeline < 5s
+- pytest markers: `integration`, `api`, `benchmark` in `pyproject.toml`
+- Debug log in `PythonBridge.init()` to verify single-instance creation
+
+### Changed
+- `PromptBIMTestApp1App.swift` — Added `@NSApplicationDelegateAdaptor`, `environmentObject` injection
+- `ContentView.swift` — Changed from `@StateObject` to `@EnvironmentObject`
+- `Info.plist` — CFBundleVersion bumped to 12, SuddenTermination disabled
+- Performance test thresholds tightened (IFC 10s→3s, USD 10s→3s, compliance 2s→1s)
+
+### Stats
+- Tests: 675 passed (from 668)
+- xcodebuild: BUILD SUCCEEDED
+- git tag: v1.4.0
+
+---
+
 ## [1.3.0] - 2026-03-26
 
 ### Added (Sprint P11: Xcode ↔ PySide6 GUI Integration + E2E)
@@ -544,8 +577,11 @@
 | 0.4.8 | P4.8 完成 | 互動式修改引擎 |
 | 0.5.0 | P5 完成 | 語音 + 匯出 |
 | 0.6.0 | P6 完成 | 成本估算 (5D) |
-| 0.6.0 | P7 完成 | MEP 管線 |
-| 0.7.0 | P8 完成 | 施工模擬 |
+| 0.7.0 | P7+P8 完成 | MEP 管線 + 施工模擬 |
 | 0.8.5 | P8.5 完成 | 智慧監控點 |
 | 0.9.0 | P9 完成 | AI 圖像辨識 + MCP + Web UI |
-| 1.0.0 | 全部完成 | POC 完整版 |
+| 1.0.0 | P10 完成 | POC 完整版 |
+| 1.1.0 | P10.2 完成 | Debug Logging System |
+| 1.2.0 | P10.3 完成 | Startup Health Check |
+| 1.3.0 | P11 完成 | Xcode ↔ PySide6 整合 |
+| 1.4.0 | P12 完成 | 品質修復 + 效能優化 + Demo |

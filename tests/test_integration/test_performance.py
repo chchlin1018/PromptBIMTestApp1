@@ -20,6 +20,7 @@ BUILDABLE = [(5, 5), (95, 5), (95, 75), (5, 75)]
 class TestPerformance:
     """Performance benchmarks — ensure key operations complete within time limits."""
 
+    @pytest.mark.benchmark
     def test_template_generation_speed(self):
         """All templates should generate plans in under 1 second."""
         for key in ["school", "hospital", "factory"]:
@@ -29,8 +30,9 @@ class TestPerformance:
             assert elapsed < 1.0, f"{key} template took {elapsed:.2f}s"
             assert len(plan.stories) > 0
 
+    @pytest.mark.benchmark
     def test_ifc_generation_speed(self, tmp_path: Path):
-        """IFC generation for a 5-story building should complete in under 10 seconds."""
+        """IFC generation for a 5-story building should complete in under 3 seconds."""
         plan = generate_from_template("hospital", LAND, BUILDABLE, num_stories=5)
 
         from promptbim.bim.ifc_generator import IFCGenerator
@@ -38,10 +40,11 @@ class TestPerformance:
         start = time.monotonic()
         IFCGenerator().generate(plan, tmp_path / "perf.ifc")
         elapsed = time.monotonic() - start
-        assert elapsed < 10.0, f"IFC generation took {elapsed:.2f}s"
+        assert elapsed < 3.0, f"IFC generation took {elapsed:.2f}s"
 
+    @pytest.mark.benchmark
     def test_usd_generation_speed(self, tmp_path: Path):
-        """USD generation should complete in under 10 seconds."""
+        """USD generation should complete in under 3 seconds."""
         plan = generate_from_template("school", LAND, BUILDABLE, num_stories=4)
 
         from promptbim.bim.usd_generator import USDGenerator
@@ -49,10 +52,11 @@ class TestPerformance:
         start = time.monotonic()
         USDGenerator().generate(plan, tmp_path / "perf.usda")
         elapsed = time.monotonic() - start
-        assert elapsed < 10.0, f"USD generation took {elapsed:.2f}s"
+        assert elapsed < 3.0, f"USD generation took {elapsed:.2f}s"
 
+    @pytest.mark.benchmark
     def test_compliance_check_speed(self):
-        """Compliance check should complete in under 2 seconds."""
+        """Compliance check (run_all_checks) should complete in under 1 second."""
         from promptbim.schemas.zoning import ZoningRules
         from promptbim.codes.registry import run_all_checks
 
@@ -65,7 +69,63 @@ class TestPerformance:
             ZoningRules(),
         )
         elapsed = time.monotonic() - start
-        assert elapsed < 2.0, f"Compliance check took {elapsed:.2f}s"
+        assert elapsed < 1.0, f"Compliance check took {elapsed:.2f}s"
+
+    @pytest.mark.benchmark
+    def test_cost_estimation_speed(self):
+        """Cost estimation should complete in under 1 second."""
+        from promptbim.bim.cost.estimator import CostEstimator
+
+        plan = generate_from_template("hospital", LAND, BUILDABLE, num_stories=5)
+
+        start = time.monotonic()
+        estimate = CostEstimator().estimate(plan)
+        elapsed = time.monotonic() - start
+        assert elapsed < 1.0, f"Cost estimation took {elapsed:.2f}s"
+        assert estimate.total_cost_twd > 0
+
+    @pytest.mark.benchmark
+    def test_schedule_generation_speed(self, tmp_path: Path):
+        """Schedule generation should complete in under 2 seconds."""
+        from promptbim.bim.simulation.scheduler import generate_schedule
+        from promptbim.bim.ifc_generator import IFCGenerator
+        import ifcopenshell
+
+        plan = generate_from_template("school", LAND, BUILDABLE, num_stories=3)
+        ifc_path = tmp_path / "sched.ifc"
+        IFCGenerator().generate(plan, ifc_path)
+        model = ifcopenshell.open(str(ifc_path))
+        labels = [e.is_a() for e in model.by_type("IfcProduct")]
+
+        start = time.monotonic()
+        schedule = generate_schedule(labels, num_stories=len(plan.stories))
+        elapsed = time.monotonic() - start
+        assert elapsed < 2.0, f"Schedule generation took {elapsed:.2f}s"
+        assert len(schedule.phases) > 0
+
+    @pytest.mark.benchmark
+    def test_full_pipeline_speed(self, tmp_path: Path):
+        """Full pipeline (template -> IFC -> USD -> cost -> compliance) with mock AI < 5s."""
+        from promptbim.bim.ifc_generator import IFCGenerator
+        from promptbim.bim.usd_generator import USDGenerator
+        from promptbim.bim.cost.estimator import CostEstimator
+        from promptbim.codes.registry import run_all_checks
+        from promptbim.schemas.zoning import ZoningRules
+
+        start = time.monotonic()
+
+        plan = generate_from_template("hospital", LAND, BUILDABLE, num_stories=3)
+        IFCGenerator().generate(plan, tmp_path / "pipe.ifc")
+        USDGenerator().generate(plan, tmp_path / "pipe.usda")
+        CostEstimator().estimate(plan)
+        run_all_checks(
+            plan,
+            LandParcel(name="P", boundary=LAND, area_sqm=8000.0),
+            ZoningRules(),
+        )
+
+        elapsed = time.monotonic() - start
+        assert elapsed < 5.0, f"Full pipeline took {elapsed:.2f}s"
 
 
 class TestEdgeCases:

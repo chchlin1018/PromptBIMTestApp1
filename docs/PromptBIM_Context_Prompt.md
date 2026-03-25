@@ -12,8 +12,8 @@
 - **GitHub：** https://github.com/chchlin1018/PromptBIMTestApp1 (private, owner: chchlin1018)
 - **組織：** Reality Matrix Inc. / Michael Lin (林志錚)
 - **性質：** POC (Proof of Concept)
-- **版本：** v1.3.0（P11 完成，P12 待執行）
-- **測試：** 668 passed, xcodebuild BUILD SUCCEEDED
+- **版本：** v1.4.0（P12 完成）
+- **測試：** 675 passed, xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -24,10 +24,10 @@
 1. **Xcode SwiftUI** — Splash Screen + Python 環境偵測 + PySide6 啟動器
 2. **Python PySide6** — 完整功能的 GUI（透過 PythonBridge 從 SwiftUI 啟動）
 
-⚠️ **P11 已修復整合，但 P12 品質分析發現 3 個 Critical 問題待修：**
-- C1: PythonBridge 雙實例（App 和 ContentView 各建一個）
-- C2: App 關閉時未終止 Python Process（進程洩漏）
-- C3: NSSupportsSuddenTermination 衝突
+**P12 已修復所有 Critical 問題：**
+- C1: PythonBridge 單一實例（`@EnvironmentObject` 注入）✅
+- C2: App 關閉時正確終止 Python Process（`AppDelegate`）✅
+- C3: NSSupportsSuddenTermination 正確管理 ✅
 
 ### Python 後端（14+ 子模組）
 

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var bridge = PythonBridge()
+    @EnvironmentObject var bridge: PythonBridge
     @State private var showSetupHelp = false
 
     var body: some View {
@@ -17,7 +17,7 @@ struct ContentView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("v1.0.0")
+                Text("v1.4.0")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -145,4 +145,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(PythonBridge())
 }
