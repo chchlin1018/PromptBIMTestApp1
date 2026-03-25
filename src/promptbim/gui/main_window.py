@@ -25,6 +25,7 @@ from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
+from promptbim.gui.cost_panel import CostPanel
 from promptbim.viz.site_plan import SitePlanView
 
 
@@ -61,6 +62,8 @@ class MainWindow(QMainWindow):
         self._tabs.addTab(self._model_view, "3D Model")
         self._site_plan = SitePlanView()
         self._tabs.addTab(self._site_plan, "Site Plan")
+        self._cost_panel = CostPanel()
+        self._tabs.addTab(self._cost_panel, "Cost (5D)")
         splitter.addWidget(self._tabs)
 
         # Modification impact panel
@@ -109,13 +112,16 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Generation failed: {', '.join(result.errors)}")
 
     def set_building_plan(self, plan: BuildingPlan):
-        """Display a generated building plan in 3D and site plan views."""
+        """Display a generated building plan in 3D, site plan, and cost views."""
         self._model_view.set_plan(plan)
         self._site_plan.set_data(plan=plan)
+        estimate = self._cost_panel.estimate_from_plan(plan)
+        total_m = estimate.total_cost_twd / 1_000_000
         self._tabs.setCurrentIndex(1)  # switch to 3D Model tab
         self.statusBar().showMessage(
             f"Building: {plan.name} | {len(plan.stories)} floors | "
-            f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f}"
+            f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f} | "
+            f"Cost: NT${total_m:,.1f}M"
         )
 
     def _on_modification_done(self, plan, record):

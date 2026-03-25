@@ -9,7 +9,33 @@
 ## [Unreleased]
 
 ### 規劃中
-- P6~P8.5 完整開發計劃（詳見 TODO.md）
+- P7~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.6.0] - 2026-03-25
+
+### Added (Sprint P6: Cost Estimation / 5D BIM)
+- `bim/cost/qto.py` — Quantity Take-Off engine
+  - Extracts wall area, slab area, roof area, openings, MEP allowance, site work from BuildingPlan
+  - Shoelace polygon area calculation, per-story breakdown
+- `bim/cost/unit_prices_tw.py` — Taiwan construction unit price table
+  - 22 price entries across 8 categories (structure, envelope, interior, doors/windows, MEP, equipment, roof, site)
+  - TWD pricing for 2025-2026 market reference
+- `bim/cost/estimator.py` — Cost estimation engine
+  - Maps QTO items to unit prices, adds interior finish allowances (ceiling + floor tile)
+  - Produces CostEstimate with line items, category breakdown, cost-per-sqm
+  - JSON-serializable `to_dict()` output
+- `viz/cost_charts.py` — Cost visualization
+  - CostPieChart — matplotlib pie chart with percentage labels
+  - CostBarChart — horizontal bar chart with NT$ million labels
+- `gui/cost_panel.py` — Cost estimation GUI panel
+  - Summary header (total, floor area, cost/sqm)
+  - Tabbed view: Pie Chart / Bar Chart / Detail Table
+  - Auto-estimates on building plan generation
+- Integrated into MainWindow — "Cost (5D)" tab auto-populates after building generation
+- Status bar shows cost total alongside BCR/FAR
+- 28 new tests (293 total), xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -247,7 +273,8 @@
 | 0.3.0 | P3+P4 完成 | AI Agent + 3D 預覽 |
 | 0.4.0 | P4.5 完成 | 法規引擎 |
 | 0.4.8 | P4.8 完成 | 互動式修改引擎 |
-| 0.5.0 | P5+P6 完成 | 語音 + 成本估算 |
+| 0.5.0 | P5 完成 | 語音 + 匯出 |
+| 0.6.0 | P6 完成 | 成本估算 (5D) |
 | 0.6.0 | P7 完成 | MEP 管線 |
 | 0.7.0 | P8 完成 | 施工模擬 |
 | 1.0.0 | 全部完成 | POC 完整版 |

@@ -26,7 +26,7 @@
 | P4.5 | 台灣法規引擎 | 3 | ✅ | P4 |
 | P4.8 | 互動式修改引擎 | 2 | ✅ | P4 |
 | P5 | 語音 + 匯出 | 2 | ✅ | P4 |
-| P6 | 成本估算 (5D) | 2 | ⬜ | P2.5 |
+| P6 | 成本估算 (5D) | 2 | ✅ | P2.5 |
 | P7 | MEP 管線自動生成 | 4 | ⬜ | P4 |
 | P8 | 施工模擬 (4D) | 3 | ⬜ | P2 |
 | P8.5 | 智慧監控點自動配置 | 3 | ⬜ | P4, P7 |
@@ -190,12 +190,12 @@
 
 ## P6: 成本估算 (~2 天)
 
-- ⬜ `bim/cost/qto.py` — IFC 數量萃取 (QTO)
-- ⬜ `bim/cost/unit_prices_tw.py` — 台灣單價表
-- ⬜ `bim/cost/estimator.py` — 成本計算引擎
-- ⬜ `viz/cost_charts.py` — 圓餅圖/長條圖
-- ⬜ `gui/cost_panel.py` — GUI 整合
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/cost/qto.py` — IFC 數量萃取 (QTO)
+- ✅ `bim/cost/unit_prices_tw.py` — 台灣單價表
+- ✅ `bim/cost/estimator.py` — 成本計算引擎
+- ✅ `viz/cost_charts.py` — 圓餅圖/長條圖
+- ✅ `gui/cost_panel.py` — GUI 整合
+- ✅ 測試 + xcodebuild 通過 (293 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 生成建築後自動顯示估算總價 + 分項圓餅圖
 
