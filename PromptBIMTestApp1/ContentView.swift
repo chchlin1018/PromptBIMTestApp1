@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var bridge = PythonBridge()
+    @State private var showSetupHelp = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +17,7 @@ struct ContentView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("v0.1.0")
+                Text("v1.0.0")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -24,54 +25,117 @@ struct ContentView: View {
 
             Divider()
 
-            // Main content area
-            HSplitView {
-                // Left panel - Land info
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Land Info")
-                        .font(.headline)
-                    Text("No land data loaded")
+            // Main content — splash screen while launching
+            if bridge.guiLaunched {
+                // GUI is running — show status
+                VStack(spacing: 20) {
+                    Spacer()
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.green)
+                    Text("PySide6 GUI is running")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Text("The full PromptBIM interface is open in a separate window.")
+                        .foregroundColor(.secondary)
+                    Text("You can close this window or keep it open for status monitoring.")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    Button("Restart GUI") {
+                        bridge.terminateGUI()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            bridge.launchPySide6GUI()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else if !bridge.pythonAvailable {
+                // Python not found — show setup instructions
+                VStack(spacing: 16) {
+                    Spacer()
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.orange)
+                    Text("Python Environment Not Found")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Text("PromptBIM requires a conda environment named 'promptbim'.")
+                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Setup steps:")
+                            .fontWeight(.semibold)
+                        Text("1. Install Miniforge: brew install miniforge")
+                            .font(.system(.body, design: .monospaced))
+                        Text("2. conda create -n promptbim python=3.11 -y")
+                            .font(.system(.body, design: .monospaced))
+                        Text("3. conda activate promptbim")
+                            .font(.system(.body, design: .monospaced))
+                        Text("4. pip install -e .")
+                            .font(.system(.body, design: .monospaced))
+                        Text("5. See SETUP.md for full instructions")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    Button("Retry") {
+                        bridge.checkPython()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+            } else {
+                // Python available, GUI not yet launched — splash screen
+                VStack(spacing: 20) {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("PromptBIM is starting...")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Text("Launching PySide6 GUI...")
                         .foregroundColor(.secondary)
                     Spacer()
                 }
-                .frame(minWidth: 250, maxWidth: 350)
-                .padding()
-
-                // Center - Tab view
-                TabView {
-                    Text("2D View — Land parcel will appear here")
-                        .tabItem { Label("2D Map", systemImage: "map") }
-
-                    Text("3D View — Building model will appear here")
-                        .tabItem { Label("3D Model", systemImage: "cube") }
+                .frame(maxWidth: .infinity)
+                .onAppear {
+                    // Auto-launch PySide6 GUI once Python is confirmed
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        if bridge.pythonAvailable && !bridge.guiLaunched {
+                            bridge.launchPySide6GUI()
+                        }
+                    }
                 }
-                .frame(minWidth: 500)
             }
 
             Divider()
-
-            // Bottom - Chat panel
-            HStack {
-                Image(systemName: "bubble.left")
-                TextField("Describe the building you want to create...", text: .constant(""))
-                    .textFieldStyle(.roundedBorder)
-                Button(action: {}) {
-                    Image(systemName: "mic")
-                }
-                Button("Generate") {}
-                    .buttonStyle(.borderedProminent)
-            }
-            .padding()
 
             // Status bar
             HStack {
                 Text(bridge.statusMessage)
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
                 Spacer()
+                Circle()
+                    .fill(bridge.pythonAvailable ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
                 Text("Python: \(bridge.pythonAvailable ? "Connected" : "Not Found")")
                     .font(.caption)
                     .foregroundColor(bridge.pythonAvailable ? .green : .red)
+                if bridge.guiLaunched {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 8, height: 8)
+                    Text("GUI: Running")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
             }
             .padding(.horizontal)
             .padding(.bottom, 4)

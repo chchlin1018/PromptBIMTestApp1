@@ -34,8 +34,9 @@
 | P10 | Polish + Remaining Backlog | 2 | ✅ | P0~P9 |
 | P10.2 | Debug Logging System | 1 | ✅ | All |
 | P10.3 | Startup Health Check + AI Validation | 1 | ✅ | P0, P4, P10.2 |
+| P11 | Xcode ↔ PySide6 GUI 整合 + E2E | 1 | ✅ | P0~P10.3 |
 
-**預估總開發時間: ~41 天**
+**預估總開發時間: ~42 天**
 
 ---
 
@@ -324,6 +325,24 @@
 - ✅ Tests (42 new tests: health_check, ai_check, auto_fix, cli_check) — 645 total passed, xcodebuild BUILD SUCCEEDED
 
 **驗收標準:** `python -m promptbim check` 顯示 12 項檢查; GUI 啟動時顯示檢查面板; --json/--ai/--fix 子選項
+
+---
+
+## P11: Xcode ↔ PySide6 GUI 整合 + E2E (~1 天)
+
+- ✅ `PythonBridge.swift` — 新增 findCondaPython(), loadDotEnv(), findProjectRoot(), launchPySide6GUI(), terminateGUI()
+- ✅ `ContentView.swift` — Splash screen + Python 狀態顯示 + 安裝指引
+- ✅ `PromptBIMTestApp1App.swift` — App 生命週期整合
+- ✅ `config.py` — .env 多路徑搜尋 (_find_env_file)
+- ✅ `chat_panel.py` — 無土地時自動建立預設地塊
+- ✅ `gui/dialogs/import_land.py` — 拖放功能驗證通過
+- ✅ `gui/dialogs/confirm_boundary.py` — 邊界確認流程驗證通過
+- ✅ `tests/test_e2e_integration.py` — 23 個 E2E 整合測試 (6 類流程)
+- ✅ `Info.plist` — 支援檔案類型 (geojson, shp, dxf, kml, jpg, png, tiff) + CFBundleDocumentTypes
+- ✅ `project.pbxproj` — CURRENT_PROJECT_VERSION = 11
+- ✅ 測試 + xcodebuild 通過 (668 passed, BUILD SUCCEEDED)
+
+**驗收標準:** Xcode Cmd+R → 自動啟動 PySide6 GUI; E2E 6 類測試通過; 向下相容 python -m promptbim gui
 
 ---
 

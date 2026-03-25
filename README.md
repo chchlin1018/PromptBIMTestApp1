@@ -7,8 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-516%20passed-green.svg)]()
-[![POC](https://img.shields.io/badge/Stage-POC%20v0.9.0-orange.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-668%20passed-green.svg)]()
+[![POC](https://img.shields.io/badge/Stage-POC%20v1.0.0-orange.svg)]()
 
 ---
 
@@ -57,10 +57,12 @@ python -m promptbim check            # 環境健康檢查
 python -m promptbim check --ai       # 只檢查 Claude AI 連線
 ```
 
-### Xcode 開啟
+### Xcode 開啟 (推薦)
 
 ```bash
 open PromptBIMTestApp1.xcodeproj     # Scheme: PromptBIMTestApp1, Destination: My Mac
+# Cmd+R → 自動啟動 PySide6 完整功能 GUI
+# SwiftUI 窗口顯示啟動狀態 + Python 環境檢查
 ```
 
 ### 其他啟動方式

@@ -175,8 +175,15 @@ class ChatPanel(QWidget):
         logger.debug("User input: %s", prompt)
 
         if self._land is None:
-            self._append_system("Please import a land parcel first.")
-            return
+            # Create a default land parcel for prompt-only generation
+            from promptbim.schemas.land import LandParcel
+            logger.debug("No land loaded — creating default parcel for prompt-only generation")
+            self._land = LandParcel(
+                name="Auto-generated",
+                boundary=[(0, 0), (30, 0), (30, 30), (0, 30)],
+                area_sqm=900.0,
+            )
+            self._append_system("No land loaded — using default 30m\u00d730m (900 m\u00b2) parcel.")
 
         busy = (
             (self._worker is not None and self._worker.isRunning())

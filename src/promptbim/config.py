@@ -1,5 +1,6 @@
 """Application configuration using Pydantic BaseSettings."""
 
+import os
 from pathlib import Path
 
 from pydantic import Field
@@ -8,6 +9,39 @@ try:
     from pydantic_settings import BaseSettings
 except ImportError:
     from pydantic import BaseModel as BaseSettings
+
+from promptbim.debug import get_logger
+
+logger = get_logger("config")
+
+
+def _find_env_file() -> str | None:
+    """Search for .env file in multiple locations.
+
+    Search order:
+    1. Current working directory
+    2. Source package root (src/promptbim/../../.env)
+    3. Well-known project path (~/Documents/MyProjects/PromptBIMTestApp1/.env)
+    4. Environment variable PROMPTBIM_ENV_FILE
+    """
+    env_paths = [
+        Path.cwd() / ".env",
+        Path(__file__).parent.parent.parent / ".env",
+        Path.home() / "Documents" / "MyProjects" / "PromptBIMTestApp1" / ".env",
+    ]
+
+    # Also check env var for explicit path
+    env_file_override = os.getenv("PROMPTBIM_ENV_FILE")
+    if env_file_override:
+        env_paths.insert(0, Path(env_file_override))
+
+    for p in env_paths:
+        if p.exists():
+            logger.debug("Found .env at: %s", p)
+            return str(p)
+
+    logger.debug("No .env file found in any searched path")
+    return None
 
 
 class Settings(BaseSettings):
@@ -40,4 +74,9 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
-    return Settings()
+    env_file = _find_env_file()
+    if env_file:
+        # Override model_config with discovered path
+        return Settings(_env_file=env_file)
+    # Fallback: rely on environment variables only
+    return Settings(_env_file=None)

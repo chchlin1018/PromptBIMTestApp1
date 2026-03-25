@@ -6,6 +6,32 @@
 
 ---
 
+## [1.3.0] - 2026-03-26
+
+### Added (Sprint P11: Xcode ↔ PySide6 GUI Integration + E2E)
+
+- `PythonBridge.swift` — Full rewrite: auto-detect conda Python, .env loading, PySide6 GUI launch/terminate, project root discovery
+- `ContentView.swift` — Splash screen with Python environment status, setup instructions for missing env, restart button
+- `PromptBIMTestApp1App.swift` — App lifecycle management
+- `config.py` — Multi-path .env search: cwd → src root → well-known path → env var override
+- `chat_panel.py` — No-land fallback: auto-creates 30×30m default parcel when no land is loaded
+- `Info.plist` — Registered document types: geojson, shp, dxf, kml, jpg, png, tiff with UTI
+- `tests/test_e2e_integration.py` — 23 E2E integration tests covering 6 flow categories:
+  - Test 1: No-land + Prompt → IFC + USD generation
+  - Test 2: GeoJSON land + Prompt → full pipeline
+  - Test 3: Image AI recognition (mocked Vision API) → boundary confirm
+  - Test 4: Generate → Modify → Undo version history
+  - Test 5: Compliance + Cost + MEP + Monitoring
+  - Test 6: Export all formats (IFC + USD + USDZ + SVG + JSON + 4D schedule)
+- CURRENT_PROJECT_VERSION bumped to 11
+
+### Changed
+
+- Window default size reduced to 800×500 (splash screen optimized)
+- CFBundleShortVersionString updated to 1.0.0, CFBundleVersion to 11
+
+---
+
 ## [1.2.0] - 2026-03-25
 
 ### Added (Sprint P10.3: Startup Health Check + AI Validation)
