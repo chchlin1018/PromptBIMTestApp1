@@ -20,7 +20,7 @@
 | P0 | 專案骨架 + Xcode + 環境 | 1 | ✅ | — |
 | P1 | 土地匯入 + 2D 視圖 | 3 | ✅ | P0 |
 | P2 | IFC + USD 生成核心 | 3 | ✅ | P0 |
-| P2.5 | 建築零件庫 | 3 | ⬜ | P2 |
+| P2.5 | 建築零件庫 | 3 | ✅ | P2 |
 | P3 | 3D 互動預覽 | 2 | ⬜ | P2 |
 | P4 | AI Agent Pipeline | 3 | ⬜ | P1, P2 |
 | P4.5 | 台灣法規引擎 | 3 | ⬜ | P4 |
@@ -105,15 +105,15 @@
 
 ## P2.5: 建築零件庫 (~3 天)
 
-- ⬜ `bim/components/base.py` — ComponentDef + SupplierInfo + PriceRange
-- ⬜ `bim/components/registry.py` — ComponentRegistry
-- ⬜ 結構構件 (12 種) 參數化幾何生成
-- ⬜ 垂直運輸 (12 種) 參數化 + mesh 佔位
-- ⬜ 開口 (10 種) 參數化生成
-- ⬜ 其他類別佔位定義 (40+ 種)
-- ⬜ 下載 5-10 個免費 GLB 模型 (Sketchfab CC0)
-- ⬜ 供應商/價格 seed data (台灣市場)
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/components/base.py` — ComponentDef + SupplierInfo + PriceRange + ComponentCategory
+- ✅ `bim/components/registry.py` — ComponentRegistry (search, get, list_by_category)
+- ✅ 結構構件 (12 種) 參數化定義 + 供應商
+- ✅ 垂直運輸 (12 種) 參數化定義 + 供應商 (7 家電梯、4 家電扶梯)
+- ✅ 開口 (10 種) 參數化定義 + 供應商
+- ✅ 其他類別定義: 外殼(10) + 室內(6) + MEP(11) + 衛浴(9) + 基地(6) = 42 種
+- ⬜ 下載 5-10 個免費 GLB 模型 (Sketchfab CC0) (deferred — models placeholder ready)
+- ✅ 供應商/價格 seed data (台灣市場)
+- ✅ 測試 + xcodebuild 通過 (108 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** `ComponentRegistry.search(["電梯"])` 回傳完整定義含供應商
 

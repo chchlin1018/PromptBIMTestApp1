@@ -9,7 +9,35 @@
 ## [Unreleased]
 
 ### 規劃中
-- P2.5~P8.5 完整開發計劃（詳見 TODO.md）
+- P3~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.2.5] - 2026-03-25
+
+### Fixed (Pre-Task: P2 Code Review 修復)
+- `bim/geometry.py` — Replace fan triangulation with mapbox-earcut for concave polygon support (L/T-shaped footprints)
+- `bim/ifc_generator.py` — Read slab thickness from `StoryPlan.slab_thickness_m` instead of hardcoded 0.2
+- `bim/usd_generator.py` — Add per-face normals to USD mesh prims for Omniverse/Reality Composer compatibility
+- `bim/ifc_generator.py` — Remove unused `OpeningDef` import
+- `bim/materials.py` — Remove unused `field` import, fix Glass IFC style from MIRROR to GLASS
+- Added edge case tests: empty plan, zero-length wall, concave slab, USD round-trip + normals
+
+### Added (Sprint P2.5: 建築零件庫)
+- `bim/components/base.py` — ComponentDef, SupplierInfo, PriceRange, ComponentCategory Pydantic models
+- `bim/components/registry.py` — ComponentRegistry with search, get, list_by_category, register_many
+- 76 building component definitions across 8 categories:
+  - Structural (12): foundations, columns, beams, slabs, rebar, shear walls
+  - Envelope (10): exterior walls, curtain wall, roofs, parapet, canopy
+  - Interior (6): partitions, ceiling, raised floor, railings
+  - Openings (10): doors (6 types), windows (3 types), skylight
+  - Vertical Transport (12): elevators (3), escalators (2), walkway, stairs (4), ramps (2)
+  - MEP (11): HVAC, ducts, pipes, sprinklers, lights, electrical
+  - Fixtures (9): toilets, sinks, bathtub, shower, kitchen
+  - Site (6): parking, fence, trees, pavement
+- Taiwan market supplier/price seed data (7 elevator brands, 4 escalator brands, structural materials)
+- `bim/components/load_all.py` — Auto-registration of all components
+- 18 new component tests (108 total), xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -97,6 +125,7 @@
 | 0.0.1 | — | 文件初始化 |
 | 0.1.0 | P0 完成 | 專案骨架可執行 |
 | 0.2.0 | P1+P2 完成 | 土地匯入 + BIM 核心 |
+| 0.2.5 | P2.5 完成 | 建築零件庫 (76 種) |
 | 0.3.0 | P3+P4 完成 | AI Agent + 3D 預覽 |
 | 0.4.0 | P4.5 完成 | 法規引擎 |
 | 0.5.0 | P5+P6 完成 | 語音 + 成本估算 |
