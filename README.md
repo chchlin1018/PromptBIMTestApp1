@@ -77,6 +77,7 @@ PromptBIMTestApp1 是一個**概念驗證 (POC)** 專案。
 output/
 ├── model.ifc              ← BIM 模型（含 MEP + 監控點 IfcSensor）
 ├── model.usda             ← OpenUSD（含 monitor: namespace → IDTF 對接）
+├── model.usdz             ← Apple Vision Pro / Quick Look
 ├── floorplan_*.svg        ← 各層平面圖
 ├── site_plan.svg          ← 配置圖（土地+建築+退縮線）
 ├── mep_overlay.png        ← MEP 四色管線 3D 視圖
@@ -109,6 +110,7 @@ output/
 | P7 MEP | ✅ | 3D A* pathfinding + 4 systems + clash detection (338 tests) |
 | P8 施工(4D) | ✅ | 16-phase simulation + Gantt chart + GIF export (388 tests) |
 | P8.5 監控點 | ✅ | 48 sensor types + auto-placement + IFC/USD + dashboard JSON (440 tests) |
+| P9 AI圖像辨識+Backlog | ✅ | AI land image recognition + USDZ + MCP Server + Streamlit Web UI (516 tests) |
 
 ---
 
@@ -116,7 +118,7 @@ output/
 
 | 功能 | 說明 |
 |------|------|
-| 🗺️ **土地匯入** | GeoJSON / Shapefile / DXF / KML / 手動座標 / 隨意描述面積 |
+| 🗺️ **土地匯入** | GeoJSON / Shapefile / DXF / KML / 手動座標 / **AI 圖像辨識** (照片/截圖/手繪) |
 | 🧠 **AI 建築生成** | Claude Multi-Agent：Enhancer → Planner → Builder → Checker |
 | 📐 **雙格式 BIM** | IFC（IfcOpenShell）+ OpenUSD（pxr）同步輸出 |
 | 🔄 **即時互動修改** | 自然語言修改指令 → 增量更新所有關聯數據 |
@@ -127,6 +129,9 @@ output/
 | 📡 **智慧監控點** | 48 種 M&C 點自動配置（HVAC/電力/消防/結構/安全） |
 | 🗣️ **語音輸入** | 按住說話 → faster-whisper 本地辨識 |
 | 🧩 **零件庫** | 74 種建築零件 + IFC 映射 + 供應商 + 台灣市場價格 |
+| 📦 **USDZ 打包** | Apple Vision Pro / Quick Look 相容 |
+| 🔌 **MCP Server** | Claude Desktop 整合 (7 tools + 2 resources) |
+| 🌐 **Web UI** | Streamlit 瀏覽器介面 |
 
 ---
 

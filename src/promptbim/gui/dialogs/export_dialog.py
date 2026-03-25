@@ -50,6 +50,7 @@ class _ExportWorker(QThread):
         export_svg: bool,
         export_json: bool,
         export_report: bool,
+        export_usdz: bool = False,
     ) -> None:
         super().__init__()
         self._plan = plan
@@ -60,6 +61,7 @@ class _ExportWorker(QThread):
         self._export_svg = export_svg
         self._export_json = export_json
         self._export_report = export_report
+        self._export_usdz = export_usdz
 
     def run(self) -> None:
         try:
@@ -68,6 +70,7 @@ class _ExportWorker(QThread):
             total_steps = sum([
                 self._export_ifc,
                 self._export_usd,
+                self._export_usdz,
                 self._export_svg,
                 self._export_json,
                 self._export_report,
@@ -89,6 +92,14 @@ class _ExportWorker(QThread):
                 usd_path = self._export_usd_file()
                 if usd_path:
                     exported.append(f"USD: {usd_path.name}")
+
+            # 2b. USDZ
+            if self._export_usdz:
+                step += 1
+                self.progress.emit("Packing USDZ...", int(step / total_steps * 100))
+                usdz_path = self._export_usdz_file()
+                if usdz_path:
+                    exported.append(f"USDZ: {usdz_path.name}")
 
             # 3. SVG floor plans
             if self._export_svg:
@@ -154,6 +165,33 @@ class _ExportWorker(QThread):
         except Exception as exc:
             logger.warning("USD export failed: %s", exc)
             return None
+
+    def _export_usdz_file(self) -> Path | None:
+        """Pack USD into USDZ for Apple Quick Look / Vision Pro."""
+        # We need a .usda first
+        usd_source = None
+        if self._result and self._result.usd_path and Path(self._result.usd_path).exists():
+            usd_source = Path(self._result.usd_path)
+        else:
+            # Try to generate one
+            try:
+                from promptbim.bim.usd_generator import USDGenerator
+
+                gen = USDGenerator()
+                usd_source = self._output_dir / f"{self._plan.name}.usda"
+                gen.generate(self._plan, usd_source)
+            except Exception:
+                pass
+
+        if usd_source and usd_source.exists():
+            try:
+                from promptbim.bim.usdz_packer import pack_usdz
+
+                dest = self._output_dir / f"{self._plan.name}.usdz"
+                return pack_usdz(usd_source, dest)
+            except Exception as exc:
+                logger.warning("USDZ export failed: %s", exc)
+        return None
 
     def _export_svg_files(self) -> list[Path]:
         try:
@@ -225,6 +263,8 @@ class ExportDialog(QDialog):
         self._chk_ifc.setChecked(True)
         self._chk_usd = QCheckBox("USD (Universal Scene Description)")
         self._chk_usd.setChecked(True)
+        self._chk_usdz = QCheckBox("USDZ (Apple Quick Look / Vision Pro)")
+        self._chk_usdz.setChecked(False)
         self._chk_svg = QCheckBox("SVG Floor Plans (one per story)")
         self._chk_svg.setChecked(True)
         self._chk_json = QCheckBox("JSON (Building Plan data)")
@@ -233,7 +273,7 @@ class ExportDialog(QDialog):
         self._chk_report.setChecked(bool(self._result and self._result.compliance_report))
         self._chk_report.setEnabled(bool(self._result and self._result.compliance_report))
 
-        for chk in [self._chk_ifc, self._chk_usd, self._chk_svg, self._chk_json, self._chk_report]:
+        for chk in [self._chk_ifc, self._chk_usd, self._chk_usdz, self._chk_svg, self._chk_json, self._chk_report]:
             fmt_layout.addWidget(chk)
         layout.addWidget(fmt_group)
 
@@ -294,6 +334,7 @@ class ExportDialog(QDialog):
             export_svg=self._chk_svg.isChecked(),
             export_json=self._chk_json.isChecked(),
             export_report=self._chk_report.isChecked(),
+            export_usdz=self._chk_usdz.isChecked(),
         )
         self._worker.progress.connect(self._on_progress)
         self._worker.finished.connect(self._on_finished)

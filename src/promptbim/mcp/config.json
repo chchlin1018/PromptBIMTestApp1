@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "promptbim": {
+      "command": "python",
+      "args": ["-m", "promptbim.mcp.server"],
+      "env": {
+        "PYTHONPATH": "src"
+      }
+    }
+  }
+}

@@ -6,6 +6,71 @@
 
 ---
 
+## [0.9.0] - 2026-03-25
+
+### Added (Sprint P9: AI Land Image Recognition + Backlog)
+
+#### Part A: AI Land Image Recognition
+- `land/parsers/image_preprocess.py` — Image preprocessing pipeline
+  - PIL-based normalization (resize, contrast enhancement)
+  - HEIC → JPG conversion (via pillow-heif)
+  - PDF first page → PNG conversion (via PyMuPDF or pdfplumber)
+  - Base64 encoding for Claude Vision API
+  - Supports JPG, PNG, TIFF, BMP, WebP, HEIC, PDF
+- `land/parsers/image_ai.py` — AI image recognition parser
+  - Integrates LandReaderAgent with image preprocessing
+  - AIRecognitionResult with parcels, confidence, and raw data
+  - build_parcel_from_ai_data() for constructing LandParcel from AI JSON
+- `agents/land_reader.py` — Land Reader Agent (new Agent 6)
+  - Claude Vision API for land boundary extraction
+  - Multi-round refinement with user feedback
+  - Structured JSON output (boundary, area, scale, annotations, confidence)
+- `land/boundary_confirm.py` — Boundary confirmation logic
+  - BoundaryConfirmation with multiple candidates ranked by confidence
+  - Vertex adjustment with area/perimeter recalculation
+  - Polygon validation (vertex count, area, self-intersection)
+- `gui/dialogs/confirm_boundary.py` — Boundary confirmation GUI
+  - Matplotlib canvas with image overlay and boundary polygon
+  - Draggable vertices for fine-tuning
+  - Candidate switching, confidence display, validation warnings
+- `gui/dialogs/import_land.py` — Updated import dialog with tabs
+  - New "Image (AI)" tab for drag-and-drop image import
+  - Automatic AI recognition → confirmation flow
+  - Supports all image formats alongside existing GIS formats
+
+#### Part B1: USDZ Packer (Apple Vision Pro / Quick Look)
+- `bim/usdz_packer.py` — USD → USDZ packaging
+  - Primary: UsdUtils.CreateNewUsdzPackage (pxr)
+  - Fallback: ZIP-based packaging for environments without UsdUtils
+- `gui/dialogs/export_dialog.py` — Added USDZ export checkbox
+
+#### Part B2: MCP Server (Claude Desktop Integration)
+- `mcp/server.py` — FastMCP-based MCP Server
+  - 7 tools: import_land, set_zoning, generate_building, modify_building,
+    check_compliance, estimate_cost, auto_monitor
+  - 2 resources: building://current, building://land
+  - Shared per-session state for land/zoning/plan/result
+  - Claude Desktop config template in mcp/config.json
+- `mcp/config.json` — Claude Desktop server configuration
+
+#### Part B3: Web UI (Streamlit)
+- `web/app.py` — Full Streamlit web interface
+  - Sidebar: land import (manual/GeoJSON/AI image), zoning rules
+  - Main: prompt input, generate button, results display
+  - Tabs: Plan JSON, Compliance, Cost chart, File downloads
+
+### Changed
+- `schemas/land.py` — Extended LandParcel with ai_confidence, original_image_path, ai_annotations
+
+### Dependencies
+- Added `mcp>=1.0` (optional: mcp extra)
+- Added `streamlit>=1.55` (optional: web extra)
+
+### Tests
+- 76 new tests (516 total), xcodebuild BUILD SUCCEEDED
+
+---
+
 ## [0.8.5] - 2026-03-25
 
 ### Added (Sprint P8.5: Smart Monitoring Auto-Placement)
@@ -360,4 +425,6 @@
 | 0.6.0 | P6 完成 | 成本估算 (5D) |
 | 0.6.0 | P7 完成 | MEP 管線 |
 | 0.7.0 | P8 完成 | 施工模擬 |
+| 0.8.5 | P8.5 完成 | 智慧監控點 |
+| 0.9.0 | P9 完成 | AI 圖像辨識 + MCP + Web UI |
 | 1.0.0 | 全部完成 | POC 完整版 |

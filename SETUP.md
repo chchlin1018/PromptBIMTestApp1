@@ -121,6 +121,12 @@ pip install pytest ruff pytest-qt pytest-cov
 
 # 語音輸入（選用）
 pip install faster-whisper
+
+# MCP Server — Claude Desktop 整合（選用）
+pip install "mcp>=1.0"
+
+# Web UI — Streamlit（選用）
+pip install streamlit
 ```
 
 ### Step 5: 設定 API Key

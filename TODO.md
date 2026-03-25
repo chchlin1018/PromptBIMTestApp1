@@ -30,8 +30,9 @@
 | P7 | MEP 管線自動生成 | 4 | ✅ | P4 |
 | P8 | 施工模擬 (4D) | 3 | ✅ | P2 |
 | P8.5 | 智慧監控點自動配置 | 3 | ✅ | P4, P7 |
+| P9 | AI 土地圖像辨識 + Backlog | 3 | ✅ | P1, P4 |
 
-**預估總開發時間: ~34 天**
+**預估總開發時間: ~37 天**
 
 ---
 
@@ -246,15 +247,45 @@
 
 ---
 
+## P9: AI 土地圖像辨識 + Backlog 優先項目 (~3 天)
+
+### Part A: AI 土地圖像辨識
+- ✅ `land/parsers/image_preprocess.py` — 圖像預處理 (resize, contrast, HEIC/PDF 轉換, base64 編碼)
+- ✅ `land/parsers/image_ai.py` — AI 圖像辨識土地邊界 (Claude Vision API)
+- ✅ `agents/land_reader.py` — Land Reader Agent (Vision API + 多輪修正)
+- ✅ `land/boundary_confirm.py` — 邊界確認邏輯 (候選排序, 頂點微調, 驗證)
+- ✅ `schemas/land.py` — 擴充 LandParcel (ai_confidence, original_image_path, ai_annotations)
+- ✅ `gui/dialogs/confirm_boundary.py` — 邊界確認 GUI (原圖疊合 + 拖曳微調)
+- ✅ `gui/dialogs/import_land.py` — 更新匯入對話框 (新增 Image AI Tab)
+- ✅ 測試圖片 fixtures (4 張 Pic_MyLand 圖片)
+
+### Part B1: USDZ 打包
+- ✅ `bim/usdz_packer.py` — USD → USDZ (UsdUtils + ZIP fallback)
+- ✅ `gui/dialogs/export_dialog.py` — 新增 USDZ 匯出選項
+
+### Part B2: MCP Server
+- ✅ `mcp/server.py` — FastMCP Server (7 tools + 2 resources)
+- ✅ `mcp/config.json` — Claude Desktop 設定檔
+
+### Part B3: Web UI
+- ✅ `web/app.py` — Streamlit 完整功能 (土地匯入 + AI 生成 + 結果展示)
+
+### 收尾
+- ✅ 測試 + xcodebuild 通過 (516 passed, BUILD SUCCEEDED)
+
+**驗收標準:** 拖放圖片 → AI 辨識 → 確認 → 生成; MCP + Streamlit 可用
+
+---
+
 ## 未來 Backlog
 
 - ⬜ PDF 地籍圖 OCR 解析 (pdfplumber)
 - ⬜ KML 匯入 + 衛星底圖疊加
-- ⬜ MCP Server (Claude Desktop 整合)
-- ⬜ USDZ 打包 (Apple Vision Pro / Quick Look)
+- ✅ MCP Server (Claude Desktop 整合) — P9 完成
+- ✅ USDZ 打包 (Apple Vision Pro / Quick Look) — P9 完成
 - ⬜ 多建築 template (學校/醫院/廠房)
 - ⬜ Windows 測試 + 打包 (.exe)
 - ⬜ 地形高程整合
-- ⬜ Web UI (Streamlit/Gradio)
+- ✅ Web UI (Streamlit) — P9 完成
 - ⬜ NVIDIA Omniverse 連接測試
 - ⬜ Sederes API 整合 (精確耐震參數)

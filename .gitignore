@@ -51,3 +51,4 @@ src/promptbim/bim/components/models/*.glb
 src/promptbim/bim/components/models/*.obj
 !src/promptbim/bim/components/models/README.md
 Miniforge3-MacOSX-arm64.sh
+Pic_MyLand/

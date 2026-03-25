@@ -1,0 +1,345 @@
+"""PromptBIM MCP Server — Claude Desktop integration.
+
+Exposes PromptBIM functionality as MCP tools and resources so that
+Claude Desktop can generate buildings, check compliance, estimate costs,
+and query project state through the Model Context Protocol.
+
+Usage (standalone):
+    python -m promptbim.mcp.server
+
+Usage (Claude Desktop config):
+    Add to claude_desktop_config.json:
+    {
+        "mcpServers": {
+            "promptbim": {
+                "command": "python",
+                "args": ["-m", "promptbim.mcp.server"],
+                "env": {"ANTHROPIC_API_KEY": "sk-..."}
+            }
+        }
+    }
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import tempfile
+from pathlib import Path
+
+from mcp.server.fastmcp import FastMCP
+
+logger = logging.getLogger(__name__)
+
+mcp = FastMCP(
+    "PromptBIM",
+    instructions="AI-Powered BIM Building Generator — generate buildings from natural language on real land parcels",
+)
+
+# --------------------------------------------------------------------------
+# Shared state (per-server-session)
+# --------------------------------------------------------------------------
+_state: dict = {
+    "land": None,          # LandParcel dict
+    "zoning": None,        # ZoningRules dict
+    "plan": None,          # BuildingPlan dict
+    "result": None,        # GenerationResult dict
+    "output_dir": None,    # Path string
+}
+
+
+def _get_orchestrator():
+    """Lazy-create an Orchestrator instance."""
+    from promptbim.agents.orchestrator import Orchestrator
+
+    output_dir = _state.get("output_dir") or str(Path(tempfile.gettempdir()) / "promptbim_mcp")
+    return Orchestrator(output_dir=output_dir)
+
+
+# --------------------------------------------------------------------------
+# Tools
+# --------------------------------------------------------------------------
+
+
+@mcp.tool()
+def import_land(
+    boundary: list[list[float]],
+    name: str = "MCP Parcel",
+    area_sqm: float | None = None,
+) -> str:
+    """Import a land parcel by specifying boundary coordinates.
+
+    Args:
+        boundary: List of [x, y] coordinate pairs in metres (local coords).
+        name: Optional name for the parcel.
+        area_sqm: Optional area override. Computed from boundary if omitted.
+    """
+    from promptbim.schemas.land import LandParcel
+
+    coords = [(pt[0], pt[1]) for pt in boundary]
+
+    if area_sqm is None:
+        area_sqm = _shoelace_area(coords)
+
+    parcel = LandParcel(
+        name=name,
+        boundary=coords,
+        area_sqm=area_sqm,
+        source_type="mcp",
+    )
+    _state["land"] = parcel.model_dump()
+    return json.dumps({
+        "status": "ok",
+        "name": parcel.name,
+        "area_sqm": parcel.area_sqm,
+        "vertices": len(coords),
+    })
+
+
+@mcp.tool()
+def set_zoning(
+    zone_type: str = "residential",
+    far_limit: float = 2.0,
+    bcr_limit: float = 0.6,
+    height_limit_m: float = 15.0,
+    setback_front_m: float = 5.0,
+    setback_back_m: float = 3.0,
+    setback_left_m: float = 2.0,
+    setback_right_m: float = 2.0,
+) -> str:
+    """Set zoning rules for the current land parcel.
+
+    Args:
+        zone_type: Land use type (residential/commercial/industrial).
+        far_limit: Floor Area Ratio limit.
+        bcr_limit: Building Coverage Ratio limit.
+        height_limit_m: Maximum building height in metres.
+        setback_front_m: Front setback distance in metres.
+        setback_back_m: Back setback distance in metres.
+        setback_left_m: Left setback distance in metres.
+        setback_right_m: Right setback distance in metres.
+    """
+    from promptbim.schemas.zoning import ZoningRules
+
+    zoning = ZoningRules(
+        zone_type=zone_type,
+        far_limit=far_limit,
+        bcr_limit=bcr_limit,
+        height_limit_m=height_limit_m,
+        setback_front_m=setback_front_m,
+        setback_back_m=setback_back_m,
+        setback_left_m=setback_left_m,
+        setback_right_m=setback_right_m,
+    )
+    _state["zoning"] = zoning.model_dump()
+    return json.dumps({"status": "ok", "zoning": _state["zoning"]})
+
+
+@mcp.tool()
+def generate_building(prompt: str) -> str:
+    """Generate a building from a natural language description.
+
+    Requires import_land() to be called first. Uses the AI pipeline:
+    Enhancer -> Planner -> Builder -> Checker.
+
+    Args:
+        prompt: Natural language building description (e.g., "3-story office with rooftop garden").
+    """
+    if _state["land"] is None:
+        return json.dumps({"error": "No land imported. Call import_land() first."})
+
+    from promptbim.schemas.land import LandParcel
+    from promptbim.schemas.zoning import ZoningRules
+
+    land = LandParcel(**_state["land"])
+    zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else ZoningRules()
+
+    orch = _get_orchestrator()
+    result = orch.generate(prompt, land, zoning)
+
+    _state["plan"] = orch.plan.model_dump() if orch.plan else None
+    _state["result"] = result.model_dump(mode="json") if result else None
+
+    return json.dumps({
+        "status": "ok" if result.success else "error",
+        "building_name": result.building_name,
+        "stories": result.summary.get("stories", 0),
+        "bcr": result.summary.get("bcr", 0),
+        "far": result.summary.get("far", 0),
+        "ifc_path": str(result.ifc_path) if result.ifc_path else None,
+        "usd_path": str(result.usd_path) if result.usd_path else None,
+        "warnings": result.warnings[:5],
+        "errors": result.errors,
+    })
+
+
+@mcp.tool()
+def modify_building(command: str) -> str:
+    """Modify the current building with a natural language command.
+
+    Args:
+        command: Modification instruction (e.g., "change to 5 stories", "add swimming pool").
+    """
+    if _state["plan"] is None:
+        return json.dumps({"error": "No building generated. Call generate_building() first."})
+
+    from promptbim.schemas.zoning import ZoningRules
+
+    zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else None
+
+    orch = _get_orchestrator()
+    # Restore plan state
+    from promptbim.schemas.plan import BuildingPlan
+    orch.plan = BuildingPlan(**_state["plan"])
+
+    new_plan, record = orch.modify(command, zoning)
+
+    if new_plan:
+        _state["plan"] = new_plan.model_dump()
+
+    return json.dumps({
+        "status": "ok" if record and record.success else "failed",
+        "modification_type": record.modification_type if record else None,
+        "impacts": [str(i) for i in (record.impacts if record else [])],
+    })
+
+
+@mcp.tool()
+def check_compliance() -> str:
+    """Run Taiwan building code compliance check on the current building."""
+    if _state["plan"] is None:
+        return json.dumps({"error": "No building generated."})
+    if _state["land"] is None:
+        return json.dumps({"error": "No land imported."})
+
+    from promptbim.agents.checker import CheckerAgent
+    from promptbim.schemas.land import LandParcel
+    from promptbim.schemas.plan import BuildingPlan
+    from promptbim.schemas.zoning import ZoningRules
+
+    plan = BuildingPlan(**_state["plan"])
+    land = LandParcel(**_state["land"])
+    zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else ZoningRules()
+
+    checker = CheckerAgent()
+    result = checker.check(plan, land, zoning)
+
+    return json.dumps({
+        "passed": result.passed,
+        "violations_count": len(result.violations),
+        "violations": [
+            {"rule": v.rule, "severity": v.severity, "message": v.message}
+            for v in result.violations[:10]
+        ],
+        "suggestions": result.suggestions[:5],
+        "report_text": result.report_text[:2000] if result.report_text else "",
+    })
+
+
+@mcp.tool()
+def estimate_cost() -> str:
+    """Estimate construction cost for the current building (Taiwan market prices)."""
+    if _state["plan"] is None:
+        return json.dumps({"error": "No building generated."})
+
+    from promptbim.bim.cost.estimator import CostEstimator
+    from promptbim.schemas.plan import BuildingPlan
+
+    plan = BuildingPlan(**_state["plan"])
+    estimator = CostEstimator()
+    estimate = estimator.estimate(plan)
+
+    result = estimate.to_dict()
+    return json.dumps({
+        "total_twd": result.get("total_twd", 0),
+        "total_usd_approx": result.get("total_twd", 0) / 32,
+        "cost_per_sqm_twd": result.get("cost_per_sqm_twd", 0),
+        "categories": result.get("category_breakdown", {}),
+    })
+
+
+@mcp.tool()
+def auto_monitor() -> str:
+    """Automatically place smart monitoring points on the current building."""
+    if _state["plan"] is None:
+        return json.dumps({"error": "No building generated."})
+
+    from promptbim.bim.monitoring.auto_placement import AutoPlacement
+    from promptbim.schemas.plan import BuildingPlan
+
+    plan = BuildingPlan(**_state["plan"])
+    placer = AutoPlacement()
+    monitor_plan = placer.place(plan)
+
+    return json.dumps({
+        "total_monitors": monitor_plan.total_count,
+        "total_cost_twd": monitor_plan.total_cost_twd,
+        "by_category": {
+            cat: len(items) for cat, items in monitor_plan.by_category().items()
+        },
+    })
+
+
+# --------------------------------------------------------------------------
+# Resources
+# --------------------------------------------------------------------------
+
+
+@mcp.resource("building://current")
+def get_current_building() -> str:
+    """Get the current building state (plan + result summary)."""
+    if _state["plan"] is None:
+        return json.dumps({"status": "no_building", "message": "No building has been generated yet."})
+
+    plan = _state["plan"]
+    result = _state["result"]
+
+    return json.dumps({
+        "status": "ok",
+        "building_name": plan.get("name", ""),
+        "stories": len(plan.get("stories", [])),
+        "bcr": plan.get("building_bcr", 0),
+        "far": plan.get("building_far", 0),
+        "has_ifc": bool(result and result.get("ifc_path")),
+        "has_usd": bool(result and result.get("usd_path")),
+        "land": _state["land"],
+        "zoning": _state["zoning"],
+    })
+
+
+@mcp.resource("building://land")
+def get_current_land() -> str:
+    """Get the current land parcel data."""
+    if _state["land"] is None:
+        return json.dumps({"status": "no_land", "message": "No land has been imported yet."})
+    return json.dumps({"status": "ok", "land": _state["land"]})
+
+
+# --------------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------------
+
+
+def _shoelace_area(coords: list[tuple[float, float]]) -> float:
+    n = len(coords)
+    if n < 3:
+        return 0.0
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += coords[i][0] * coords[j][1]
+        area -= coords[j][0] * coords[i][1]
+    return abs(area) / 2.0
+
+
+# --------------------------------------------------------------------------
+# Entry point
+# --------------------------------------------------------------------------
+
+def main():
+    """Run the MCP server via stdio transport."""
+    mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()
