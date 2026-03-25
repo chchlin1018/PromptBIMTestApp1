@@ -13,6 +13,8 @@ class GenerationResult(BaseModel):
     ifc_path: Path | None = Field(default=None, description="Path to generated .ifc file")
     usd_path: Path | None = Field(default=None, description="Path to generated .usda file")
     summary: dict = Field(default_factory=dict, description="Building summary data")
+    compliance_report: dict = Field(default_factory=dict, description="Taiwan building code compliance report")
+    compliance_text: str = Field(default="", description="Human-readable compliance report")
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 

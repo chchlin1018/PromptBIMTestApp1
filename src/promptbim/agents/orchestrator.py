@@ -132,6 +132,12 @@ class Orchestrator:
             for v in (self.check_result.violations if self.check_result else [])
         ]
 
+        compliance_report = {}
+        compliance_text = ""
+        if self.check_result:
+            compliance_report = self.check_result.compliance_summary
+            compliance_text = self.check_result.report_text
+
         return GenerationResult(
             success=self.build_result.ok,
             building_name=self.plan.name,
@@ -143,6 +149,8 @@ class Orchestrator:
                 "far": self.plan.building_far,
                 "footprint_area": _poly_area(self.plan.building_footprint),
             },
+            compliance_report=compliance_report,
+            compliance_text=compliance_text,
             errors=self.build_result.errors,
             warnings=warnings,
         )

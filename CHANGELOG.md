@@ -9,7 +9,31 @@
 ## [Unreleased]
 
 ### 規劃中
-- P4.5~P8.5 完整開發計劃（詳見 TODO.md）
+- P4.8~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.4.0] - 2026-03-25
+
+### Added (Sprint P4.5: Taiwan Building Code Engine)
+- `codes/base.py` — BaseRule abstract class + CheckResult + Severity enum
+- `codes/tw_building_code.py` — 8 rules: BCR, FAR, height limit, stairs, corridors, ceiling height, elevators, parking
+- `codes/tw_seismic_code.py` — Seismic zone table (20 cities) + structural estimation (column size, shear wall)
+- `codes/tw_fire_code.py` — 5 rules: fire construction, compartment, egress distance, two stairs, safety stair
+- `codes/tw_accessibility_code.py` — Accessibility facilities check (ramp, elevator, toilet, parking, path)
+- `codes/tw_zoning_data.py` — BCR/FAR lookup for 6 major cities + non-urban land + generic fallback
+- `codes/registry.py` — 15 rules registered, batch check + compliance summary
+- `codes/report.py` — JSON report + human-readable text table generation
+
+### Changed
+- `agents/checker.py` — Now uses Taiwan building code engine for deterministic checks (15+ rules)
+  - Code results include rule_id, law_reference, severity, suggestion
+  - Compliance summary + report text included in CheckResult
+- `agents/planner.py` — Injects Taiwan building code constraints into Planner prompt
+  - Volume limits, evacuation safety, equipment requirements, seismic, accessibility
+- `agents/orchestrator.py` — Passes compliance report through to GenerationResult
+- `schemas/result.py` — Added compliance_report + compliance_text fields
+- 47 new code engine tests (211 total), xcodebuild BUILD SUCCEEDED
 
 ---
 

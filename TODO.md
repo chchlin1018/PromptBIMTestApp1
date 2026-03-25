@@ -23,7 +23,7 @@
 | P2.5 | 建築零件庫 | 3 | ✅ | P2 |
 | P3 | 3D 互動預覽 | 2 | ✅ | P2 |
 | P4 | AI Agent Pipeline | 3 | ✅ | P1, P2 |
-| P4.5 | 台灣法規引擎 | 3 | ⬜ | P4 |
+| P4.5 | 台灣法規引擎 | 3 | ✅ | P4 |
 | P4.8 | 互動式修改引擎 | 2 | ⬜ | P4 |
 | P5 | 語音 + 匯出 | 2 | ⬜ | P4 |
 | P6 | 成本估算 (5D) | 2 | ⬜ | P2.5 |
@@ -148,16 +148,16 @@
 
 ## P4.5: 台灣法規引擎 (~3 天)
 
-- ⬜ `codes/base.py` — BaseRule + CheckResult + Severity
-- ⬜ `codes/tw_building_code.py` — 建蔽率/容積率/高度/樓梯/走廊/電梯/停車
-- ⬜ `codes/tw_seismic_code.py` — 震區簡化表 + 結構概估規則
-- ⬜ `codes/tw_fire_code.py` — 防火區劃/逃生距離/安全梯
-- ⬜ `codes/tw_accessibility_code.py` — 無障礙設施
-- ⬜ `codes/tw_zoning_data.py` — 各縣市分區 BCR/FAR JSON
-- ⬜ `codes/registry.py` — 規則註冊 + 批次檢查
-- ⬜ `codes/report.py` — 合規報告 JSON + 表格
-- ⬜ 整合到 Checker Agent + Planner prompt
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `codes/base.py` — BaseRule + CheckResult + Severity
+- ✅ `codes/tw_building_code.py` — 建蔽率/容積率/高度/樓梯/走廊/電梯/停車 (8 rules)
+- ✅ `codes/tw_seismic_code.py` — 震區簡化表 + 結構概估規則 (20 cities)
+- ✅ `codes/tw_fire_code.py` — 防火區劃/逃生距離/安全梯 (5 rules)
+- ✅ `codes/tw_accessibility_code.py` — 無障礙設施
+- ✅ `codes/tw_zoning_data.py` — 各縣市分區 BCR/FAR JSON (6 cities + non-urban)
+- ✅ `codes/registry.py` — 規則註冊 + 批次檢查 (15 rules)
+- ✅ `codes/report.py` — 合規報告 JSON + 表格
+- ✅ 整合到 Checker Agent + Planner prompt
+- ✅ 測試 + xcodebuild 通過 (211 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 生成建築後自動執行 15+ 條法規檢查，輸出合規報告
 

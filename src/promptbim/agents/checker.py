@@ -1,7 +1,8 @@
 """Agent 4: Rule Checker.
 
 Validates a :class:`BuildingPlan` against zoning rules and building codes,
-using Claude to suggest fixes when violations are found.
+using the Taiwan building code engine for deterministic checks and Claude
+to suggest fixes when violations are found.
 """
 
 from __future__ import annotations
@@ -10,6 +11,10 @@ import logging
 from dataclasses import dataclass, field
 
 from promptbim.agents.base import BaseAgent
+from promptbim.codes.base import Severity
+from promptbim.codes.base import CheckResult as CodeCheckResult
+from promptbim.codes.registry import run_all_checks, get_compliance_summary
+from promptbim.codes.report import generate_report_table
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
@@ -32,6 +37,9 @@ class CheckResult:
 
     violations: list[CheckViolation] = field(default_factory=list)
     suggestions: list[str] = field(default_factory=list)
+    code_results: list[CodeCheckResult] = field(default_factory=list)
+    compliance_summary: dict = field(default_factory=dict)
+    report_text: str = ""
 
     @property
     def passed(self) -> bool:
@@ -39,20 +47,22 @@ class CheckResult:
 
 
 CHECKER_SYSTEM_PROMPT = """\
-You are a building code compliance checker. Given a list of violations
-found in a building plan, suggest specific fixes for each violation.
+You are a Taiwan building code compliance checker. Given a list of violations
+found in a building plan (based on Taiwan Building Technical Regulations),
+suggest specific fixes for each violation.
 
 ## INPUT
 You receive a list of violations, each with:
-- rule: the rule name
+- rule_id: the Taiwan building code rule ID
+- law_reference: the specific law article
 - message: what went wrong
-- severity: error or warning
+- severity: fail or warning
 
 ## OUTPUT
 Return a JSON object:
 {
   "suggestions": [
-    "Specific fix suggestion 1",
+    "Specific fix suggestion 1 (in Chinese preferred)",
     "Specific fix suggestion 2",
     ...
   ]
@@ -63,7 +73,7 @@ Be concise and actionable. Return ONLY the JSON.
 
 
 class CheckerAgent(BaseAgent):
-    """Agent 4 — validates building plans and suggests fixes."""
+    """Agent 4 — validates building plans against Taiwan building codes."""
 
     SYSTEM_PROMPT = CHECKER_SYSTEM_PROMPT
 
@@ -73,69 +83,71 @@ class CheckerAgent(BaseAgent):
         land: LandParcel,
         zoning: ZoningRules,
     ) -> CheckResult:
-        """Check *plan* against zoning rules. Returns a :class:`CheckResult`.
+        """Check *plan* against Taiwan building codes.
 
-        Deterministic checks run locally; Claude is only called when
-        violations are found, to generate fix suggestions.
+        Runs the full code engine deterministically, then asks Claude for
+        fix suggestions if violations are found.
         """
-        violations = self._check_rules(plan, land, zoning)
-        result = CheckResult(violations=violations)
+        # Run Taiwan building code engine
+        code_results = run_all_checks(plan, land, zoning)
+        compliance = get_compliance_summary(code_results)
+        report_text = generate_report_table(code_results)
 
-        if violations:
-            suggestions = self._get_suggestions(violations)
+        # Convert code engine fails/warnings to legacy CheckViolation format
+        violations = self._code_results_to_violations(code_results)
+        result = CheckResult(
+            violations=violations,
+            code_results=code_results,
+            compliance_summary=compliance,
+            report_text=report_text,
+        )
+
+        # Also run legacy checks for footprint containment
+        legacy_violations = self._check_legacy_rules(plan, land, zoning)
+        result.violations.extend(legacy_violations)
+
+        if result.violations:
+            suggestions = self._get_suggestions(result.violations, code_results)
             result.suggestions = suggestions
+
+        logger.info(
+            "Compliance: %d passed, %d warnings, %d failed (rate: %.1f%%)",
+            compliance.get("passed", 0),
+            compliance.get("warnings", 0),
+            compliance.get("failed", 0),
+            compliance.get("compliance_rate", 0),
+        )
 
         return result
 
-    def _check_rules(
+    def _code_results_to_violations(
+        self, code_results: list[CodeCheckResult]
+    ) -> list[CheckViolation]:
+        """Convert code engine results to CheckViolation list."""
+        violations: list[CheckViolation] = []
+        for cr in code_results:
+            if cr.severity == Severity.FAIL:
+                violations.append(CheckViolation(
+                    rule=cr.rule_id,
+                    message=cr.message_zh,
+                    severity="error",
+                ))
+            elif cr.severity == Severity.WARNING:
+                violations.append(CheckViolation(
+                    rule=cr.rule_id,
+                    message=cr.message_zh,
+                    severity="warning",
+                ))
+        return violations
+
+    def _check_legacy_rules(
         self,
         plan: BuildingPlan,
         land: LandParcel,
         zoning: ZoningRules,
     ) -> list[CheckViolation]:
-        """Run deterministic rule checks."""
+        """Footprint containment check (not covered by code engine)."""
         violations: list[CheckViolation] = []
-
-        # 1. BCR check
-        if plan.building_bcr > zoning.bcr_limit:
-            violations.append(
-                CheckViolation(
-                    rule="BCR",
-                    message=(
-                        f"Building coverage ratio {plan.building_bcr:.2%} "
-                        f"exceeds limit {zoning.bcr_limit:.2%}"
-                    ),
-                )
-            )
-
-        # 2. FAR check
-        if plan.building_far > zoning.far_limit:
-            violations.append(
-                CheckViolation(
-                    rule="FAR",
-                    message=(
-                        f"Floor area ratio {plan.building_far:.2f} "
-                        f"exceeds limit {zoning.far_limit:.2f}"
-                    ),
-                )
-            )
-
-        # 3. Height check
-        if plan.stories:
-            top = plan.stories[-1]
-            total_height = top.elevation_m + top.height_m
-            if total_height > zoning.height_limit_m:
-                violations.append(
-                    CheckViolation(
-                        rule="Height",
-                        message=(
-                            f"Building height {total_height:.1f}m "
-                            f"exceeds limit {zoning.height_limit_m:.1f}m"
-                        ),
-                    )
-                )
-
-        # 4. Footprint containment check
         if plan.building_footprint and plan.buildable_area:
             try:
                 from shapely.geometry import Polygon
@@ -152,42 +164,51 @@ class CheckerAgent(BaseAgent):
                         )
             except Exception:
                 logger.warning("Could not verify footprint containment")
-
-        # 5. Minimum story height
-        for story in plan.stories:
-            if story.height_m < 2.4:
-                violations.append(
-                    CheckViolation(
-                        rule="MinHeight",
-                        message=f"Story {story.name} height {story.height_m}m < 2.4m minimum",
-                        severity="warning",
-                    )
-                )
-
         return violations
 
-    def _get_suggestions(self, violations: list[CheckViolation]) -> list[str]:
+    def _get_suggestions(
+        self,
+        violations: list[CheckViolation],
+        code_results: list[CodeCheckResult] | None = None,
+    ) -> list[str]:
         """Ask Claude for fix suggestions (best-effort)."""
+        # Build context from code results for richer suggestions
         violations_text = "\n".join(
             f"- [{v.severity}] {v.rule}: {v.message}" for v in violations
         )
 
+        # Include suggestions from code engine
+        code_suggestions = []
+        if code_results:
+            for cr in code_results:
+                if cr.suggestion and cr.severity in (Severity.FAIL, Severity.WARNING):
+                    code_suggestions.append(f"[{cr.rule_id}] {cr.suggestion}")
+
         try:
-            response = self.run(f"Violations found:\n{violations_text}")
+            prompt = f"Violations found:\n{violations_text}"
+            if code_suggestions:
+                prompt += f"\n\nCode engine suggestions:\n" + "\n".join(
+                    f"- {s}" for s in code_suggestions
+                )
+            response = self.run(prompt)
             if response.ok and response.json_data:
                 return response.json_data.get("suggestions", [])
         except Exception:
             logger.warning("Could not get AI suggestions for violations")
 
-        # Fallback: generate basic suggestions locally
+        # Fallback: use code engine suggestions directly
+        if code_suggestions:
+            return code_suggestions
+
+        # Legacy fallback
         suggestions = []
         for v in violations:
-            if v.rule == "BCR":
-                suggestions.append("Reduce building footprint area")
-            elif v.rule == "FAR":
-                suggestions.append("Reduce number of stories or footprint area")
-            elif v.rule == "Height":
-                suggestions.append("Reduce number of stories or story height")
+            if "BCR" in v.rule:
+                suggestions.append("縮小建築投影面積")
+            elif "FAR" in v.rule:
+                suggestions.append("減少樓層數或縮小各層面積")
+            elif "Height" in v.rule or "24-1" in v.rule:
+                suggestions.append("減少樓層數或降低層高")
             elif v.rule == "Setback":
-                suggestions.append("Move building footprint within buildable area")
+                suggestions.append("將建築平面移入可建築範圍內")
         return suggestions

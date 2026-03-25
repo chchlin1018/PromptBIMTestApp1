@@ -11,6 +11,7 @@ import json
 import logging
 
 from promptbim.agents.base import AgentResponse, BaseAgent
+from promptbim.codes.tw_seismic_code import get_min_column_cm, get_seismic_params
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
@@ -114,6 +115,7 @@ class PlannerAgent(BaseAgent):
         zoning: ZoningRules,
         buildable_area: list[tuple[float, float]],
     ) -> str:
+        code_constraints = _get_code_constraints(land, zoning, req.num_stories)
         return (
             f"## Land Parcel\n"
             f"- Boundary: {land.boundary}\n"
@@ -127,6 +129,7 @@ class PlannerAgent(BaseAgent):
             f"left={zoning.setback_left_m}m, right={zoning.setback_right_m}m\n\n"
             f"## Buildable Area (after setback)\n"
             f"- Polygon: {buildable_area}\n\n"
+            f"{code_constraints}\n\n"
             f"## Building Requirement\n"
             f"- Type: {req.building_type}\n"
             f"- Stories: {req.num_stories}\n"
@@ -285,4 +288,42 @@ def _fallback_box(
         building_far=round(far, 4),
         stories=stories,
         roof=RoofPlan(roof_type="flat"),
+    )
+
+
+def _get_code_constraints(
+    land: LandParcel,
+    zoning: ZoningRules,
+    num_stories: int = 3,
+) -> str:
+    """Generate Taiwan building code constraints for the Planner prompt."""
+    city = getattr(land, "city", "") or ""
+    seismic = get_seismic_params(city)
+    min_col = get_min_column_cm(num_stories)
+
+    return (
+        f"## Taiwan Building Code Constraints (MUST comply)\n\n"
+        f"### Volume Limits\n"
+        f"- BCR limit: {zoning.bcr_limit:.0%} "
+        f"(footprint <= {land.area_sqm * zoning.bcr_limit:.1f} m2)\n"
+        f"- FAR limit: {zoning.far_limit:.0%} "
+        f"(total floor area <= {land.area_sqm * zoning.far_limit:.1f} m2)\n"
+        f"- Height limit: {zoning.height_limit_m:.1f}m\n"
+        f"- Setbacks: front {zoning.setback_front_m}m, back {zoning.setback_back_m}m, "
+        f"left {zoning.setback_left_m}m, right {zoning.setback_right_m}m\n\n"
+        f"### Evacuation Safety\n"
+        f"- Corridor width: double-side rooms >= 1.6m, single-side >= 1.2m\n"
+        f"- Max egress distance to stair: <= 50m\n"
+        f"- 6F+ with room area > 200m2: need 2 egress stairs\n"
+        f"- Stair width >= 1.2m, riser <= 20cm, tread >= 24cm\n\n"
+        f"### Equipment\n"
+        f"- 6F+: elevator required (>= 8 persons)\n"
+        f"- 10F+: >= 2 elevators (including emergency)\n"
+        f"- Parking: office per 100m2, residential per 150m2\n\n"
+        f"### Seismic (city: {city or 'default'})\n"
+        f"- Ss={seismic['Ss']}, S1={seismic['S1']}\n"
+        f"- RC column min: {min_col}cm x {min_col}cm\n\n"
+        f"### Accessibility\n"
+        f"- Public buildings: accessible ramp, elevator (>= 1.1m x 1.35m), "
+        f"toilet (>= 4m2), parking (width >= 3.5m)\n"
     )
