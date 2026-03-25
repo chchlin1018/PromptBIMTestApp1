@@ -28,7 +28,7 @@
 | P5 | 語音 + 匯出 | 2 | ✅ | P4 |
 | P6 | 成本估算 (5D) | 2 | ✅ | P2.5 |
 | P7 | MEP 管線自動生成 | 4 | ✅ | P4 |
-| P8 | 施工模擬 (4D) | 3 | ⬜ | P2 |
+| P8 | 施工模擬 (4D) | 3 | ✅ | P2 |
 | P8.5 | 智慧監控點自動配置 | 3 | ⬜ | P4, P7 |
 
 **預估總開發時間: ~34 天**
@@ -218,13 +218,13 @@
 
 ## P8: 施工模擬 (~3 天)
 
-- ⬜ `bim/simulation/construction_phases.py` — 階段模板
-- ⬜ `bim/simulation/scheduler.py` — AI 排程
-- ⬜ `bim/simulation/animator.py` — PyVista 4D 動畫
-- ⬜ `viz/gantt_chart.py` — 甘特圖
-- ⬜ `gui/simulation_tab.py` — 時間軸滑桿 + 播放
-- ⬜ 匯出 GIF 動畫
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/simulation/construction_phases.py` — 16-phase construction template with IFC class mapping
+- ✅ `bim/simulation/scheduler.py` — Schedule generation (phase assignment + duration scaling)
+- ✅ `bim/simulation/animator.py` — PyVista 4D animation engine + GIF export
+- ✅ `viz/gantt_chart.py` — Interactive Gantt chart (matplotlib, synced with 3D view)
+- ✅ `gui/simulation_tab.py` — Timeline slider + play/pause + Gantt panel + GIF export button
+- ✅ 匯出 GIF 動畫 (via imageio)
+- ✅ 測試 + xcodebuild 通過 (388 passed, BUILD SUCCEEDED)
 
 **驗收標準:** 拖動滑桿看施工進度 + 匯出動畫 + 甘特圖
 

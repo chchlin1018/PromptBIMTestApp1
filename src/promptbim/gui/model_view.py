@@ -105,6 +105,23 @@ class ModelView(QWidget):
                 clipped = clip_model_at_elevation(self._all_meshes, cut_z)
                 self._render_meshes(clipped)
 
+    def set_simulation_frame(
+        self,
+        frame_meshes: list[tuple["pv.PolyData", str, float]],
+    ) -> None:
+        """Render a 4D simulation frame.
+
+        Args:
+            frame_meshes: List of (polydata, color, opacity) tuples.
+        """
+        if self._plotter is None:
+            return
+        self._plotter.clear()
+        for pd, color, opacity in frame_meshes:
+            self._plotter.add_mesh(pd, color=color, opacity=opacity, show_edges=True, edge_color="gray")
+        self._plotter.reset_camera()
+        self._plotter.render()
+
     def close(self):
         if self._plotter is not None:
             try:

@@ -9,7 +9,37 @@
 ## [Unreleased]
 
 ### 規劃中
-- P8~P8.5 完整開發計劃（詳見 TODO.md）
+- P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.8.0] - 2026-03-25
+
+### Added (Sprint P8: Construction Simulation / 4D BIM)
+- `bim/simulation/construction_phases.py` — 16-phase construction template
+  - Standard phases from site prep to MEP finish with IFC class mapping
+  - Component classifier maps mesh labels to construction phases
+- `bim/simulation/scheduler.py` — Construction schedule generator
+  - Phase assignment from component labels, duration scaling by building size
+  - Visibility state tracking (hidden/in_progress/completed) per day
+- `bim/simulation/animator.py` — PyVista 4D animation engine
+  - Frame rendering with semi-transparent orange for in-progress, grey for completed
+  - GIF export via imageio with configurable FPS and window size
+- `viz/gantt_chart.py` — Interactive Gantt chart (matplotlib)
+  - Horizontal bar chart with phase colours, active phase highlight
+  - Day marker line synchronized with timeline slider
+  - SVG export for construction schedule documentation
+- `gui/simulation_tab.py` — 4D Simulation Tab
+  - Timeline slider to scrub construction days
+  - Play/pause button with auto-advance timer
+  - Gantt chart panel synchronized with 3D view
+  - GIF export button with file dialog
+- Integrated 4D simulation tab into MainWindow
+- ModelView gains `set_simulation_frame()` for 4D rendering
+- 50 new tests (388 total), xcodebuild BUILD SUCCEEDED
+
+### Dependencies
+- Added `imageio` for GIF animation export
 
 ---
 

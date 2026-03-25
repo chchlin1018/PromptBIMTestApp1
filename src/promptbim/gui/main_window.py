@@ -26,6 +26,7 @@ from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
 from promptbim.gui.cost_panel import CostPanel
+from promptbim.gui.simulation_tab import SimulationTab
 from promptbim.viz.site_plan import SitePlanView
 
 
@@ -64,6 +65,9 @@ class MainWindow(QMainWindow):
         self._tabs.addTab(self._site_plan, "Site Plan")
         self._cost_panel = CostPanel()
         self._tabs.addTab(self._cost_panel, "Cost (5D)")
+        self._sim_tab = SimulationTab()
+        self._sim_tab.day_changed.connect(self._on_sim_day_changed)
+        self._tabs.addTab(self._sim_tab, "4D Simulation")
         splitter.addWidget(self._tabs)
 
         # Modification impact panel
@@ -112,17 +116,46 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Generation failed: {', '.join(result.errors)}")
 
     def set_building_plan(self, plan: BuildingPlan):
-        """Display a generated building plan in 3D, site plan, and cost views."""
+        """Display a generated building plan in 3D, site plan, cost, and 4D views."""
         self._model_view.set_plan(plan)
         self._site_plan.set_data(plan=plan)
         estimate = self._cost_panel.estimate_from_plan(plan)
         total_m = estimate.total_cost_twd / 1_000_000
+
+        # Feed 4D simulation
+        self._setup_simulation(plan)
+
         self._tabs.setCurrentIndex(1)  # switch to 3D Model tab
         self.statusBar().showMessage(
             f"Building: {plan.name} | {len(plan.stories)} floors | "
             f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f} | "
             f"Cost: NT${total_m:,.1f}M"
         )
+
+    def _setup_simulation(self, plan: BuildingPlan):
+        """Initialize 4D simulation from a BuildingPlan."""
+        from promptbim.viz.model_3d import build_model
+
+        meshes_data = build_model(plan)
+        mesh_dict = {}
+        color_dict = {}
+        for pd, color, label in meshes_data:
+            mesh_dict[label] = pd
+            color_dict[label] = color
+
+        self._sim_tab.set_building_data(
+            meshes=mesh_dict,
+            mesh_colors=color_dict,
+            num_stories=len(plan.stories),
+        )
+
+    def _on_sim_day_changed(self, day: int):
+        """Update 3D view when simulation day changes."""
+        animator = self._sim_tab.animator
+        if not animator:
+            return
+        frame_meshes = animator.get_frame_meshes(day)
+        self._model_view.set_simulation_frame(frame_meshes)
 
     def _on_modification_done(self, plan, record):
         """Handle a completed modification."""
