@@ -105,6 +105,11 @@ class ChatPanel(QWidget):
             on_status=lambda s: self._on_status(s.message, s.progress)
         )
 
+        # Voice input
+        from promptbim.voice.stt import VoiceInput
+
+        self._voice = VoiceInput()
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
 
@@ -131,11 +136,18 @@ class ChatPanel(QWidget):
 
         self._mic_btn = QPushButton("Mic")
         self._mic_btn.setFixedWidth(50)
+        self._mic_btn.setCheckable(True)
+        self._mic_btn.clicked.connect(self._on_mic_toggle)
         input_row.addWidget(self._mic_btn)
 
         self._gen_btn = QPushButton("Generate")
         self._gen_btn.clicked.connect(self._on_send)
         input_row.addWidget(self._gen_btn)
+
+        self._export_btn = QPushButton("Export")
+        self._export_btn.setEnabled(False)
+        self._export_btn.clicked.connect(self._on_export)
+        input_row.addWidget(self._export_btn)
 
         layout.addLayout(input_row)
 
@@ -143,6 +155,8 @@ class ChatPanel(QWidget):
         self._land: LandParcel | None = None
         self._zoning: ZoningRules | None = None
         self._has_plan = False
+        self._current_plan: BuildingPlan | None = None
+        self._current_result: GenerationResult | None = None
 
     def set_context(
         self, land: "LandParcel", zoning: "ZoningRules | None" = None
@@ -246,7 +260,40 @@ class ChatPanel(QWidget):
         self._progress.setValue(int(progress * 100))
         self._append_system(message)
 
+    def _on_mic_toggle(self) -> None:
+        """Toggle voice recording on/off."""
+        if self._mic_btn.isChecked():
+            self._mic_btn.setText("Stop")
+            self._mic_btn.setStyleSheet("background-color: #f44336; color: white;")
+            self._voice.start_recording()
+            self._append_system("Recording... click Stop when done.")
+        else:
+            self._mic_btn.setText("Mic")
+            self._mic_btn.setStyleSheet("")
+            self._append_system("Transcribing...")
+            self._voice.stop_and_transcribe(callback=self._on_transcription)
+
+    def _on_transcription(self, text: str) -> None:
+        """Called from voice thread with transcribed text."""
+        if text:
+            self._input.setText(text)
+            self._append_system(f"Voice: {text}")
+        else:
+            self._append_system("No speech detected or transcription failed.")
+
+    def _on_export(self) -> None:
+        """Open the export dialog."""
+        if self._current_plan is None:
+            self._append_system("No building to export yet.")
+            return
+        from promptbim.gui.dialogs.export_dialog import ExportDialog
+
+        dlg = ExportDialog(self._current_plan, self._current_result, parent=self)
+        dlg.exec()
+
     def _on_plan_ready(self, plan: "BuildingPlan") -> None:
+        self._current_plan = plan
+        self._export_btn.setEnabled(True)
         self.plan_ready.emit(plan)
 
     def _on_finished(self, result: "GenerationResult") -> None:
@@ -256,6 +303,7 @@ class ChatPanel(QWidget):
 
         if result.success:
             self._has_plan = True
+            self._current_result = result
             summary = result.summary
             self._append_ai(
                 f"Building generated: {result.building_name}\n"

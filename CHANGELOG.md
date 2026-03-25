@@ -9,7 +9,29 @@
 ## [Unreleased]
 
 ### 規劃中
-- P5~P8.5 完整開發計劃（詳見 TODO.md）
+- P6~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.5.0] - 2026-03-25
+
+### Added (Sprint P5: Voice Input + Export)
+- `voice/stt.py` — Speech-to-text engine
+  - faster-whisper local transcription (auto-detect language)
+  - AudioRecorder via sounddevice (16kHz 16-bit PCM)
+  - VoiceInput high-level API with async callback support
+  - Graceful fallback when faster-whisper/sounddevice unavailable
+- Voice button in Chat panel — toggle recording with visual feedback
+- `viz/floorplan.py` — Per-floor SVG plan generation
+  - Walls (exterior/interior), spaces with labels, openings (door/window)
+  - Compass indicator, auto-scaling, Y-flip for standard 2D view
+  - `generate_floorplans()` file output + `generate_floorplan_svg_strings()` in-memory
+- `gui/dialogs/export_dialog.py` — One-click export dialog
+  - IFC + USD + SVG floor plans + JSON plan + Compliance report
+  - Background thread export with progress bar
+  - Copy existing files or regenerate from plan
+- Export button in Chat panel (enabled after generation)
+- 30 new tests (265 total)
 
 ---
 

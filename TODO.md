@@ -25,7 +25,7 @@
 | P4 | AI Agent Pipeline | 3 | ✅ | P1, P2 |
 | P4.5 | 台灣法規引擎 | 3 | ✅ | P4 |
 | P4.8 | 互動式修改引擎 | 2 | ✅ | P4 |
-| P5 | 語音 + 匯出 | 2 | ⬜ | P4 |
+| P5 | 語音 + 匯出 | 2 | ✅ | P4 |
 | P6 | 成本估算 (5D) | 2 | ⬜ | P2.5 |
 | P7 | MEP 管線自動生成 | 4 | ⬜ | P4 |
 | P8 | 施工模擬 (4D) | 3 | ⬜ | P2 |
@@ -178,11 +178,11 @@
 
 ## P5: 語音 + 匯出 (~2 天)
 
-- ⬜ `voice/stt.py` — faster-whisper 本地語音辨識
-- ⬜ 語音按鈕整合到 Chat 面板
-- ⬜ 匯出對話框 (IFC + USD + SVG + JSON 一鍵打包)
-- ⬜ `viz/floorplan.py` — 各層平面圖 SVG
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `voice/stt.py` — faster-whisper 本地語音辨識
+- ✅ 語音按鈕整合到 Chat 面板
+- ✅ 匯出對話框 (IFC + USD + SVG + JSON 一鍵打包)
+- ✅ `viz/floorplan.py` — 各層平面圖 SVG
+- ✅ 測試 + xcodebuild 通過 (265 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** 語音描述 → 完整生成 → 一鍵匯出 5 件套
 
