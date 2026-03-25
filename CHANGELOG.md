@@ -6,6 +6,55 @@
 
 ---
 
+## [1.0.0] - 2026-03-25
+
+### Added (Sprint P10: Polish + Remaining Backlog)
+
+#### KML Import + Satellite Basemap
+- `land/parsers/kml.py` — KML/KMZ parser using fastkml
+  - Supports .kml and .kmz (ZIP-wrapped) files
+  - Recursive Placemark extraction (handles nested Folders/Documents)
+  - pygeoif → shapely geometry conversion
+- `viz/basemap.py` — Satellite basemap overlay for 2D map view
+  - OpenStreetMap + Esri Satellite tile providers
+  - contextily integration with placeholder fallback
+  - `gui/map_view.py` — Added basemap style toggle
+
+#### Multiple Building Templates
+- `bim/templates/school.py` — School building template
+  - Central corridor with classrooms on both sides
+  - Configurable stories, office/library on ground floor
+- `bim/templates/hospital.py` — Hospital building template
+  - H-shaped layout with ER, wards, radiology
+  - Configurable 1-20+ stories
+- `bim/templates/factory.py` — Factory building template
+  - Large production hall (70%) + office wing (30%)
+  - Gable roof, roller door, optional 2nd floor
+- `bim/templates/__init__.py` — Template registry with `generate_from_template()`
+
+#### NVIDIA Omniverse Connection
+- `bim/omniverse.py` — OmniverseConnector
+  - omni.client integration (when available)
+  - HTTP fallback for Nucleus server connectivity
+  - Upload, list, and test connection operations
+
+#### End-to-End Integration Tests
+- `tests/test_integration/test_e2e_pipeline.py` — 13 E2E tests
+  - template → IFC → USD → USDZ → compliance → cost → MEP → simulation → monitoring
+  - KML import → LandParcel roundtrip
+  - BuildingPlan JSON serialization roundtrip
+
+#### Performance & Edge Cases
+- `tests/test_integration/test_performance.py` — Performance benchmarks + edge case tests
+  - Template generation, IFC/USD generation, compliance check speed limits
+  - Very small land, 20-story buildings, irregular shapes, empty buildable area
+
+### Stats
+- Tests: 591 passed (from 516)
+- xcodebuild: BUILD SUCCEEDED
+
+---
+
 ## [0.9.0] - 2026-03-25
 
 ### Added (Sprint P9: AI Land Image Recognition + Backlog)

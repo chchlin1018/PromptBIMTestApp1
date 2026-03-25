@@ -31,8 +31,9 @@
 | P8 | 施工模擬 (4D) | 3 | ✅ | P2 |
 | P8.5 | 智慧監控點自動配置 | 3 | ✅ | P4, P7 |
 | P9 | AI 土地圖像辨識 + Backlog | 3 | ✅ | P1, P4 |
+| P10 | Polish + Remaining Backlog | 2 | ✅ | P0~P9 |
 
-**預估總開發時間: ~37 天**
+**預估總開發時間: ~39 天**
 
 ---
 
@@ -277,15 +278,29 @@
 
 ---
 
+## P10: Polish + Remaining Backlog (~2 天)
+
+- ✅ KML 匯入 + 衛星底圖疊加 (fastkml + basemap overlay)
+- ✅ 多建築 template (學校/醫院/廠房) — 3 templates + registry
+- ✅ NVIDIA Omniverse 連接測試 — OmniverseConnector + config
+- ✅ End-to-end 整合測試 (template → IFC → USD → USDZ → compliance → cost → MEP → simulation → monitoring)
+- ✅ 效能優化 + 邊界案例修復
+- ✅ 最終文件更新
+- ✅ 測試 + xcodebuild 通過 (591 passed, BUILD SUCCEEDED)
+
+**驗收標準:** 所有 backlog 項目完成 + 全部測試通過
+
+---
+
 ## 未來 Backlog
 
 - ⬜ PDF 地籍圖 OCR 解析 (pdfplumber)
-- ⬜ KML 匯入 + 衛星底圖疊加
+- ✅ KML 匯入 + 衛星底圖疊加 — P10 完成
 - ✅ MCP Server (Claude Desktop 整合) — P9 完成
 - ✅ USDZ 打包 (Apple Vision Pro / Quick Look) — P9 完成
-- ⬜ 多建築 template (學校/醫院/廠房)
+- ✅ 多建築 template (學校/醫院/廠房) — P10 完成
 - ⬜ Windows 測試 + 打包 (.exe)
 - ⬜ 地形高程整合
 - ✅ Web UI (Streamlit) — P9 完成
-- ⬜ NVIDIA Omniverse 連接測試
+- ✅ NVIDIA Omniverse 連接測試 — P10 完成
 - ⬜ Sederes API 整合 (精確耐震參數)

@@ -27,11 +27,17 @@ class MapView(QWidget):
 
         self._parcel: LandParcel | None = None
         self._buildable_area: list[tuple[float, float]] = []
+        self._basemap_style: str = "none"
 
     def set_parcel(self, parcel: LandParcel, buildable_area: list[tuple[float, float]] | None = None):
         """Display a land parcel with optional buildable area overlay."""
         self._parcel = parcel
         self._buildable_area = buildable_area or []
+        self._redraw()
+
+    def set_basemap_style(self, style: str) -> None:
+        """Set basemap style ('osm', 'satellite', 'none') and redraw."""
+        self._basemap_style = style
         self._redraw()
 
     def _redraw(self):
@@ -58,6 +64,21 @@ class MapView(QWidget):
             by = [c[1] for c in self._buildable_area] + [self._buildable_area[0][1]]
             self._ax.fill(bx, by, alpha=0.2, color="blue", label="Buildable area")
             self._ax.plot(bx, by, "b--", linewidth=1.5)
+
+        # Basemap overlay
+        if self._basemap_style != "none" and coords:
+            try:
+                from promptbim.viz.basemap import add_basemap, calculate_bounds
+
+                bounds = calculate_bounds(coords)
+                add_basemap(
+                    self._ax,
+                    bounds,
+                    crs=self._parcel.crs,
+                    style=self._basemap_style,
+                )
+            except Exception:
+                pass  # basemap is best-effort
 
         # Area annotation
         if coords:
