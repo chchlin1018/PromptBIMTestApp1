@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.2.0 | **更新:** 2026-03-25
+> **版本:** v1.3.0 | **更新:** 2026-03-25
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 本文件中標記為 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -9,11 +9,11 @@
 ## 開發前必讀順序
 
 ```
-1. PROMPT.md    ← 執行指令 + 文件檢查清單（最重要！）
-2. SKILL.md     ← 專案 SSOT（架構、Schema、Agent Prompt、開發規範）
-3. TODO.md      ← 確認當前 Sprint 狀態
-4. 對應 Addendum ← 依當前 Sprint 讀取技術規格
-5. CLAUDE.md    ← 本文件（行為規範）
+1. PROMPT_P{X}.md ← 當前 Sprint 的執行指令（最重要！）
+2. SKILL.md       ← 專案 SSOT（架構、Schema、Agent Prompt、開發規範）
+3. TODO.md        ← 確認當前 Sprint 狀態
+4. 對應 Addendum   ← 依當前 Sprint 讀取技術規格
+5. CLAUDE.md      ← 本文件（行為規範）
 ```
 
 ---
@@ -27,6 +27,214 @@
 - 輸入 AI Prompt（如 "帶游泳池的3層別墅"）
 
 系統自動完成所有後續工作（BIM 生成、MEP、法規、4D/5D、監控點、即時修改）。
+
+---
+
+## [MANDATORY] 自動執行模式 — 不得詢問用戶
+
+> ⚠️ **Claude Code 在執行 Sprint 時，不得中途停下來詢問用戶任何問題。**
+> ⚠️ **所有決策由 Claude Code 自行判斷並執行。答案永遠是 Yes / OK。**
+
+### 規則
+
+1. **不要問「是否要繼續？」** — 直接繼續
+2. **不要問「要用 A 還是 B 方案？」** — 自己選擇最佳方案並執行
+3. **不要問「這樣可以嗎？」** — 直接做，不需確認
+4. **遇到錯誤不要問** — 自己修復，修到通過為止
+5. **遇到模糊需求** — 參考 SKILL.md 和 Addendum 自行決定，不要問
+6. **需要安裝新套件** — 直接安裝，不要問
+7. **檔案衝突** — 以 SKILL.md 為準，不要問
+
+### 唯一例外
+
+只有在以下情況可以停下來通知用戶（不是問問題，是通知）：
+- `.env` 中的 API Key 未設定（無法繼續）
+- Git push 因為 remote 衝突失敗（需要手動 resolve）
+- Xcode 缺少必要的 signing certificate
+
+**通知格式：**
+```
+⚠️ 無法繼續: {原因}
+請手動處理後，重新執行: claude --dangerously-skip-permissions -p "繼續 Sprint P{X}"
+```
+
+---
+
+## [MANDATORY] 每個 Sprint 一個 PROMPT 檔案
+
+> ⚠️ **每個 Sprint 必須有獨立的 Prompt 檔案，用於啟動和追蹤該 Sprint。**
+
+### 命名規則
+
+```
+PROMPT.md        ← 總覽（Sprint 目錄 + 通用規則）
+PROMPT_P0.md     ← Sprint P0 專用執行指令
+PROMPT_P1.md     ← Sprint P1 專用執行指令
+PROMPT_P2.md     ← Sprint P2 專用執行指令
+...
+PROMPT_P8.5.md   ← Sprint P8.5 專用執行指令
+```
+
+### Sprint 完成時，必須建立下一個 Sprint 的 PROMPT 檔案
+
+每個 `PROMPT_P{X}.md` 必須包含：
+
+```markdown
+# PROMPT_P{X}.md — Sprint P{X}: {名稱}
+
+> 版本: v1.0.0 | 建立時間: {日期}
+> 前置 Sprint: P{X-1} ✅ 已完成
+> 依賴: {列出依賴的 Sprint}
+
+## 環境檢查（見下方 [MANDATORY] 環境檢查）
+
+## 必讀文件
+1. SKILL.md
+2. TODO.md
+3. CLAUDE.md
+4. {對應的 Addendum 檔案}
+
+## 本 Sprint 的 Task 清單
+（從 TODO.md 複製該 Sprint 的所有 task）
+
+## 執行指令
+所有問題答案都是 Yes，不要中斷詢問。
+工作結束前嚴格遵循 CLAUDE.md [MANDATORY] 步驟。
+
+## 驗收標準
+{從 TODO.md 複製}
+```
+
+### CLI 啟動格式
+
+```bash
+# 每個 Sprint 獨立啟動
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P0.md 並執行所有 task。不要問任何問題。"
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P1.md 並執行所有 task。不要問任何問題。"
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P2.md 並執行所有 task。不要問任何問題。"
+```
+
+---
+
+## [MANDATORY] 跨機器環境檢查
+
+> ⚠️ **每次 Sprint 開始前，必須先檢查執行環境。**
+> ⚠️ **開發者可能從 MacBook Air、Mac Mini 等不同機器執行 Claude Code。**
+
+### 環境檢查腳本（每次 Sprint 開始前必須執行）
+
+```bash
+echo "========================================"
+echo "🖥️  環境檢查 — $(hostname)"
+echo "========================================"
+echo ""
+
+# 1. 機器識別
+echo "--- 機器資訊 ---"
+echo "Hostname: $(hostname)"
+echo "macOS: $(sw_vers -productVersion)"
+echo "Chip: $(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo 'Apple Silicon')"
+echo "User: $(whoami)"
+echo ""
+
+# 2. 開發工具
+echo "--- 開發工具 ---"
+echo "Git: $(git --version 2>/dev/null || echo '❌ 未安裝')"
+echo "Xcode: $(xcodebuild -version 2>/dev/null | head -1 || echo '❌ 未安裝')"
+echo "Python: $(python3 --version 2>/dev/null || echo '❌ 未安裝')"
+echo "Conda: $(conda --version 2>/dev/null || echo '❌ 未安裝')"
+echo ""
+
+# 3. Git 狀態
+echo "--- Git 狀態 ---"
+git remote -v
+git log --oneline -3
+echo "Current branch: $(git branch --show-current)"
+echo "Uncommitted changes: $(git status --porcelain | wc -l | tr -d ' ')"
+echo ""
+
+# 4. 同步遠端
+echo "--- 同步遠端 ---"
+git fetch origin
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(git rev-parse origin/main)
+if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "✅ 本地與遠端同步"
+else
+    echo "⚠️ 本地落後遠端，執行 git pull..."
+    git pull origin main
+fi
+echo ""
+
+# 5. Python 環境
+echo "--- Python 環境 ---"
+if conda info --envs 2>/dev/null | grep -q promptbim; then
+    echo "✅ Conda env 'promptbim' 存在"
+    conda activate promptbim 2>/dev/null || source activate promptbim 2>/dev/null
+    python -c "
+import sys; print(f'Python: {sys.version}')
+try:
+    import ifcopenshell; print(f'✅ IfcOpenShell {ifcopenshell.version}')
+except: print('❌ IfcOpenShell 未安裝')
+try:
+    from pxr import Usd; print('✅ OpenUSD')
+except: print('❌ OpenUSD 未安裝')
+try:
+    from PySide6.QtWidgets import QApplication; print('✅ PySide6')
+except: print('❌ PySide6 未安裝')
+try:
+    import anthropic; print('✅ Anthropic SDK')
+except: print('❌ Anthropic SDK 未安裝')
+"
+else
+    echo "❌ Conda env 'promptbim' 不存在"
+    echo "→ 執行: conda create -n promptbim python=3.11 -y"
+    echo "→ 然後依照 SETUP.md 安裝依賴"
+fi
+echo ""
+
+# 6. .env 檢查
+echo "--- API Key ---"
+if [ -f ".env" ]; then
+    if grep -q "ANTHROPIC_API_KEY=sk-" .env; then
+        echo "✅ .env 已設定 API Key"
+    else
+        echo "⚠️ .env 存在但 API Key 未設定"
+    fi
+else
+    echo "❌ .env 不存在 → cp .env.example .env 並填入 API Key"
+fi
+echo ""
+
+# 7. 必要文件檢查
+echo "--- 必要文件 ---"
+missing=0
+for f in SKILL.md TODO.md CLAUDE.md PROMPT.md pyproject.toml; do
+    if [ -f "$f" ]; then echo "✅ $f"; else echo "❌ $f"; missing=$((missing+1)); fi
+done
+echo ""
+
+if [ $missing -eq 0 ]; then
+    echo "========================================"
+    echo "✅ 環境檢查通過，可以開始開發！"
+    echo "========================================"
+else
+    echo "========================================"
+    echo "⚠️ 有 $missing 個問題需要修復"
+    echo "========================================"
+fi
+```
+
+### 環境差異自動處理
+
+| 情況 | Claude Code 自動處理方式 |
+|------|-------------------------|
+| `git pull` 有新 commits | 自動 pull，不問 |
+| Conda env 不存在 | 自動建立 + 安裝依賴 |
+| `.env` 不存在 | 複製 `.env.example`，**停下通知用戶填入 API Key** |
+| `pip` 套件缺失 | 自動 `pip install`，不問 |
+| Xcode 未安裝 | **停下通知用戶安裝 Xcode** |
+| 檔案缺失 | 自動 `git pull`，如果還缺失則報錯 |
 
 ---
 
@@ -50,53 +258,31 @@ PromptBIMTestApp1/                  # Xcode 原始碼群組
 └── Entitlements.entitlements
 ```
 
-### Xcode 建置架構
-
-```
-Xcode macOS App (Swift/SwiftUI)
-  └── Build Phases:
-       ├── 1. Compile Swift Sources
-       ├── 2. Run Script: Python Environment Check
-       │     conda activate promptbim && python -c "import promptbim"
-       ├── 3. Run Script: pytest
-       │     conda activate promptbim && python -m pytest tests/ -v --tb=short
-       └── 4. Run Script: Python Lint
-             conda activate promptbim && ruff check src/
-```
-
 ### xcodebuild 命令
 
 ```bash
-# 標準建置驗證命令
 xcodebuild -project PromptBIMTestApp1.xcodeproj \
            -scheme PromptBIMTestApp1 \
            -destination 'platform=macOS' \
            build 2>&1 | tail -5
 
-# 預期輸出最後一行:
-# ** BUILD SUCCEEDED **
+# 預期: ** BUILD SUCCEEDED **
 ```
 
 ---
 
 ## [MANDATORY] 每次工作結束必須執行的步驟
 
-> ⚠️ **以下步驟是強制性的，每次 Claude Code 工作結束前必須完整執行。**
-> ⚠️ **不得省略任何步驟。不得以「下次再做」為由跳過。**
+> ⚠️ **以下步驟是強制性的，不得省略，不得以「下次再做」為由跳過。**
 
 ### Step 1: xcodebuild 驗證 ✅
 
 ```bash
-# 必須執行且必須通過
 xcodebuild -project PromptBIMTestApp1.xcodeproj \
            -scheme PromptBIMTestApp1 \
            -destination 'platform=macOS' \
            build 2>&1 | tail -20
-
-# 如果 BUILD FAILED:
-#   1. 修復所有錯誤
-#   2. 重新 build 直到 BUILD SUCCEEDED
-#   3. 不得在 build 失敗的狀態下結束工作
+# BUILD FAILED → 修復 → 重新 build → 直到 BUILD SUCCEEDED
 ```
 
 ### Step 2: pytest 驗證 ✅
@@ -104,52 +290,49 @@ xcodebuild -project PromptBIMTestApp1.xcodeproj \
 ```bash
 conda activate promptbim
 python -m pytest tests/ -v --tb=short
-
-# 如果有測試失敗:
-#   1. 修復所有失敗的測試
-#   2. 重新執行直到全部通過
-#   3. 不得在測試失敗的狀態下結束工作
+# 失敗 → 修復 → 重新跑 → 直到全部通過
 ```
 
 ### Step 3: 更新所有專案文件 ✅
 
-**必須更新以下文件（按順序）：**
-
-| # | 文件 | 更新內容 | 範例 |
-|---|------|---------|------|
-| 1 | `TODO.md` | 將已完成的 task 標記為 ✅ | `- ✅ bim/geometry.py` |
-| 2 | `CHANGELOG.md` | 如果完成了一個 Sprint，加入新版本條目 | `## [0.2.0] - 2026-03-26` |
-| 3 | `SETUP.md` | 如果安裝步驟有變更，更新指南 | 新增依賴說明 |
-| 4 | `README.md` | 如果功能有重大變更，在表格中更新狀態 | 功能標記 ✅ |
+| # | 文件 | 更新內容 |
+|---|------|---------|
+| 1 | `TODO.md` | 已完成的 task 標記 ✅ |
+| 2 | `CHANGELOG.md` | 如果完成 Sprint，加入新版本條目 |
+| 3 | `SETUP.md` | 如果安裝步驟有變更 |
+| 4 | `README.md` | 如果功能有重大變更 |
 
 ### Step 4: Git Commit + Push ✅
 
 ```bash
-# 統一提交格式
 git add -A
-git status  # 確認變更內容
 git commit -m "[P{X}] {Sprint描述} — session end: build OK, tests OK, docs updated"
 git push origin main
 ```
 
-### Step 5: 產生下一步驟的 Prompt ✅
+### Step 5: 建立下一個 Sprint 的 PROMPT 檔案 ✅
 
-在工作結束前，**必須在 terminal 輸出**下次繼續開發的 prompt：
+```bash
+# 例如完成 P0 後，建立 PROMPT_P1.md
+# 內容格式見上方「每個 Sprint 一個 PROMPT 檔案」規則
+```
+
+### Step 6: 輸出下次繼續的 CLI 命令 ✅
 
 ```
 ====================================================
-📋 下次繼續開發請貼上以下 prompt:
+📋 下次繼續開發，在任何一台 Mac 上執行:
 ====================================================
 
-請讀取 PROMPT.md，先執行 Step 1 檢查所有文件。
-然後讀取 SKILL.md、TODO.md、{對應Addendum}，
-繼續執行 Sprint P{X} 的剩餘 task:
-- [ ] {未完成的 task 1}
-- [ ] {未完成的 task 2}
+cd ~/Documents/MyProjects/PromptBIMTestApp1
+conda activate promptbim
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X+1}.md 並執行所有 task。不要問任何問題。"
 
-目前進度: Sprint P{X} 完成 {N}/{M} 個 task
+目前進度: Sprint P{X} ✅ 已完成
+下一個: Sprint P{X+1}: {名稱}
 上次 xcodebuild: ✅ BUILD SUCCEEDED
 上次 pytest: ✅ {N} passed
+執行機器: {hostname}
 
 ====================================================
 ```
@@ -164,8 +347,10 @@ git push origin main
 □ TODO.md 已更新（完成的 task 標記 ✅）
 □ CHANGELOG.md 已更新（如果完成 Sprint）
 □ SETUP.md 已更新（如果安裝步驟變更）
+□ README.md 已更新（如果功能變更）
 □ git commit + push 完成
-□ 下次繼續的 prompt 已輸出
+□ 下一個 Sprint 的 PROMPT_P{X+1}.md 已建立
+□ 下次繼續的 CLI 命令已輸出
 ```
 
 **如果任何一項未完成，不得結束工作。**
@@ -177,9 +362,10 @@ git push origin main
 | 文件 | 誰更新 | 何時更新 | Claude Code 可改？ |
 |------|--------|----------|:-----------------:|
 | `SKILL.md` | 人工 | 架構變更 | ❌ 禁止 |
-| `PROMPT.md` | 人工 | 流程變更 | ❌ 禁止 |
 | `CLAUDE.md` | 人工 | 規範變更 | ❌ 禁止 |
 | `docs/addendum/*.md` | 人工 | 規格變更 | ❌ 禁止 |
+| `PROMPT.md` | 人工 | 總覽變更 | ❌ 禁止 |
+| `PROMPT_P{X}.md` | **Claude Code** | Sprint 完成時建立下一個 | ✅ 必須建立 |
 | `README.md` | **Claude Code** | 功能/狀態變更 | ✅ 必須更新 |
 | `TODO.md` | **Claude Code** | 每完成 1 個 task | ✅ 必須更新 |
 | `CHANGELOG.md` | **Claude Code** | 每完成 1 個 Sprint | ✅ 必須更新 |
@@ -198,14 +384,11 @@ git push origin main
 
 範例:
 [P0] Init Xcode project + Python scaffold
-[P0] Add xcodebuild script phases
 [P1] Add GeoJSON land parser
-[P2] Implement IFC wall generation
-[P4.8] Implement modification engine with delta computation
-[P8.5] Add auto monitor placement for HVAC system
+[P4.8] Implement modification engine
 ```
 
-工作結束 commit 必須包含 session end 標記：
+工作結束 commit：
 ```
 [P2] Complete IFC generator — session end: build OK, tests OK, docs updated
 ```
@@ -223,6 +406,7 @@ git push origin main
 - ⚠️ 監控點輸出必須含 `monitor:` USD namespace（IDTF 對接）
 - ⚠️ **xcodebuild 必須通過才能結束工作**
 - ⚠️ **pytest 必須通過才能結束工作**
+- ⚠️ **不得在 Sprint 執行中詢問用戶任何問題**
 
 ---
 
@@ -239,14 +423,15 @@ git push origin main
 
 ## 開發環境
 
-- **平台:** macOS (Apple Silicon)
+- **平台:** macOS (Apple Silicon) — 可能在 MacBook Air 或 Mac Mini 上執行
 - **Python:** 3.11+
 - **Xcode:** 16.0+ (含 SwiftUI, macOS target)
 - **Swift:** 6.0+
 - **套件管理:** Conda (Miniforge) + pip
-- **IDE:** Claude Code CLI + Xcode
+- **IDE:** Claude Code CLI (`--dangerously-skip-permissions` 模式)
 - **Git:** main branch
+- **執行方式:** `claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"`
 
 ---
 
-*CLAUDE.md v1.2.0 | 2026-03-25 | 新增 Xcode 專案要求 + [MANDATORY] 工作結束步驟 + 下次 prompt 產生*
+*CLAUDE.md v1.3.0 | 2026-03-25 | 新增: 自動執行模式(不詢問) + 每Sprint獨立PROMPT + 跨機器環境檢查*
