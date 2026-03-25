@@ -6,10 +6,34 @@
 
 ---
 
-## [Unreleased]
+## [0.8.5] - 2026-03-25
 
-### 規劃中
-- P8.5 完整開發計劃（詳見 TODO.md）
+### Added (Sprint P8.5: Smart Monitoring Auto-Placement)
+- `bim/monitoring/monitor_types.py` — 48 sensor/actuator type definitions
+  - 8 categories: Environmental, Safety, Security, Energy, Structural, MEP, Smart, Accessibility
+  - Each type has IFC class (IfcSensor/IfcActuator), predefined type, colour, unit cost
+- `bim/monitoring/auto_placement.py` — Automatic placement algorithm
+  - Per-space placement with circular distribution pattern
+  - Per-floor and per-building placement for infrastructure sensors
+  - MonitorPlan with grouping by floor, category, and type
+- `bim/monitoring/rules_engine.py` — 48 placement density rules
+  - 4 modes: per_sqm, per_space, per_floor, per_building
+  - Min/max per space constraints, minimum area thresholds
+- `bim/monitoring/ifc_monitor.py` — IFC output with IfcSensor/IfcActuator entities
+  - Standalone generation and add-to-existing-file modes
+  - Category-based colour coding
+- `bim/monitoring/usd_monitor.py` — USD output with `monitor:` namespace attributes
+  - IDTF-compatible custom attributes (type_id, category, floor, cost, etc.)
+  - Sphere prims with category-coloured materials
+- `bim/monitoring/dashboard_data.py` — Dashboard JSON export
+  - Floor summary, category summary, type detail, full sensor list
+- `gui/monitor_toggle.py` — 3D monitoring point visibility toggle
+  - 8-category checkbox panel with colour coding
+  - Show All / Hide All buttons with summary label
+- Monitoring cost integration into 5D estimation
+  - CostEstimator.estimate() accepts optional MonitorPlan
+  - Per-type unit costs aggregated into "Smart Monitoring" category
+- 52 new tests (440 total), xcodebuild BUILD SUCCEEDED
 
 ---
 

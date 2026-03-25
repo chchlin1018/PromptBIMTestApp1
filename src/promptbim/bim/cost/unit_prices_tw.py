@@ -56,6 +56,9 @@ UNIT_PRICES_TWD: dict[str, dict] = {
     # Site
     "site_work_sqm":         {"price": 1500,    "unit": "m2",   "desc": "Site work (grading, paving)",     "category": "site"},
     "landscaping_sqm":       {"price": 2500,    "unit": "m2",   "desc": "Landscaping",                     "category": "site"},
+    # Monitoring
+    "monitoring_sensor":     {"price": 5000,    "unit": "unit", "desc": "Smart sensor (average)",           "category": "monitoring"},
+    "monitoring_actuator":   {"price": 8000,    "unit": "unit", "desc": "Smart actuator (average)",         "category": "monitoring"},
 }
 
 
@@ -70,6 +73,7 @@ CATEGORY_LABELS: dict[str, str] = {
     "equipment": "Equipment",
     "roof": "Roof",
     "site": "Site Work",
+    "monitoring": "Smart Monitoring",
 }
 
 

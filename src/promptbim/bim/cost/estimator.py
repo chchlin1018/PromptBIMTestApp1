@@ -11,6 +11,11 @@ from promptbim.bim.cost.unit_prices_tw import (
 )
 from promptbim.schemas.plan import BuildingPlan
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from promptbim.bim.monitoring.auto_placement import MonitorPlan
+
 
 @dataclass
 class CostLineItem:
@@ -95,6 +100,7 @@ _QTO_COST_CATEGORY: dict[str, str] = {
     "mep_electrical": "mep",
     "mep_fire": "mep",
     "site_work": "site",
+    "monitoring": "monitoring",
 }
 
 
@@ -104,7 +110,11 @@ class CostEstimator:
     def __init__(self) -> None:
         self._qto = QuantityTakeOff()
 
-    def estimate(self, plan: BuildingPlan) -> CostEstimate:
+    def estimate(
+        self,
+        plan: BuildingPlan,
+        monitor_plan: MonitorPlan | None = None,
+    ) -> CostEstimate:
         qto_items = self._qto.extract(plan)
         line_items = self._price_items(qto_items)
 
@@ -114,6 +124,12 @@ class CostEstimator:
         interior_extras = self._interior_finish_allowance(qto_items)
         line_items.extend(interior_extras)
         total += sum(li.total_twd for li in interior_extras)
+
+        # Monitoring costs (if monitor plan provided)
+        if monitor_plan is not None:
+            monitor_items = self._monitoring_cost_items(monitor_plan)
+            line_items.extend(monitor_items)
+            total += sum(li.total_twd for li in monitor_items)
 
         # Calculate total floor area
         total_floor_area = sum(
@@ -167,6 +183,28 @@ class CostEstimator:
                 price_key=qi.category,
             ))
         return result
+
+    def _monitoring_cost_items(self, monitor_plan: MonitorPlan) -> list[CostLineItem]:
+        """Add monitoring sensor/actuator costs from a MonitorPlan."""
+        from promptbim.bim.monitoring.monitor_types import MONITOR_TYPES
+
+        items: list[CostLineItem] = []
+        # Aggregate by type
+        type_counts: dict[str, int] = monitor_plan.by_type()
+        for type_id, count in type_counts.items():
+            mt = MONITOR_TYPES.get(type_id)
+            if mt is None:
+                continue
+            items.append(CostLineItem(
+                category="monitoring",
+                name=mt.name,
+                quantity=count,
+                unit="unit",
+                unit_price_twd=mt.unit_cost_twd,
+                total_twd=count * mt.unit_cost_twd,
+                price_key="monitoring",
+            ))
+        return items
 
     def _interior_finish_allowance(self, qto_items: list[QTOItem]) -> list[CostLineItem]:
         """Add ceiling + floor tile costs based on slab areas."""

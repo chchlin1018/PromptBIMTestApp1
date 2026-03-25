@@ -29,7 +29,7 @@
 | P6 | 成本估算 (5D) | 2 | ✅ | P2.5 |
 | P7 | MEP 管線自動生成 | 4 | ✅ | P4 |
 | P8 | 施工模擬 (4D) | 3 | ✅ | P2 |
-| P8.5 | 智慧監控點自動配置 | 3 | ⬜ | P4, P7 |
+| P8.5 | 智慧監控點自動配置 | 3 | ✅ | P4, P7 |
 
 **預估總開發時間: ~34 天**
 
@@ -232,15 +232,15 @@
 
 ## P8.5: 智慧監控點自動配置 (~3 天)
 
-- ⬜ `bim/monitoring/monitor_types.py` — 48 種監控點定義
-- ⬜ `bim/monitoring/auto_placement.py` — 自動配置演算法
-- ⬜ `bim/monitoring/rules_engine.py` — 配置密度規則
-- ⬜ `bim/monitoring/ifc_monitor.py` — IFC IfcSensor/IfcActuator 輸出
-- ⬜ `bim/monitoring/usd_monitor.py` — USD monitor: namespace 輸出 (IDTF)
-- ⬜ `bim/monitoring/dashboard_data.py` — 儀表板 JSON 匯出
-- ⬜ `gui/monitor_toggle.py` — 3D 監控點顯示/隱藏開關
-- ⬜ 監控點成本加入 5D 估算
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `bim/monitoring/monitor_types.py` — 48 種監控點定義 (8 categories, IfcSensor/IfcActuator)
+- ✅ `bim/monitoring/auto_placement.py` — 自動配置演算法 (per-space, per-floor, per-building)
+- ✅ `bim/monitoring/rules_engine.py` — 配置密度規則 (48 rules, 4 placement modes)
+- ✅ `bim/monitoring/ifc_monitor.py` — IFC IfcSensor/IfcActuator 輸出
+- ✅ `bim/monitoring/usd_monitor.py` — USD monitor: namespace 輸出 (IDTF)
+- ✅ `bim/monitoring/dashboard_data.py` — 儀表板 JSON 匯出
+- ✅ `gui/monitor_toggle.py` — 3D 監控點顯示/隱藏開關 (8 category toggles)
+- ✅ 監控點成本加入 5D 估算 (CostEstimator accepts MonitorPlan)
+- ✅ 測試 + xcodebuild 通過 (440 passed, BUILD SUCCEEDED)
 
 **驗收標準:** 一鍵 Auto Monitor → 顯示所有監控點 + 匯出清單
 

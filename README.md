@@ -102,13 +102,13 @@ output/
 | P2.5 零件庫 | ✅ | 76 component definitions + Taiwan suppliers (108 tests) |
 | P3 3D 預覽 | ✅ | PyVista 3D viewer + site plan + floor sections (127 tests) |
 | P4 AI Agent | ✅ | Enhancer→Planner→Builder→Checker pipeline + Chat UI (164 tests) |
-| P4.5 法規引擎 | ⬜ | — |
-| P4.8 修改引擎 | ⬜ | — |
-| P5 語音+匯出 | ⬜ | — |
-| P6 成本(5D) | ⬜ | — |
-| P7 MEP | ⬜ | — |
-| P8 施工(4D) | ⬜ | — |
-| P8.5 監控點 | ⬜ | — |
+| P4.5 法規引擎 | ✅ | 15 Taiwan building code rules + compliance report (211 tests) |
+| P4.8 修改引擎 | ✅ | Modifier Agent + impact propagation + version history (235 tests) |
+| P5 語音+匯出 | ✅ | faster-whisper STT + one-click export (265 tests) |
+| P6 成本(5D) | ✅ | QTO + Taiwan unit prices + cost charts (293 tests) |
+| P7 MEP | ✅ | 3D A* pathfinding + 4 systems + clash detection (338 tests) |
+| P8 施工(4D) | ✅ | 16-phase simulation + Gantt chart + GIF export (388 tests) |
+| P8.5 監控點 | ✅ | 48 sensor types + auto-placement + IFC/USD + dashboard JSON (440 tests) |
 
 ---
 
