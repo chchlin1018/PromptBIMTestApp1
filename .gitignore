@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Output
+output/
+*.ifc
+*.usda
+*.usdc
+*.usdz
+*.glb
+*.obj
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Conda
+*.conda
+
+# 3D model cache
+src/promptbim/bim/components/models/*.glb
+src/promptbim/bim/components/models/*.obj
+!src/promptbim/bim/components/models/README.md

@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Irregular L-Shaped Parcel",
+        "area_sqm": 825.0,
+        "zoning": "住三",
+        "city": "台北市",
+        "front_road_width_m": 8.0,
+        "bcr_limit": 0.45,
+        "far_limit": 2.25
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [0, 0], [30, 0], [30, 15], [15, 15], [15, 30], [0, 30], [0, 0]
+        ]]
+      }
+    }
+  ]
+}

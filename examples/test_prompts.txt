@@ -1,0 +1,32 @@
+# PromptBIMTestApp1 — 測試 Prompt 集
+# 用於驗證 AI Agent Pipeline
+
+# === 英文 Prompt ===
+
+1. Build a simple 2-story rectangular house with 3 bedrooms upstairs and a living room, kitchen, and bathroom downstairs
+
+2. Create an L-shaped 3-story office building, each floor about 300 sqm, with open office areas and 2 meeting rooms per floor
+
+3. Design a single-story warehouse, 40m x 20m, with one large open space and a small office in the corner
+
+4. Build a 5-story apartment building with 4 units per floor, each unit has 2 bedrooms, a bathroom, kitchen, and living room
+
+5. Create a 2-story retail building with shops on ground floor and offices on second floor, total area 500 sqm
+
+# === 中文 Prompt ===
+
+6. 建一棟3層樓的方形辦公大樓，一樓大廳和2間會議室，二三樓開放辦公區
+
+7. 設計一間兩層透天厝，一樓客廳廚房車庫，二樓主臥加兩間小房間
+
+8. 蓋一間單層鐵皮廠房，長50公尺寬30公尺，裡面分三個工作區
+
+9. 在300坪的地上蓋5層辦公大樓，一樓停車場，頂樓有會議室和員工餐廳
+
+10. 設計一棟4層樓的集合住宅，每層3戶，每戶約30坪，含兩房一廳一衛
+
+# === 進階 Prompt（含 MEP / 法規 / 成本）===
+
+11. 在台北市信義區一塊200坪商三用地上，蓋一棟10層辦公大樓，需要符合建蔽率容積率規定，包含2部電梯和1部電扶梯
+
+12. 蓋一棟醫院大樓，地上8層地下2層，需要特別安全梯、緊急用電梯、完整消防系統和無障礙設施

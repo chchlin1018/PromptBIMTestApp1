@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sample Land Parcel - Taipei",
+        "area_sqm": 991.74,
+        "area_ping": 300,
+        "zoning": "商三",
+        "city": "台北市",
+        "district": "信義區",
+        "front_road_width_m": 12.0,
+        "bcr_limit": 0.65,
+        "far_limit": 5.60
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [121.5650, 25.0330],
+          [121.5653, 25.0330],
+          [121.5653, 25.0327],
+          [121.5650, 25.0327],
+          [121.5650, 25.0330]
+        ]]
+      }
+    }
+  ]
+}
