@@ -9,7 +9,26 @@
 ## [Unreleased]
 
 ### 規劃中
-- P0~P8 完整開發計劃（詳見 TODO.md）
+- P1~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.1.0] - 2026-03-25
+
+### Added (Sprint P0: 專案骨架 + Xcode + 環境)
+- Xcode 專案 (`PromptBIMTestApp1.xcodeproj`) — macOS SwiftUI app target
+  - `PromptBIMTestApp1App.swift` — App entry point
+  - `ContentView.swift` — 主介面骨架 (HSplitView + TabView + Chat panel)
+  - `PythonBridge.swift` — Process() 呼叫 Python 後端
+  - `Info.plist`, `Assets.xcassets`, `Entitlements`
+  - Build Phase Script: Python 環境檢查
+- Python 專案骨架
+  - `src/promptbim/__main__.py` — CLI (`--version`, `gui`, `generate`)
+  - `src/promptbim/config.py` — Pydantic BaseSettings
+  - `src/promptbim/gui/main_window.py` — PySide6 空白主視窗
+  - `src/promptbim/schemas/` — LandParcel, ZoningRules, BuildingPlan, BuildingRequirement, GenerationResult
+- 測試: 29 pytest tests 全部通過
+- xcodebuild BUILD SUCCEEDED
 
 ---
 

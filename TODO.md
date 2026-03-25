@@ -17,7 +17,7 @@
 
 | Sprint | 名稱 | 預估天數 | 狀態 | 依賴 |
 |--------|------|:--------:|:----:|------|
-| P0 | 專案骨架 + Xcode + 環境 | 1 | ⬜ | — |
+| P0 | 專案骨架 + Xcode + 環境 | 1 | ✅ | — |
 | P1 | 土地匯入 + 2D 視圖 | 3 | ⬜ | P0 |
 | P2 | IFC + USD 生成核心 | 3 | ⬜ | P0 |
 | P2.5 | 建築零件庫 | 3 | ⬜ | P2 |
@@ -38,29 +38,29 @@
 ## P0: 專案骨架 + Xcode + 環境 (~1 天)
 
 ### Xcode 專案
-- ⬜ 建立 `PromptBIMTestApp1.xcodeproj` (macOS app target, SwiftUI, Apple Silicon)
-- ⬜ `PromptBIMTestApp1/PromptBIMTestApp1App.swift` — App entry point
-- ⬜ `PromptBIMTestApp1/ContentView.swift` — 主介面骨架
-- ⬜ `PromptBIMTestApp1/PythonBridge.swift` — Process() 呼叫 Python 後端
-- ⬜ `PromptBIMTestApp1/Info.plist` + `Assets.xcassets` + `Entitlements`
-- ⬜ Build Phase Script: Python 環境檢查
-- ⬜ Build Phase Script: pytest 執行
-- ⬜ `xcodebuild -project PromptBIMTestApp1.xcodeproj -scheme PromptBIMTestApp1 build` → BUILD SUCCEEDED
+- ✅ 建立 `PromptBIMTestApp1.xcodeproj` (macOS app target, SwiftUI, Apple Silicon)
+- ✅ `PromptBIMTestApp1/PromptBIMTestApp1App.swift` — App entry point
+- ✅ `PromptBIMTestApp1/ContentView.swift` — 主介面骨架
+- ✅ `PromptBIMTestApp1/PythonBridge.swift` — Process() 呼叫 Python 後端
+- ✅ `PromptBIMTestApp1/Info.plist` + `Assets.xcassets` + `Entitlements`
+- ✅ Build Phase Script: Python 環境檢查
+- ⬜ Build Phase Script: pytest 執行 (deferred — requires conda env on build machine)
+- ✅ `xcodebuild -project PromptBIMTestApp1.xcodeproj -scheme PromptBIMTestApp1 build` → BUILD SUCCEEDED
 
 ### Python 骨架
-- ⬜ 完整目錄結構 (所有 `__init__.py`)
-- ⬜ `pyproject.toml` (含所有依賴)
-- ⬜ `.env.example` + `config.py` (Pydantic BaseSettings)
-- ⬜ PySide6 空白主視窗可啟動 (`gui/main_window.py`)
-- ⬜ CLI skeleton (`__main__.py`: `promptbim gui` / `promptbim --version`)
-- ⬜ 所有 `schemas/` Pydantic models 骨架
-- ⬜ 驗證: ifcopenshell + pxr + anthropic + PySide6 全部可 import
+- ✅ 完整目錄結構 (所有 `__init__.py`)
+- ✅ `pyproject.toml` (含所有依賴)
+- ✅ `.env.example` + `config.py` (Pydantic BaseSettings)
+- ✅ PySide6 空白主視窗可啟動 (`gui/main_window.py`)
+- ✅ CLI skeleton (`__main__.py`: `promptbim gui` / `promptbim --version`)
+- ✅ 所有 `schemas/` Pydantic models 骨架
+- ⬜ 驗證: ifcopenshell + pxr + anthropic + PySide6 全部可 import (deferred — requires conda env with full deps)
 
 ### 收尾
-- ⬜ pytest 通過
-- ⬜ xcodebuild 通過
-- ⬜ 更新 TODO.md + CHANGELOG.md
-- ⬜ `git commit [P0] + push main`
+- ✅ pytest 通過 (29 passed)
+- ✅ xcodebuild 通過 (BUILD SUCCEEDED)
+- ✅ 更新 TODO.md + CHANGELOG.md
+- ✅ `git commit [P0] + push main`
 
 **驗收標準:**
 1. `xcodebuild ... build` → **BUILD SUCCEEDED**
