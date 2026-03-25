@@ -22,7 +22,7 @@
 | P2 | IFC + USD 生成核心 | 3 | ✅ | P0 |
 | P2.5 | 建築零件庫 | 3 | ✅ | P2 |
 | P3 | 3D 互動預覽 | 2 | ✅ | P2 |
-| P4 | AI Agent Pipeline | 3 | ⬜ | P1, P2 |
+| P4 | AI Agent Pipeline | 3 | ✅ | P1, P2 |
 | P4.5 | 台灣法規引擎 | 3 | ⬜ | P4 |
 | P4.8 | 互動式修改引擎 | 2 | ⬜ | P4 |
 | P5 | 語音 + 匯出 | 2 | ⬜ | P4 |
@@ -133,14 +133,14 @@
 
 ## P4: AI Agent Pipeline (~3 天)
 
-- ⬜ `agents/base.py` — Claude API wrapper (BaseAgent)
-- ⬜ `agents/enhancer.py` — Agent 1: 需求增強
-- ⬜ `agents/planner.py` — Agent 2: 建築規劃 (含土地+法規 context)
-- ⬜ `agents/builder.py` — Agent 3: IFC+USD 雙輸出 (純 Python)
-- ⬜ `agents/checker.py` — Agent 4: 規則檢查 + 迭代修正
-- ⬜ `agents/orchestrator.py` — Pipeline 編排
-- ⬜ `gui/chat_panel.py` — Chat UI 整合
-- ⬜ 測試 + xcodebuild 通過
+- ✅ `agents/base.py` — Claude API wrapper (BaseAgent)
+- ✅ `agents/enhancer.py` — Agent 1: 需求增強
+- ✅ `agents/planner.py` — Agent 2: 建築規劃 (含土地+法規 context)
+- ✅ `agents/builder.py` — Agent 3: IFC+USD 雙輸出 (純 Python)
+- ✅ `agents/checker.py` — Agent 4: 規則檢查 + 迭代修正
+- ✅ `agents/orchestrator.py` — Pipeline 編排
+- ✅ `gui/chat_panel.py` — Chat UI 整合
+- ✅ 測試 + xcodebuild 通過 (164 tests passed, BUILD SUCCEEDED)
 
 **驗收標準:** Chat 輸入描述 → 自動在土地上生成建築 → 2D+3D 同步更新
 

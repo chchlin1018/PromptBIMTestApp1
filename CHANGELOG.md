@@ -9,7 +9,35 @@
 ## [Unreleased]
 
 ### 規劃中
-- P4~P8.5 完整開發計劃（詳見 TODO.md）
+- P4.5~P8.5 完整開發計劃（詳見 TODO.md）
+
+---
+
+## [0.3.0] - 2026-03-25
+
+### Added (Sprint P4: AI Agent Pipeline)
+- `agents/base.py` — BaseAgent Claude API wrapper with JSON extraction
+  - Lazy Anthropic client init, structured AgentResponse, markdown/brace JSON parsing
+- `agents/enhancer.py` — Agent 1: requirement enhancement
+  - Enriches raw user prompts into structured BuildingRequirement with land/zoning context
+  - Respects FAR/height limits, falls back to basic requirement on API failure
+- `agents/planner.py` — Agent 2: building planner (key agent)
+  - Generates BuildingPlan JSON placing building on real land parcel
+  - Deterministic fallback box generator for offline/error scenarios
+  - BCR/FAR/height compliance built into fallback logic
+- `agents/builder.py` — Agent 3: BIM builder (pure Python, no LLM)
+  - Converts BuildingPlan → IFC + USD dual output via existing generators
+- `agents/checker.py` — Agent 4: rule checker
+  - Deterministic checks: BCR, FAR, height, setback containment, min story height
+  - Claude-powered fix suggestions when violations found
+- `agents/orchestrator.py` — Pipeline orchestrator
+  - Chains Enhancer → Planner → Builder → Checker with iterative correction
+  - Status callbacks for GUI progress updates
+- `gui/chat_panel.py` — Chat UI panel with threaded pipeline execution
+  - Message history, progress bar, background QThread worker
+  - Signals: plan_ready, generation_finished for GUI integration
+- `gui/main_window.py` — Integrated ChatPanel replacing inline chat widgets
+- 37 new agent tests (164 total), xcodebuild BUILD SUCCEEDED
 
 ---
 

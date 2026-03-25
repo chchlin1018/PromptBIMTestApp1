@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 from promptbim import __version__
+from promptbim.gui.chat_panel import ChatPanel
 from promptbim.gui.land_panel import LandPanel
 from promptbim.gui.map_view import MapView
 from promptbim.gui.model_view import ModelView
@@ -62,18 +63,10 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self._tabs)
 
         # Bottom chat panel
-        chat_widget = QWidget()
-        chat_layout = QHBoxLayout(chat_widget)
-        self.chat_input = QLineEdit()
-        self.chat_input.setPlaceholderText(
-            "Describe the building you want to create..."
-        )
-        chat_layout.addWidget(self.chat_input, stretch=1)
-        mic_btn = QPushButton("Mic")
-        chat_layout.addWidget(mic_btn)
-        gen_btn = QPushButton("Generate")
-        chat_layout.addWidget(gen_btn)
-        layout.addWidget(chat_widget)
+        self._chat_panel = ChatPanel()
+        self._chat_panel.plan_ready.connect(self.set_building_plan)
+        self._chat_panel.generation_finished.connect(self._on_generation_finished)
+        layout.addWidget(self._chat_panel)
 
         # Status bar
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
@@ -91,10 +84,21 @@ class MainWindow(QMainWindow):
         buildable = compute_setback(parcel, self._zoning)
         self._map_view.set_parcel(parcel, buildable)
         self._site_plan.set_data(parcel=parcel, buildable_area=buildable)
+        self._chat_panel.set_context(parcel, self._zoning)
         self._tabs.setCurrentIndex(0)  # switch to 2D Map tab
         self.statusBar().showMessage(
             f"Loaded: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)"
         )
+
+    def _on_generation_finished(self, result):
+        if result.success:
+            self.statusBar().showMessage(
+                f"Generated: {result.building_name} | "
+                f"IFC: {'OK' if result.ifc_path else 'N/A'} | "
+                f"USD: {'OK' if result.usd_path else 'N/A'}"
+            )
+        else:
+            self.statusBar().showMessage(f"Generation failed: {', '.join(result.errors)}")
 
     def set_building_plan(self, plan: BuildingPlan):
         """Display a generated building plan in 3D and site plan views."""
