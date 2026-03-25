@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+import mapbox_earcut
 import numpy as np
 
 
@@ -78,8 +79,7 @@ def slab_mesh(
     """Generate an extruded slab from a 2-D polygon boundary.
 
     The slab sits between *base_z* and *base_z + thickness*.
-    Uses simple ear-clipping fan triangulation (works for convex and
-    many concave polygons).
+    Uses earcut triangulation (handles convex and concave polygons).
     """
     if len(boundary) < 3:
         return Mesh(vertices=np.zeros((0, 3)), faces=np.zeros((0, 3), dtype=np.int32))
@@ -95,8 +95,8 @@ def slab_mesh(
 
     faces: list[list[int]] = []
 
-    # Bottom face (fan from vertex 0) — reversed winding for outward normal
-    tri_indices = _fan_triangulate(n)
+    # Bottom face — reversed winding for outward normal
+    tri_indices = _earcut_triangulate(boundary)
     for a, b, c in tri_indices:
         faces.append([a, c, b])  # flip for downward normal
 
@@ -215,6 +215,9 @@ def _box_faces() -> np.ndarray:
     )
 
 
-def _fan_triangulate(n: int) -> list[tuple[int, int, int]]:
-    """Simple fan triangulation for an *n*-vertex polygon."""
-    return [(0, i, i + 1) for i in range(1, n - 1)]
+def _earcut_triangulate(boundary: list[tuple[float, float]]) -> list[tuple[int, int, int]]:
+    """Robust triangulation using earcut — works for convex and concave polygons."""
+    pts = np.array(boundary, dtype=np.float64)
+    ring_ends = np.array([len(boundary)], dtype=np.uint32)
+    indices = mapbox_earcut.triangulate_float64(pts, ring_ends)
+    return [(indices[i], indices[i + 1], indices[i + 2]) for i in range(0, len(indices), 3)]

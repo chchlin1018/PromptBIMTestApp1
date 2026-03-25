@@ -25,6 +25,7 @@ dependencies = [
     "ezdxf>=1.1",
     "fastkml>=1.0",
     # Geometry & Viz
+    "mapbox-earcut>=2.0",
     "numpy>=1.26",
     "trimesh>=4.0",
     "matplotlib>=3.8",

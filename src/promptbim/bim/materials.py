@@ -5,7 +5,7 @@ Each material has an IFC surface style name and a USD PBR preset.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -51,7 +51,7 @@ MATERIALS: dict[str, MaterialDef] = {
         color=(0.6, 0.8, 0.9),
         transparency=0.6,
         roughness=0.05,
-        ifc_surface_style="MIRROR",
+        ifc_surface_style="GLASS",
     ),
     "wood": MaterialDef(
         name="Wood",

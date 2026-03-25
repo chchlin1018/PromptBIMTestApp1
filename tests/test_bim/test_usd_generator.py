@@ -106,6 +106,41 @@ def test_usd_has_materials(simple_plan, tmp_path):
     assert len(mat_prims) >= 1
 
 
+def test_usd_round_trip_prim_count(simple_plan, tmp_path):
+    """USD round-trip: open file and verify expected prim count."""
+    gen = USDGenerator()
+    output = gen.generate(simple_plan, tmp_path / "test.usda")
+    stage = Usd.Stage.Open(str(output))
+    prims = list(stage.Traverse())
+    # Building root + 1F Xform + 4 walls + 1 slab + Roof + Materials + shaders
+    assert len(prims) >= 8
+
+
+def test_usd_mesh_has_normals(simple_plan, tmp_path):
+    """USD mesh prims should have normals set."""
+    gen = USDGenerator()
+    output = gen.generate(simple_plan, tmp_path / "test.usda")
+    stage = Usd.Stage.Open(str(output))
+    wall_prims = [
+        p for p in stage.Traverse()
+        if "Wall" in p.GetPath().pathString and p.GetTypeName() == "Mesh"
+    ]
+    assert len(wall_prims) > 0
+    mesh = UsdGeom.Mesh(wall_prims[0])
+    normals = mesh.GetNormalsAttr().Get()
+    assert normals is not None
+    assert len(normals) > 0
+
+
+def test_usd_empty_plan(tmp_path):
+    """Generate with empty plan (no stories)."""
+    plan = BuildingPlan(name="Empty")
+    gen = USDGenerator()
+    output = gen.generate(plan, tmp_path / "empty.usda")
+    stage = Usd.Stage.Open(str(output))
+    assert stage is not None
+
+
 def test_usd_multi_storey(tmp_path):
     footprint = [(0, 0), (8, 0), (8, 6), (0, 6)]
     walls = [

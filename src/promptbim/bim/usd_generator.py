@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import numpy as np
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, Vt
 
 from promptbim.bim.geometry import (
@@ -118,7 +119,7 @@ class USDGenerator:
         story: StoryPlan,
         parent_path: str,
     ) -> None:
-        mesh_data = slab_mesh(boundary, thickness=0.2, base_z=story.elevation_m)
+        mesh_data = slab_mesh(boundary, thickness=story.slab_thickness_m, base_z=story.elevation_m)
         if len(mesh_data.vertices) == 0:
             return
 
@@ -175,6 +176,12 @@ class USDGenerator:
         indices = [int(i) for tri in mesh_data.faces for i in tri]
         usd_mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray(indices))
 
+        # Compute and set face normals (flat shading)
+        normals = _compute_face_normals(mesh_data)
+        if normals:
+            usd_mesh.GetNormalsAttr().Set(Vt.Vec3fArray(normals))
+            usd_mesh.SetNormalsInterpolation(UsdGeom.Tokens.faceVarying)
+
         return usd_mesh
 
     # ------------------------------------------------------------------
@@ -215,6 +222,22 @@ class USDGenerator:
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
+
+def _compute_face_normals(mesh_data: Mesh) -> list[Gf.Vec3f]:
+    """Compute per-face normals for a triangle mesh (flat shading)."""
+    normals: list[Gf.Vec3f] = []
+    for tri in mesh_data.faces:
+        v0, v1, v2 = mesh_data.vertices[tri[0]], mesh_data.vertices[tri[1]], mesh_data.vertices[tri[2]]
+        e1 = v1 - v0
+        e2 = v2 - v0
+        n = np.cross(e1, e2)
+        length = np.linalg.norm(n)
+        if length > 1e-10:
+            n = n / length
+        normal = Gf.Vec3f(float(n[0]), float(n[1]), float(n[2]))
+        normals.extend([normal] * 3)  # one per vertex of the face (faceVarying)
+    return normals
+
 
 def _safe_name(name: str) -> str:
     """Convert a display name to a valid USD prim name."""

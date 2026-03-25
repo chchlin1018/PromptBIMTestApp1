@@ -50,6 +50,7 @@ class StoryPlan(BaseModel):
     spaces: list[SpaceDef] = Field(default_factory=list)
     openings: list[OpeningDef] = Field(default_factory=list)
     slab_boundary: list[tuple[float, float]] = Field(default_factory=list)
+    slab_thickness_m: float = Field(default=0.2, description="Slab thickness in metres")
 
 
 class BuildingPlan(BaseModel):

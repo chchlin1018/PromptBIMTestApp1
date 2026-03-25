@@ -21,7 +21,7 @@ from promptbim.bim.materials import (
     slab_material,
     wall_material,
 )
-from promptbim.schemas.plan import BuildingPlan, OpeningDef, StoryPlan, WallDef
+from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
 
 
 class IFCGenerator:
@@ -221,7 +221,7 @@ class IFCGenerator:
             "geometry.edit_object_placement", f, product=slab, matrix=matrix
         )
 
-        thickness = 0.2
+        thickness = story.slab_thickness_m
         rep = ifcopenshell.api.run(
             "geometry.add_slab_representation",
             f,

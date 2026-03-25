@@ -59,6 +59,22 @@ class TestSlabMesh:
         assert 3.2 in z_vals
 
 
+    def test_concave_l_shaped_slab(self):
+        """L-shaped concave polygon should triangulate correctly with earcut."""
+        boundary = [(0, 0), (16, 0), (16, 6), (10, 6), (10, 10), (0, 10)]
+        m = slab_mesh(boundary, thickness=0.2)
+        n = len(boundary)
+        assert m.vertices.shape == (n * 2, 3)  # bottom + top
+        assert m.faces.shape[0] > 0
+        # All face indices must be valid
+        assert m.faces.min() >= 0
+        assert m.faces.max() < n * 2
+
+    def test_empty_boundary(self):
+        m = slab_mesh([], thickness=0.2)
+        assert len(m.vertices) == 0
+
+
 class TestRoofMesh:
     def test_flat_roof(self):
         boundary = [(0, 0), (10, 0), (10, 8), (0, 8)]
