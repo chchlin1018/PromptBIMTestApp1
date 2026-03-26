@@ -1,14 +1,17 @@
 /**
  * bindings.cpp — pybind11 Python bindings for libpromptbim
  *
- * Exposes compliance + cost engines to Python for V1 backward compatibility.
- * Import as: from promptbim._native import check_compliance, estimate_cost
+ * Exposes compliance + cost + MEP + simulation engines to Python
+ * for V1 backward compatibility.
+ * Import as: from promptbim._native import check_compliance, estimate_cost, ...
  */
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "promptbim/compliance_engine.hpp"
 #include "promptbim/cost_engine.hpp"
+#include "promptbim/mep_engine.hpp"
+#include "promptbim/simulation_engine.hpp"
 #include "promptbim/promptbim.h"
 
 namespace py = pybind11;
@@ -78,4 +81,44 @@ Returns:
         },
         py::arg("plan_json"),
         "Estimate cost. Returns JSON string.");
+
+    // -----------------------------------------------------------------------
+    // MEP Engine
+    // -----------------------------------------------------------------------
+    py::class_<promptbim::MEPEngine>(m, "MEPEngine")
+        .def(py::init<double>(), py::arg("grid_size") = 0.3)
+        .def("plan_mep",
+            &promptbim::MEPEngine::plan_mep,
+            py::arg("plan_json"),
+            py::arg("config_json") = "{}",
+            "Generate MEP routes. Returns JSON string.");
+
+    m.def("plan_mep",
+        [](const std::string& plan_json, const std::string& config_json) {
+            promptbim::MEPEngine engine;
+            return engine.plan_mep(plan_json, config_json);
+        },
+        py::arg("plan_json"),
+        py::arg("config_json") = "{}",
+        "Plan MEP routes. Returns JSON string.");
+
+    // -----------------------------------------------------------------------
+    // Simulation Engine
+    // -----------------------------------------------------------------------
+    py::class_<promptbim::SimulationEngine>(m, "SimulationEngine")
+        .def(py::init<>())
+        .def("generate_schedule",
+            &promptbim::SimulationEngine::generate_schedule_json,
+            py::arg("plan_json"),
+            py::arg("total_days") = 360,
+            "Generate construction schedule. Returns JSON string.");
+
+    m.def("generate_schedule",
+        [](const std::string& plan_json, int total_days) {
+            promptbim::SimulationEngine engine;
+            return engine.generate_schedule_json(plan_json, total_days);
+        },
+        py::arg("plan_json"),
+        py::arg("total_days") = 360,
+        "Generate construction schedule. Returns JSON string.");
 }

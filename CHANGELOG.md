@@ -6,6 +6,52 @@
 
 ---
 
+## [2.6.0] - 2026-03-26
+
+### Added (Sprint P19: V2 Migration Phase 2 — MEP + Simulation C++ + P18 Tech Debt)
+
+#### MEP A* Pathfinding Engine C++ (Phase 2)
+- `libpromptbim/src/mep/mep_engine.cpp` — 3D voxel A* pathfinder with turn penalty
+- `libpromptbim/include/promptbim/mep_engine.hpp` — MEP engine C++ interface
+- 6-directional orthogonal movement, path simplification, obstacle management
+- C ABI: `pb_plan_mep()` replaces placeholder stub
+
+#### Simulation Engine C++ (Phase 2)
+- `libpromptbim/src/simulation/simulation_engine.cpp` — 4D scheduler with 16 phases
+- `libpromptbim/include/promptbim/simulation_engine.hpp` — Simulation engine interface
+- Component classification, phase sequencing, visibility state queries
+- C ABI: `pb_generate_schedule()` replaces placeholder stub
+
+#### Shared Geometry Module (P18 Tech Debt)
+- `libpromptbim/src/geometry/geometry.cpp` — Extracted `poly_area()`, `poly_centroid()`, `wall_length()`
+- `libpromptbim/include/promptbim/geometry.hpp` — Shared geometry interface
+- compliance_engine.cpp and cost_engine.cpp now use shared geometry (DRY)
+
+#### Placeholder Stubs Separation (P18 Tech Debt)
+- `libpromptbim/src/stubs/future_stubs.cpp` — Phase 3/4 stubs moved from compliance_engine.cpp
+
+#### GoogleTest Additions (+46 tests, total 70)
+- `tests/test_mep_engine.cpp` — 13 MEP tests (pathfinding, obstacles, JSON, performance)
+- `tests/test_simulation_engine.cpp` — 21 simulation tests (classify, schedule, visibility)
+- `tests/test_geometry.cpp` — 9 geometry tests (poly_area, centroid, wall_length)
+- `tests/test_utf8.cpp` — 3 UTF-8 tests (Chinese messages, version string)
+
+#### pybind11 Enhancements
+- `bindings.cpp` — Added MEPEngine + SimulationEngine bindings
+- `_native_bridge.py` — Added `plan_mep_json()`, `generate_schedule_json()` with fallback
+
+### Changed
+- CMakeLists.txt: v2.6.0, Python3_EXECUTABLE auto-detection for conda env (P18 tech debt)
+- CI: Added `LC_ALL=en_US.UTF-8` for GoogleTest (P18 tech debt: UTF-8 locale)
+- Performance report: `docs/reports/V2_Performance_Comparison.md` (4 engines)
+
+### Fixed
+- pybind11 build dir py3.11 vs py3.13 conflict (CMake `Python3_EXECUTABLE` detection)
+- Duplicate `poly_area()` in compliance/cost engines (extracted to shared geometry)
+- Placeholder stubs mixed with production code (separated to future_stubs.cpp)
+
+---
+
 ## [2.5.0] - 2026-03-26
 
 ### Added (Sprint P18: V2 Migration Phase 0-1 — C++ Core Library Bootstrap)
@@ -867,3 +913,4 @@
 | 2.4.0 | P17 完成 | 架構強化 + Async + Cache + CI 修復 |
 | 2.4.1 | P17.1 完成 | 文檔一致性修復（測試數、CLAUDE.md 版本、啟動通知）|
 | 2.5.0 | P18 完成 | V2 Migration Phase 0-1：C++ Core 骨架 + Compliance/Cost C++ + pybind11 + 24 GoogleTests |
+| 2.6.0 | P19 完成 | V2 Migration Phase 2：MEP + Simulation C++ + P18 技術債 + 70 GoogleTests |

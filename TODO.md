@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.5.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.6.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -41,8 +41,9 @@
 | P16 | 全面品質修整 (Quality Remediation) | 1 | ✅ | P14, AuditReport |
 | P17 | 全面修整 + 架構強化 + Async + 快取 | 1 | ✅ | P16 |
 | P18 | V2 Migration Phase 0-1 — C++ 骨架 + Engine 遷移 | 1 | ✅ | P17 |
+| P19 | V2 Migration Phase 2 — MEP + Simulation C++ + P18 技術債 | 1 | ✅ | P18 |
 
-**預估總開發時間: ~48 天**
+**預估總開發時間: ~49 天**
 
 ---
 

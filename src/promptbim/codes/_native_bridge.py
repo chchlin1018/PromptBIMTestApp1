@@ -1,11 +1,20 @@
 """Native C++ engine bridge for V1 backward compatibility.
 
-Automatically selects the best available compliance / cost engine:
+Automatically selects the best available engine (C++ native or Python fallback):
   1. C++ native (_native pybind11 module) — fastest
   2. Python fallback — always available
 
+Supported engines:
+  - Compliance Engine (check_compliance_json)
+  - Cost Engine (estimate_cost_json)
+  - MEP Engine (plan_mep_json) — v2.6.0+
+  - Simulation Engine (generate_schedule_json) — v2.6.0+
+
 Usage (internal):
-    from promptbim.codes._native_bridge import check_compliance_json, estimate_cost_json
+    from promptbim.codes._native_bridge import (
+        check_compliance_json, estimate_cost_json,
+        plan_mep_json, generate_schedule_json,
+    )
 
 These functions accept/return JSON strings to match the C++ ABI.
 """
@@ -122,5 +131,64 @@ def _python_cost_fallback(plan_json: str) -> str:
         estimator = CostEstimator()
         estimate  = estimator.estimate(plan)
         return json.dumps(estimate.to_dict())
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+
+# ---------------------------------------------------------------------------
+# MEP Engine (v2.6.0+)
+# ---------------------------------------------------------------------------
+
+def plan_mep_json(plan_json: str, config_json: str = "{}") -> str:
+    """Generate MEP routes. Returns JSON string.
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        return _NATIVE_MODULE.plan_mep(plan_json, config_json)
+
+    return _python_mep_fallback(plan_json, config_json)
+
+
+def _python_mep_fallback(plan_json: str, config_json: str = "{}") -> str:
+    """Python MEP engine — fallback when C++ is unavailable."""
+    try:
+        from promptbim.bim.mep.planner import MEPPlanner
+        from promptbim.schemas.plan import BuildingPlan
+
+        plan    = BuildingPlan.model_validate_json(plan_json)
+        planner = MEPPlanner()
+        result  = planner.plan(plan)
+        return json.dumps(result.to_dict())
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+
+# ---------------------------------------------------------------------------
+# Simulation Engine (v2.6.0+)
+# ---------------------------------------------------------------------------
+
+def generate_schedule_json(plan_json: str, total_days: int = 360) -> str:
+    """Generate construction schedule. Returns JSON string.
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        return _NATIVE_MODULE.generate_schedule(plan_json, total_days)
+
+    return _python_schedule_fallback(plan_json, total_days)
+
+
+def _python_schedule_fallback(plan_json: str, total_days: int = 360) -> str:
+    """Python simulation engine — fallback when C++ is unavailable."""
+    try:
+        from promptbim.bim.simulation.scheduler import generate_schedule
+        from promptbim.schemas.plan import BuildingPlan
+
+        plan   = BuildingPlan.model_validate_json(plan_json)
+        labels = [c.label for c in (plan.components or [])]
+        num_st = len(plan.stories) if plan.stories else 1
+        sched  = generate_schedule(labels, total_days, num_st)
+        return json.dumps(sched.to_dict())
     except Exception as exc:
         return json.dumps({"error": str(exc)})

@@ -63,7 +63,7 @@ class TestPythonPackage:
         import promptbim
 
         assert hasattr(promptbim, "__version__")
-        assert promptbim.__version__ == "1.5.0"
+        assert promptbim.__version__ == "2.6.0"
 
     def test_import_config(self):
         from promptbim.config import get_settings
@@ -105,4 +105,4 @@ class TestPythonPackage:
             env=env,
         )
         assert result.returncode == 0
-        assert "1.5.0" in result.stdout
+        assert "2.6.0" in result.stdout

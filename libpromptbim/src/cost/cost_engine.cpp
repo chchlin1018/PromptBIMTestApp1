@@ -6,6 +6,7 @@
  */
 
 #include "promptbim/cost_engine.hpp"
+#include "promptbim/geometry.hpp"
 #include "promptbim/promptbim.h"
 
 #include <cmath>
@@ -71,30 +72,15 @@ static const std::map<std::string, std::string> CATEGORY_LABELS = {
 };
 
 // ---------------------------------------------------------------------------
-// Geometry helpers (duplicated from compliance; future: share via common lib)
+// Geometry helpers — now using shared geometry module
 // ---------------------------------------------------------------------------
 
 static double poly_area(const nlohmann::json& coords) {
-    if (!coords.is_array() || coords.size() < 3) return 0.0;
-    double area = 0.0;
-    const size_t n = coords.size();
-    for (size_t i = 0; i < n; ++i) {
-        size_t j = (i + 1) % n;
-        double xi = coords[i][0].get<double>();
-        double yi = coords[i][1].get<double>();
-        double xj = coords[j][0].get<double>();
-        double yj = coords[j][1].get<double>();
-        area += xi * yj - xj * yi;
-    }
-    return std::abs(area) / 2.0;
+    return promptbim::geometry::poly_area(coords);
 }
 
 static double wall_length(const nlohmann::json& wall) {
-    // wall: {start:[x,y], end:[x,y]}
-    if (!wall.contains("start") || !wall.contains("end")) return 0.0;
-    double dx = wall["end"][0].get<double>() - wall["start"][0].get<double>();
-    double dy = wall["end"][1].get<double>() - wall["start"][1].get<double>();
-    return std::sqrt(dx*dx + dy*dy);
+    return promptbim::geometry::wall_length(wall);
 }
 
 // ---------------------------------------------------------------------------

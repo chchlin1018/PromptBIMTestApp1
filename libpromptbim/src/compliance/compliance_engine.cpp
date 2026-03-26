@@ -14,6 +14,7 @@
  */
 
 #include "promptbim/compliance_engine.hpp"
+#include "promptbim/geometry.hpp"
 #include "promptbim/promptbim.h"
 
 #include <cmath>
@@ -25,23 +26,11 @@
 namespace promptbim {
 
 // ---------------------------------------------------------------------------
-// Geometry helpers
+// Geometry helpers — delegating to shared geometry module
 // ---------------------------------------------------------------------------
 
 double ComplianceEngine::poly_area(const nlohmann::json& coords) {
-    // Shoelace formula — coords is [[x,y], ...]
-    if (!coords.is_array() || coords.size() < 3) return 0.0;
-    double area = 0.0;
-    const size_t n = coords.size();
-    for (size_t i = 0; i < n; ++i) {
-        size_t j = (i + 1) % n;
-        double xi = coords[i][0].get<double>();
-        double yi = coords[i][1].get<double>();
-        double xj = coords[j][0].get<double>();
-        double yj = coords[j][1].get<double>();
-        area += xi * yj - xj * yi;
-    }
-    return std::abs(area) / 2.0;
+    return geometry::poly_area(coords);
 }
 
 double ComplianceEngine::footprint_area(const nlohmann::json& plan) {
@@ -609,24 +598,6 @@ char* pb_check_compliance(const char* plan_json,
     }
 }
 
-const char* pb_version(void) { return "2.5.0"; }
+const char* pb_version(void) { return "2.6.0"; }
 
 void pb_free_string(char* str) { std::free(str); }
-
-// Placeholder stubs for Phase 3/4/5 (not yet implemented)
-char* pb_estimate_cost(const char* plan_json);  // defined in cost_engine.cpp
-
-// Phase 3/4 placeholders
-PBPlan* pb_plan_from_json(const char*) { return nullptr; }
-void    pb_plan_free(PBPlan*) {}
-char*   pb_plan_to_json(const PBPlan*) { return nullptr; }
-int     pb_generate_ifc(const PBPlan*, const char*) { return -1; }
-int     pb_generate_usd(const PBPlan*, const char*) { return -1; }
-int     pb_generate_usdz(const char*, const char*)  { return -1; }
-PBLandParcel* pb_land_from_geojson(const char*)    { return nullptr; }
-PBLandParcel* pb_land_from_shapefile(const char*)  { return nullptr; }
-PBLandParcel* pb_land_from_dxf(const char*)        { return nullptr; }
-void          pb_land_free(PBLandParcel*)           {}
-char*         pb_land_to_json(const PBLandParcel*)  { return nullptr; }
-char* pb_plan_mep(const char*, const char*)         { return nullptr; }
-char* pb_generate_schedule(const char*, int)        { return nullptr; }

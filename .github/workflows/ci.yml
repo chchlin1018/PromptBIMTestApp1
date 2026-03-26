@@ -94,6 +94,9 @@ jobs:
 
       - name: Run GoogleTest
         working-directory: libpromptbim/build
+        env:
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
         run: ctest --output-on-failure --timeout 60
 
   # ---------------------------------------------------------------------------

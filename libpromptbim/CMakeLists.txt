@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(promptbim VERSION 2.5.0 LANGUAGES CXX)
+project(promptbim VERSION 2.6.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,6 +11,26 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(PROMPTBIM_BUILD_TESTS    "Build GoogleTest suite"      ON)
 option(PROMPTBIM_BUILD_PYTHON   "Build pybind11 bindings"     ON)
 option(PROMPTBIM_USE_VCPKG      "Use vcpkg for dependencies"  OFF)
+
+# ---------------------------------------------------------------------------
+# Python executable — prefer conda env python3.11 over system python
+# ---------------------------------------------------------------------------
+if(PROMPTBIM_BUILD_PYTHON AND NOT Python3_EXECUTABLE)
+    # Try conda env first
+    find_program(_CONDA_PYTHON python3.11
+        PATHS "$ENV{CONDA_PREFIX}/bin" NO_DEFAULT_PATH)
+    if(_CONDA_PYTHON)
+        set(Python3_EXECUTABLE "${_CONDA_PYTHON}" CACHE FILEPATH
+            "Preferred Python interpreter (conda env)" FORCE)
+        message(STATUS "Using conda Python: ${_CONDA_PYTHON}")
+    else()
+        find_program(_SYS_PYTHON python3.11)
+        if(_SYS_PYTHON)
+            set(Python3_EXECUTABLE "${_SYS_PYTHON}" CACHE FILEPATH
+                "Preferred Python interpreter" FORCE)
+        endif()
+    endif()
+endif()
 
 # ---------------------------------------------------------------------------
 # Dependencies — FetchContent (CI-friendly, no vcpkg required locally)
@@ -44,12 +64,21 @@ if(PROMPTBIM_BUILD_TESTS)
 endif()
 
 # ---------------------------------------------------------------------------
-# Core library
+# Source file list
 # ---------------------------------------------------------------------------
-add_library(promptbim_core STATIC
+set(PROMPTBIM_SOURCES
+    src/geometry/geometry.cpp
     src/compliance/compliance_engine.cpp
     src/cost/cost_engine.cpp
+    src/mep/mep_engine.cpp
+    src/simulation/simulation_engine.cpp
+    src/stubs/future_stubs.cpp
 )
+
+# ---------------------------------------------------------------------------
+# Core library (static — for tests and pybind11)
+# ---------------------------------------------------------------------------
+add_library(promptbim_core STATIC ${PROMPTBIM_SOURCES})
 
 target_include_directories(promptbim_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -59,10 +88,7 @@ target_include_directories(promptbim_core PUBLIC
 target_link_libraries(promptbim_core PUBLIC nlohmann_json::nlohmann_json)
 
 # Shared library with C ABI (for Swift / FFI)
-add_library(promptbim SHARED
-    src/compliance/compliance_engine.cpp
-    src/cost/cost_engine.cpp
-)
+add_library(promptbim SHARED ${PROMPTBIM_SOURCES})
 target_include_directories(promptbim PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -96,6 +122,10 @@ if(PROMPTBIM_BUILD_TESTS)
         tests/test_compliance_engine.cpp
         tests/test_cost_engine.cpp
         tests/test_version.cpp
+        tests/test_mep_engine.cpp
+        tests/test_simulation_engine.cpp
+        tests/test_geometry.cpp
+        tests/test_utf8.cpp
     )
     target_link_libraries(promptbim_tests
         PRIVATE promptbim_core
