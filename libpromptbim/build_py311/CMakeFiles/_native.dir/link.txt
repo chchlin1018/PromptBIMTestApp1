@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -arch arm64 -bundle -Wl,-headerpad_max_install_names -Xlinker -undefined -Xlinker dynamic_lookup -flto -o _native.cpython-311-darwin.so CMakeFiles/_native.dir/bindings/python/bindings.cpp.o  libpromptbim_core.a

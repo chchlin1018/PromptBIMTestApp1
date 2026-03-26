@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpromptbim_core.a CMakeFiles/promptbim_core.dir/src/compliance/compliance_engine.cpp.o CMakeFiles/promptbim_core.dir/src/cost/cost_engine.cpp.o
-/usr/bin/ranlib libpromptbim_core.a
