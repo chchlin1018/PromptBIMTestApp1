@@ -71,6 +71,14 @@ notify() {
 - **★ pytest 必須加: --timeout=10 --ignore=tests/test_gui -x**
 - P24b 教訓: pytest GUI 測試產生殭屍 Python 進程吃 26GB
 
+### pytest OOM 根因（P24e — 4次事故總結）
+- **★ conftest.py 最頂部必須設定 os.environ["QT_QPA_PLATFORM"] = "offscreen"**
+- **★ 禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
+- **★ pytest 必須加 --ignore=tests/test_e2e_integration.py（20KB 觸發 PySide6）**
+- **★ 每次 pytest 前後都 pkill -f "python.*pytest"**
+- 根因: pytest 收集 test 檔案時 import PySide6 → 建立 QApplication → 每個進程吃數 GB
+- Claude Code 同時啟動多個 pytest 進程 → 記憶體倍增 → swap 10.77GB → OOM
+
 ### Git 安全規則（v1.19.0 MANDATORY）
 - **★ Sprint 啟動前 git pull origin main（防遠端分歧）**
 - **★ 每個 Part 結束必須 git commit + push（增量保存）**
@@ -90,6 +98,14 @@ notify() {
 - **★ export QT_QPA_PLATFORM=offscreen（禁止真正 GUI 視窗）**
 - **★ pytest 必須加: --timeout=10 --ignore=tests/test_gui -x**
 - P24b 教訓: pytest GUI 測試產生殭屍 Python 進程吃 26GB
+
+### pytest OOM 根因（P24e — 4次事故總結）
+- **★ conftest.py 最頂部必須設定 os.environ["QT_QPA_PLATFORM"] = "offscreen"**
+- **★ 禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
+- **★ pytest 必須加 --ignore=tests/test_e2e_integration.py（20KB 觸發 PySide6）**
+- **★ 每次 pytest 前後都 pkill -f "python.*pytest"**
+- 根因: pytest 收集 test 檔案時 import PySide6 → 建立 QApplication → 每個進程吃數 GB
+- Claude Code 同時啟動多個 pytest 進程 → 記憶體倍增 → swap 10.77GB → OOM
 
 ---
 
