@@ -6,6 +6,23 @@
 
 ---
 
+## [2.4.1] - 2026-03-26
+
+### Fixed (Sprint P17.1: 審計修復 + 文檔一致性)
+
+#### 文檔修復
+- `PROMPT_P18.md` — 修正測試數 776→792，CLAUDE.md 版本 v1.9.0→v1.13.0
+- `PROMPT_P18.md` — 加入啟動通知步驟（⚠️ 第一步）
+- `PROMPT_P18.md` — 加入 Part A / Part B 完成通知模板
+- `docs/PromptBIM_Context_Prompt.md` — 同步 P17 測試數 776→792
+- `docs/PromptBIM_Context_Prompt.md` — 更新 CLAUDE.md 版本至 v1.13.0
+
+#### 版本同步
+- `pyproject.toml` — Version bumped to 2.4.1
+- `__init__.py` — Fallback version updated to 2.4.1
+
+---
+
 ## [2.4.0] - 2026-03-26
 
 ### Added (Sprint P17: Final Polish + Architecture Hardening + CI Fix)
@@ -799,3 +816,4 @@
 | 2.0.0 | P14 完成 | CI/CD + 安全 + 文件 v2.0 |
 | 2.1.0 | P16 完成 | 品質修復 (retry, timeout, constants) |
 | 2.4.0 | P17 完成 | 架構強化 + Async + Cache + CI 修復 |
+| 2.4.1 | P17.1 完成 | 文檔一致性修復（測試數、CLAUDE.md 版本、啟動通知）|
