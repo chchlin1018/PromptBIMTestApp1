@@ -1,0 +1,73 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+    "configurePresets": [
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": { "type": "FILEPATH", "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" }
+            },
+            "vendor": {
+                "microsoft.com/VisualStudio/CMake/v1": { "hostOS": ["Windows"] }
+            }
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Windows Debug (VS2025)",
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "BUILD_TESTS": "ON",
+                "BUILD_PYTHON_BINDINGS": "ON"
+            }
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Windows Release (VS2025)",
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "BUILD_TESTS": "ON",
+                "BUILD_PYTHON_BINDINGS": "ON"
+            }
+        },
+        {
+            "name": "macos-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": { "type": "FILEPATH", "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" }
+            }
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS Debug (Clang)",
+            "inherits": "macos-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "BUILD_TESTS": "ON" }
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS Release (Clang)",
+            "inherits": "macos-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "BUILD_TESTS": "ON" }
+        }
+    ],
+    "buildPresets": [
+        { "name": "windows-debug", "configurePreset": "windows-debug" },
+        { "name": "windows-release", "configurePreset": "windows-release" },
+        { "name": "macos-debug", "configurePreset": "macos-debug" },
+        { "name": "macos-release", "configurePreset": "macos-release" }
+    ],
+    "testPresets": [
+        { "name": "windows-debug", "configurePreset": "windows-debug", "output": { "outputOnFailure": true } },
+        { "name": "windows-release", "configurePreset": "windows-release", "output": { "outputOnFailure": true } },
+        { "name": "macos-debug", "configurePreset": "macos-debug", "output": { "outputOnFailure": true } },
+        { "name": "macos-release", "configurePreset": "macos-release", "output": { "outputOnFailure": true } }
+    ]
+}

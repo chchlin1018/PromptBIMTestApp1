@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "name": "promptbim-cpp-core",
+    "version": "3.0.0",
+    "description": "PromptBIM C++ Core — Compliance Engine + Cost Engine",
+    "homepage": "https://github.com/chchlin1018/PromptBIMTestApp1",
+    "license": "MIT",
+    "dependencies": [
+        "pybind11",
+        "gtest",
+        "nlohmann-json"
+    ]
+}

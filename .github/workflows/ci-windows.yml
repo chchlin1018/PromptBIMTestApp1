@@ -1,0 +1,62 @@
+# PromptBIM — Windows CI (Python + C++)
+name: CI-Windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-tests:
+    name: Python Tests (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.11"
+          activate-environment: promptbim
+          channels: conda-forge,defaults
+
+      - name: Install dependencies
+        run: |
+          conda install -c conda-forge ifcopenshell -y
+          pip install -e ".[dev]"
+          pip install usd-core qasync
+
+      - name: Lint
+        run: ruff check src/ tests/
+
+      - name: Test
+        run: |
+          python -m pytest tests/ \
+            --tb=short -q \
+            --timeout=10 \
+            --ignore=tests/test_mcp \
+            --ignore=tests/test_gui \
+            -m "not api and not slow and not gui"
+
+  cpp-tests:
+    name: C++ Tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: "latest"
+
+      - name: Configure
+        run: cmake --preset windows-release
+
+      - name: Build
+        run: cmake --build --preset windows-release
+
+      - name: Test
+        run: ctest --preset windows-release --output-on-failure
