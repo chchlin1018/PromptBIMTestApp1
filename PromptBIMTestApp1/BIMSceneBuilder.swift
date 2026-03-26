@@ -102,6 +102,58 @@ class BIMSceneBuilder {
         }
     }
 
+    // MARK: - Demo Scene (P24-Task 7)
+
+    /// Find the demo USDA file in resources/demo/ directory.
+    static func findDemoUSDA() -> String? {
+        // Look relative to the app bundle or project root
+        let candidates = [
+            // Xcode build: look relative to executable
+            Bundle.main.resourcePath.map { "\($0)/demo/demo_building.usda" },
+            // Development: look relative to project root
+            findProjectRoot().map { "\($0)/resources/demo/demo_building.usda" },
+        ].compactMap { $0 }
+
+        for path in candidates {
+            if FileManager.default.fileExists(atPath: path) {
+                return path
+            }
+        }
+        return nil
+    }
+
+    /// Build a demo scene from embedded plan data (fallback when no USDA file).
+    static func buildDemoScene() -> SCNScene? {
+        let demoPlanJSON = """
+        {
+            "project_name": "Demo Building - Taipei Xinyi",
+            "stories": [
+                {"name": "1F", "height_m": 3.6, "elevation_m": 0,
+                 "slab_boundary": [[5,5],[18,5],[17,21],[5,22]]},
+                {"name": "2F", "height_m": 3.0, "elevation_m": 3.6,
+                 "slab_boundary": [[5,5],[18,5],[17,21],[5,22]]},
+                {"name": "3F", "height_m": 3.0, "elevation_m": 6.6,
+                 "slab_boundary": [[5,5],[18,5],[17,21],[5,22]]}
+            ],
+            "building_footprint": [[5,5],[18,5],[17,21],[5,22]]
+        }
+        """
+        return buildScene(fromPlanJSON: demoPlanJSON)
+    }
+
+    /// Find the project root by searching upward for pyproject.toml.
+    private static func findProjectRoot() -> String? {
+        var dir = Bundle.main.bundlePath as NSString
+        for _ in 0..<6 {
+            dir = dir.deletingLastPathComponent as NSString
+            let marker = dir.appendingPathComponent("pyproject.toml")
+            if FileManager.default.fileExists(atPath: marker) {
+                return dir as String
+            }
+        }
+        return nil
+    }
+
     // MARK: - Private helpers
 
     private static func storyColor(index: Int) -> NSColor {

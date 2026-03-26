@@ -1,0 +1,21 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [check, --fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: version-sync-check
+        name: Check version consistency
+        entry: python -c "
+import re, sys;
+v1 = re.search(r'version = \"([^\"]+)\"', open('pyproject.toml').read()).group(1);
+v2 = re.search(r'__version__ = \"([^\"]+)\"', open('src/promptbim/__init__.py').read()).group(1);
+sys.exit(0) if v1 == v2 else (print(f'Version mismatch: pyproject={v1} init={v2}') or sys.exit(1))
+"
+        language: python
+        pass_filenames: false
+        files: (pyproject\.toml|__init__\.py)

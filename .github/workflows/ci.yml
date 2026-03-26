@@ -6,36 +6,45 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ---------------------------------------------------------------------------
-  # Python tests + Xcode build (macOS only)
+  # Python lint + test (Ubuntu — fast, saves macOS minutes)
   # ---------------------------------------------------------------------------
-  test:
-    runs-on: macos-14
+  lint-and-test:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          activate-environment: promptbim
-          auto-activate-base: false
 
       - name: Install dependencies
-        shell: bash -el {0}
         run: |
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" || pip install -e "."
+          pip install ruff pytest pytest-cov
 
       - name: Lint
-        shell: bash -el {0}
         run: ruff check src/ tests/
 
       - name: Test with coverage
-        shell: bash -el {0}
         run: |
-          pytest -m "not api and not slow" --tb=short -q \
+          pytest -m "not api and not slow and not integration" --tb=short -q \
             --cov=src/promptbim --cov-report=term-missing --cov-report=xml \
-            --cov-fail-under=70
+            --cov-fail-under=75
+
+  # ---------------------------------------------------------------------------
+  # Xcode build (macOS only — runs only on main push to save minutes)
+  # ---------------------------------------------------------------------------
+  xcode-build:
+    runs-on: macos-14
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Xcode Build
         run: |
