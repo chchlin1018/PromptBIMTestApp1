@@ -1,6 +1,6 @@
 [project]
 name = "promptbim"
-version = "1.4.0"
+version = "1.5.0"
 description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -32,15 +32,16 @@ dependencies = [
     "Pillow>=10.0",
     # Infra
     "pydantic>=2.0",
+    "pydantic-settings>=2.0",
     "python-dotenv>=1.0",
-    "rich>=13.0",
+    "imageio>=2.30",
 ]
 
 [project.optional-dependencies]
-pdf = ["pdfplumber>=0.10"]
-voice = ["faster-whisper>=1.0"]
+pdf = ["pdfplumber>=0.10", "PyMuPDF>=1.23"]
+voice = ["faster-whisper>=1.0", "sounddevice>=0.4"]
 mcp = ["mcp>=1.0"]
-web = ["fastapi>=0.100", "uvicorn>=0.25"]
+web = ["streamlit>=1.30"]
 dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0"]
 
 [project.scripts]
@@ -58,7 +59,8 @@ line-length = 100
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "integration: end-to-end integration tests",
-    "api: tests requiring external API access",
-    "benchmark: performance benchmark tests",
+    "integration: requires real environment",
+    "api: requires Claude API key",
+    "benchmark: performance benchmarks",
+    "slow: tests taking > 10 seconds",
 ]

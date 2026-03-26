@@ -56,8 +56,6 @@ class Settings(BaseSettings):
 
     # Paths
     output_dir: Path = Field(default=Path("./output"), description="Output directory")
-    f3d_path: str = Field(default="f3d", description="F3D binary path")
-
     # Defaults
     default_city: str = Field(default="Taipei", description="Default city for zoning lookup")
     log_level: str = Field(default="INFO", description="Log level")

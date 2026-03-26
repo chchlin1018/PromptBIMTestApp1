@@ -6,6 +6,56 @@
 
 ---
 
+## [1.5.0] - 2026-03-26
+
+### Fixed (Sprint P13: CLI + Dependencies + PDF OCR)
+
+#### Dependency Fixes
+- **pyproject.toml** — Bumped version to 1.5.0; added `pydantic-settings>=2.0` and `imageio>=2.30` as core deps
+- **pyproject.toml** — Removed unused `rich>=13.0` dependency
+- **pyproject.toml** — Fixed optional deps: `web` now uses `streamlit` (not fastapi), `voice` adds `sounddevice`, `pdf` adds `PyMuPDF`
+- **config.py** — Removed unused `f3d_path` setting
+- **`__init__.py`** — Version now uses `importlib.metadata` for single-source-of-truth versioning
+
+### Added
+
+#### `generate` CLI Command (fully functional)
+- `python -m promptbim generate "3-story villa" -o ./output` — runs full pipeline from CLI
+- `--land` option for GeoJSON/SHP/DXF/KML land files, defaults to 30x30m parcel
+- `--format` (ifc/usd/both), `--city`, `--template` options
+- `_load_land_file()` auto-detects format by extension
+- `_cli_status()` prints pipeline progress to console
+- Outputs `result.json` with building summary
+
+#### PDF Cadastral Document Parser
+- `land/parsers/pdf_ocr.py` — `PDFLandParser` class with full extraction pipeline:
+  - Text extraction via pdfplumber (area, lot number, address)
+  - Table coordinate extraction
+  - Image extraction via PyMuPDF + Claude Vision AI boundary recognition
+  - Cadastral keyword detection (Chinese + English)
+  - Square approximation fallback when only area is available
+- GUI `import_land.py` — New "PDF (OCR)" tab with drag-and-drop support
+- `Info.plist` — Added PDF document type, CFBundleVersion bumped to 13
+
+#### Test Infrastructure
+- `tests/conftest.py` — Shared fixtures: `sample_land`, `sample_plan`, `sample_zoning`, `tmp_output`
+- `tests/test_cli.py` — CLI tests: version, generate, check, help (15 tests)
+- `tests/test_land/test_pdf_ocr.py` — PDF parser tests (13 tests)
+- pytest markers: added `slow: tests taking > 10 seconds` marker
+
+### Changed
+- `bim/geometry.py` — Added `poly_area()` as canonical shoelace implementation
+- `agents/orchestrator.py` — Uses `poly_area` from geometry; added Builder failure recovery (saves `plan_partial.json`); wrapped modify in try/except
+- `agents/modifier.py` — Uses `poly_area` from geometry (alias `_poly_area` kept for backward compat)
+- `gui/dialogs/import_land.py` — Separated `PDF_EXTENSIONS` from `IMAGE_EXTENSIONS`; added KML support to `_parse_file`
+
+### Stats
+- Tests: 705 passed (from 675)
+- xcodebuild: BUILD SUCCEEDED
+- git tag: v1.5.0
+
+---
+
 ## [1.4.0] - 2026-03-26
 
 ### Fixed (Sprint P12: Quality Fixes + Performance + Demo Prep)
@@ -585,3 +635,4 @@
 | 1.2.0 | P10.3 完成 | Startup Health Check |
 | 1.3.0 | P11 完成 | Xcode ↔ PySide6 整合 |
 | 1.4.0 | P12 完成 | 品質修復 + 效能優化 + Demo |
+| 1.5.0 | P13 完成 | CLI + 依賴修復 + PDF OCR |

@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v1.4.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v1.5.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -36,8 +36,9 @@
 | P10.3 | Startup Health Check + AI Validation | 1 | ✅ | P0, P4, P10.2 |
 | P11 | Xcode ↔ PySide6 GUI 整合 + E2E | 1 | ✅ | P0~P10.3 |
 | P12 | 品質修復 + 效能優化 + Demo 準備 | 1 | ✅ | P0~P11 |
+| P13 | CLI 完整化 + 依賴修復 + PDF OCR | 1 | ✅ | P4, P9, P12 |
 
-**預估總開發時間: ~43 天**
+**預估總開發時間: ~44 天**
 
 ---
 
@@ -372,9 +373,35 @@
 
 ---
 
+## P13: CLI 完整化 + 依賴修復 + PDF OCR (~1 天)
+
+### Part A: Critical 依賴修復
+- ✅ T1: pyproject.toml — version 1.5.0, added pydantic-settings + imageio, removed rich, fixed optional-deps (web→streamlit, voice+sounddevice, pdf+PyMuPDF)
+- ✅ T2: __init__.py — importlib.metadata dynamic version, removed f3d_path from config
+
+### Part B: generate CLI 命令
+- ✅ T3: _run_generate() + _load_land_file() + _cli_status() — full pipeline from CLI with --format/--city/--template
+- ✅ T4: test_cli.py — 15 CLI tests (version, generate, check, help, unit tests)
+
+### Part C: PDF OCR 土地匯入
+- ✅ T5: land/parsers/pdf_ocr.py — PDFLandParser (pdfplumber text + PyMuPDF images + Claude Vision AI)
+- ✅ T6: GUI import_land.py — PDF (OCR) tab + Info.plist PDF support + CFBundleVersion 13
+
+### Part D: 測試基礎設施
+- ✅ T7: tests/conftest.py — shared fixtures (sample_land, sample_plan, sample_zoning, tmp_output) + slow marker
+- ✅ T8: poly_area() canonical impl in bim/geometry.py, orchestrator + modifier use shared function
+
+### Part E: 收尾
+- ✅ T9: Orchestrator — Builder failure saves plan_partial.json; modify wrapped in try/except
+- ✅ T10: 705 passed, BUILD SUCCEEDED, docs updated, git tag v1.5.0
+
+**驗收標準:** generate CLI 可用; 版本一致 1.5.0; PDF OCR 解析器; 共用 fixtures; 705+ tests passed
+
+---
+
 ## 未來 Backlog
 
-- ⬜ PDF 地籍圖 OCR 解析 (pdfplumber)
+- ✅ PDF 地籍圖 OCR 解析 (pdfplumber) — P13 完成
 - ✅ KML 匯入 + 衛星底圖疊加 — P10 完成
 - ✅ MCP Server (Claude Desktop 整合) — P9 完成
 - ✅ USDZ 打包 (Apple Vision Pro / Quick Look) — P9 完成

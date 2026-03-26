@@ -588,11 +588,13 @@ class TestGUIImports:
         from promptbim.gui.dialogs.import_land import (
             SUPPORTED_EXTENSIONS,
             IMAGE_EXTENSIONS,
+            PDF_EXTENSIONS,
             ALL_EXTENSIONS,
         )
         assert ".geojson" in SUPPORTED_EXTENSIONS
         assert ".jpg" in IMAGE_EXTENSIONS
-        assert ALL_EXTENSIONS == SUPPORTED_EXTENSIONS | IMAGE_EXTENSIONS
+        assert ".pdf" in PDF_EXTENSIONS
+        assert ALL_EXTENSIONS == SUPPORTED_EXTENSIONS | IMAGE_EXTENSIONS | PDF_EXTENSIONS
 
     def test_chat_panel_no_land_fallback(self):
         """ChatPanel should allow generation without pre-loaded land."""

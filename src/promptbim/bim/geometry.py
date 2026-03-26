@@ -25,6 +25,27 @@ class Mesh:
 
 
 # ---------------------------------------------------------------------------
+# Polygon area (Shoelace formula)
+# ---------------------------------------------------------------------------
+
+
+def poly_area(coords: list[tuple[float, float]]) -> float:
+    """Shoelace formula for polygon area.
+
+    Canonical implementation — used throughout the project.
+    """
+    n = len(coords)
+    if n < 3:
+        return 0.0
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += coords[i][0] * coords[j][1]
+        area -= coords[j][0] * coords[i][1]
+    return abs(area) / 2.0
+
+
+# ---------------------------------------------------------------------------
 # Wall
 # ---------------------------------------------------------------------------
 

@@ -11,6 +11,7 @@ import copy
 import json
 
 from promptbim.agents.base import BaseAgent
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 from promptbim.schemas.modification import (
     ImpactItem,
@@ -145,23 +146,15 @@ def _diff_component(
     if component == "roof":
         return (old.roof.roof_type, new.roof.roof_type, f"Roof: {old.roof.roof_type} → {new.roof.roof_type}")
     if component == "cost":
-        old_area = sum(s.slab_boundary and _poly_area(s.slab_boundary) or 0 for s in old.stories)
-        new_area = sum(s.slab_boundary and _poly_area(s.slab_boundary) or 0 for s in new.stories)
+        old_area = sum(s.slab_boundary and poly_area(s.slab_boundary) or 0 for s in old.stories)
+        new_area = sum(s.slab_boundary and poly_area(s.slab_boundary) or 0 for s in new.stories)
         return (f"{old_area:.0f}m²", f"{new_area:.0f}m²", f"Total area: {old_area:.0f} → {new_area:.0f} m²")
     # Default: no meaningful diff
     return ("—", "—", component)
 
 
-def _poly_area(coords: list[tuple[float, float]]) -> float:
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
+# _poly_area moved to bim.geometry.poly_area — keep backward compat alias
+_poly_area = poly_area
 
 
 # ---------------------------------------------------------------------------
@@ -484,7 +477,7 @@ def _recalculate_metrics(plan: BuildingPlan) -> BuildingPlan:
     if land_area > 0:
         plan.building_bcr = round(footprint_area / land_area, 4)
         total_floor_area = sum(
-            _poly_area(s.slab_boundary) if s.slab_boundary else footprint_area
+            poly_area(s.slab_boundary) if s.slab_boundary else footprint_area
             for s in plan.stories
         )
         plan.building_far = round(total_floor_area / land_area, 4)

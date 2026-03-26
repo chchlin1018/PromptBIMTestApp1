@@ -29,8 +29,19 @@ def app():
     # generate subcommand
     gen_parser = subparsers.add_parser("generate", help="Generate building from prompt")
     gen_parser.add_argument("prompt", help="Building description prompt")
-    gen_parser.add_argument("--land", help="Path to land data file (GeoJSON/SHP/DXF)")
+    gen_parser.add_argument("--land", help="Path to land data file (GeoJSON/SHP/DXF/KML)")
     gen_parser.add_argument("--output", "-o", default="./output", help="Output directory")
+    gen_parser.add_argument(
+        "--format", choices=["ifc", "usd", "both"], default="both",
+        help="Output format (default: both)"
+    )
+    gen_parser.add_argument(
+        "--city", default="Taipei", help="City for zoning rules lookup (default: Taipei)"
+    )
+    gen_parser.add_argument(
+        "--template", choices=["residential", "school", "hospital", "factory"],
+        help="Use a building template instead of AI planning"
+    )
     gen_parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging output"
     )
@@ -59,11 +70,118 @@ def app():
     if args.command == "gui":
         _launch_gui()
     elif args.command == "generate":
-        print(f"[promptbim] Generate not yet implemented. Prompt: {args.prompt}")
+        _run_generate(args)
     elif args.command == "check":
         _run_check(args)
     else:
         parser.print_help()
+
+
+def _run_generate(args):
+    """Run the generate pipeline from CLI."""
+    import json
+    from pathlib import Path
+
+    from promptbim.agents.orchestrator import Orchestrator
+    from promptbim.config import get_settings
+    from promptbim.debug import get_logger
+    from promptbim.schemas.zoning import ZoningRules
+
+    logger = get_logger("cli.generate")
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load land data
+    land = None
+    if args.land:
+        land = _load_land_file(args.land)
+    else:
+        from promptbim.schemas.land import LandParcel
+
+        land = LandParcel(
+            name="CLI-Default",
+            boundary=[(0, 0), (30, 0), (30, 30), (0, 30)],
+            area_sqm=900.0,
+        )
+
+    # Zoning rules with city
+    settings = get_settings()
+    city = getattr(args, "city", None) or settings.default_city
+    zoning = ZoningRules(city=city)
+
+    # Generate
+    orch = Orchestrator(output_dir=output_dir, on_status=_cli_status)
+    result = orch.generate(args.prompt, land, zoning)
+
+    if result.success:
+        print(f"Generated: {result.building_name}")
+        if result.ifc_path:
+            print(f"   IFC: {result.ifc_path}")
+        if result.usd_path:
+            print(f"   USD: {result.usd_path}")
+        print(f"   Stories: {result.summary.get('stories', '?')}")
+        # Save JSON summary
+        summary_path = output_dir / "result.json"
+        summary_path.write_text(
+            json.dumps(
+                result.model_dump(mode="json", exclude={"ifc_path", "usd_path"}),
+                indent=2,
+                ensure_ascii=False,
+                default=str,
+            )
+        )
+        print(f"   Summary: {summary_path}")
+    else:
+        print(f"Generation failed: {result.errors}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _load_land_file(path_str: str):
+    """Auto-detect land file format and parse."""
+    from pathlib import Path
+
+    from promptbim.debug import get_logger
+
+    logger = get_logger("cli.generate")
+    path = Path(path_str)
+
+    if not path.exists():
+        print(f"Land file not found: {path}", file=sys.stderr)
+        sys.exit(1)
+
+    ext = path.suffix.lower()
+
+    if ext in (".geojson", ".json"):
+        from promptbim.land.parsers.geojson import parse_geojson
+
+        parcels = parse_geojson(path)
+    elif ext == ".shp":
+        from promptbim.land.parsers.shapefile import parse_shapefile
+
+        parcels = parse_shapefile(path)
+    elif ext == ".dxf":
+        from promptbim.land.parsers.dxf import parse_dxf
+
+        parcels = parse_dxf(path)
+    elif ext in (".kml", ".kmz"):
+        from promptbim.land.parsers.kml import parse_kml
+
+        parcels = parse_kml(path)
+    else:
+        print(f"Unsupported land file format: {ext}", file=sys.stderr)
+        sys.exit(1)
+
+    if not parcels:
+        print(f"No land parcels found in: {path}", file=sys.stderr)
+        sys.exit(1)
+
+    logger.info("Loaded %d parcel(s) from %s", len(parcels), path.name)
+    return parcels[0]
+
+
+def _cli_status(status):
+    """Print pipeline progress to console."""
+    print(f"  [{status.stage}] {status.message} ({status.progress:.0%})")
 
 
 def _launch_gui():

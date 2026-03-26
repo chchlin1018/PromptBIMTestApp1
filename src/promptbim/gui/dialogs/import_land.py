@@ -26,11 +26,12 @@ from PySide6.QtWidgets import (
 
 from promptbim.schemas.land import LandParcel
 
-SUPPORTED_EXTENSIONS = {".geojson", ".json", ".shp", ".dxf"}
+SUPPORTED_EXTENSIONS = {".geojson", ".json", ".shp", ".dxf", ".kml", ".kmz"}
+PDF_EXTENSIONS = {".pdf"}
 IMAGE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".heic", ".heif", ".pdf",
+    ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".heic", ".heif",
 }
-ALL_EXTENSIONS = SUPPORTED_EXTENSIONS | IMAGE_EXTENSIONS
+ALL_EXTENSIONS = SUPPORTED_EXTENSIONS | IMAGE_EXTENSIONS | PDF_EXTENSIONS
 
 
 class ImportLandDialog(QDialog):
@@ -86,6 +87,26 @@ class ImportLandDialog(QDialog):
         img_layout.addLayout(btn_img)
         self._tabs.addTab(img_tab, "Image (AI)")
 
+        # Tab 3: PDF Cadastral Import
+        pdf_tab = QWidget()
+        pdf_layout = QVBoxLayout(pdf_tab)
+        self._pdf_label = QLabel(
+            "Drag & drop a PDF here, or click Browse.\n\n"
+            "Supports cadastral PDF documents.\n"
+            "Auto-detects lot numbers, area, and coordinates."
+        )
+        self._pdf_label.setWordWrap(True)
+        pdf_layout.addWidget(self._pdf_label)
+        self._pdf_progress = QProgressBar()
+        self._pdf_progress.setVisible(False)
+        pdf_layout.addWidget(self._pdf_progress)
+        btn_pdf = QHBoxLayout()
+        self._btn_browse_pdf = QPushButton("Browse PDF...")
+        self._btn_browse_pdf.clicked.connect(self._on_browse_pdf)
+        btn_pdf.addWidget(self._btn_browse_pdf)
+        pdf_layout.addLayout(btn_pdf)
+        self._tabs.addTab(pdf_tab, "PDF (OCR)")
+
         # Cancel button
         cancel_layout = QHBoxLayout()
         cancel_layout.addStretch()
@@ -103,6 +124,49 @@ class ImportLandDialog(QDialog):
         )
         if file_path:
             self._import_gis_file(file_path)
+
+    def _on_browse_pdf(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select PDF Document",
+            "",
+            "PDF files (*.pdf);;All files (*)",
+        )
+        if file_path:
+            self._import_pdf_file(file_path)
+
+    def _import_pdf_file(self, file_path: str):
+        logger.debug("Importing PDF for OCR: %s", file_path)
+        self._pdf_progress.setVisible(True)
+        self._pdf_progress.setRange(0, 0)
+        self._pdf_label.setText("Parsing PDF document...")
+        self._btn_browse_pdf.setEnabled(False)
+
+        try:
+            from promptbim.land.parsers.pdf_ocr import PDFLandParser
+
+            parser = PDFLandParser(use_ai=True)
+            parcels = parser.parse(file_path)
+            self._pdf_progress.setVisible(False)
+            self._btn_browse_pdf.setEnabled(True)
+
+            if parcels:
+                parcel = parcels[0]
+                self._pdf_label.setText(
+                    f"Extracted: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)\n"
+                    f"Boundary: {len(parcel.boundary)} points"
+                )
+                self.parcel_imported.emit(parcel)
+                self.accept()
+            else:
+                self._pdf_label.setText(
+                    "No cadastral data found in PDF.\n"
+                    "Try the Image (AI) tab for image-based recognition."
+                )
+        except Exception as e:
+            self._pdf_progress.setVisible(False)
+            self._btn_browse_pdf.setEnabled(True)
+            self._pdf_label.setText(f"Error: {e}")
 
     def _on_browse_image(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -193,6 +257,10 @@ class ImportLandDialog(QDialog):
             if suffix in SUPPORTED_EXTENSIONS:
                 self._import_gis_file(file_path)
                 return
+            elif suffix in PDF_EXTENSIONS:
+                self._tabs.setCurrentIndex(2)
+                self._import_pdf_file(file_path)
+                return
             elif suffix in IMAGE_EXTENSIONS:
                 self._tabs.setCurrentIndex(1)
                 self._import_image_file(file_path)
@@ -211,5 +279,8 @@ def _parse_file(path: Path, suffix: str) -> list[LandParcel]:
     elif suffix == ".dxf":
         from promptbim.land.parsers.dxf import parse_dxf
         return parse_dxf(path)
+    elif suffix in (".kml", ".kmz"):
+        from promptbim.land.parsers.kml import parse_kml
+        return parse_kml(path)
     else:
         raise ValueError(f"Unsupported file format: {suffix}")

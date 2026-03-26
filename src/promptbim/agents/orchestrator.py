@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from promptbim.agents.builder import BuilderAgent, BuildResult
+from promptbim.bim.geometry import poly_area
 from promptbim.agents.checker import CheckerAgent, CheckResult
 from promptbim.agents.enhancer import EnhancerAgent
 from promptbim.agents.modifier import ModifierAgent
@@ -128,7 +129,24 @@ class Orchestrator:
 
         # --- Build ---
         self._emit("builder", "Generating IFC + USD files...", 0.8)
-        self.build_result = self._builder.build(self.plan)
+        output_dir = self._builder._output_dir if hasattr(self._builder, '_output_dir') else None
+        try:
+            self.build_result = self._builder.build(self.plan)
+        except Exception as e:
+            logger.error("Builder failed: %s", e)
+            # Save partial result (plan JSON) for debugging
+            if output_dir:
+                try:
+                    plan_json = Path(output_dir) / "plan_partial.json"
+                    plan_json.write_text(self.plan.model_dump_json(indent=2))
+                    logger.info("Saved partial plan to %s", plan_json)
+                except Exception:
+                    pass
+            return GenerationResult(
+                success=False,
+                building_name=self.plan.name if self.plan else "",
+                errors=[str(e)],
+            )
 
         # --- Result ---
         _pipeline_elapsed = time.time() - _pipeline_start
@@ -154,7 +172,7 @@ class Orchestrator:
                 "stories": len(self.plan.stories),
                 "bcr": self.plan.building_bcr,
                 "far": self.plan.building_far,
-                "footprint_area": _poly_area(self.plan.building_footprint),
+                "footprint_area": poly_area(self.plan.building_footprint),
             },
             compliance_report=compliance_report,
             compliance_text=compliance_text,
@@ -176,7 +194,11 @@ class Orchestrator:
             return None, None
 
         self._emit("modifier", f"Analyzing: {command}", 0.1)
-        new_plan, record = self._modifier.modify(command, self.plan, zoning)
+        try:
+            new_plan, record = self._modifier.modify(command, self.plan, zoning)
+        except Exception as e:
+            logger.error("Modification failed unexpectedly: %s", e)
+            return None, None
 
         if record.success:
             self.plan = new_plan
@@ -221,14 +243,5 @@ class Orchestrator:
             self._on_status(PipelineStatus(stage=stage, message=message, progress=progress))
 
 
-def _poly_area(coords: list[tuple[float, float]]) -> float:
-    """Shoelace formula for polygon area."""
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
+# _poly_area moved to bim.geometry.poly_area — keep backward compat alias
+_poly_area = poly_area
