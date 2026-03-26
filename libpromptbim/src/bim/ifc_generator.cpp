@@ -17,6 +17,7 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 
 namespace promptbim {
@@ -38,10 +39,19 @@ void IFCGenerator::reset() {
 // -------------------------------------------------------------------------
 
 int IFCGenerator::add_entity(const std::string& type, const std::string& args) {
+    if (next_id_ >= std::numeric_limits<int>::max() - 1) {
+        return -1;  // overflow protection
+    }
     int id = ++next_id_;
     entities_.push_back({id, type, args});
     return id;
 }
+
+namespace {
+bool is_valid_coord(double v) {
+    return std::isfinite(v);
+}
+} // anonymous namespace
 
 // -------------------------------------------------------------------------
 // Public API
@@ -60,6 +70,7 @@ int IFCGenerator::generate(const std::string& plan_json,
 }
 
 std::string IFCGenerator::generate_string(const std::string& plan_json) {
+    std::lock_guard<std::mutex> lock(mutex_);
     reset();
 
     nlohmann::json plan;
@@ -369,6 +380,12 @@ int IFCGenerator::create_wall(int storey_id, int context_id,
                                double sx, double sy, double ex, double ey,
                                double base_z, double height, double thickness,
                                const std::string& wall_type) {
+    if (!is_valid_coord(sx) || !is_valid_coord(sy) ||
+        !is_valid_coord(ex) || !is_valid_coord(ey) ||
+        !is_valid_coord(base_z) || !is_valid_coord(height) ||
+        !is_valid_coord(thickness)) {
+        return -1;
+    }
     double dx = ex - sx;
     double dy = ey - sy;
     double length = std::sqrt(dx * dx + dy * dy);
@@ -503,9 +520,10 @@ void IFCGenerator::add_rel_aggregates(int parent_id,
 // -------------------------------------------------------------------------
 
 std::string IFCGenerator::build_header(const std::string& filename) {
-    // Get current timestamp
+    // Get current timestamp (thread-safe)
     time_t now = time(nullptr);
-    struct tm* t = gmtime(&now);
+    struct tm t_buf;
+    struct tm* t = gmtime_r(&now, &t_buf);
     char ts[64];
     std::strftime(ts, sizeof(ts), "%Y-%m-%dT%H:%M:%S", t);
 

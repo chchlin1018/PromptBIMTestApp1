@@ -389,22 +389,72 @@ std::vector<Point2D> GISEngine::apply_setback(
 {
     if (boundary.size() < 3 || setback_m <= 0.0) return boundary;
 
-    // Compute centroid
-    Point2D c = compute_centroid(boundary);
+    const size_t n = boundary.size();
 
-    // Shrink each vertex toward centroid by setback_m
-    std::vector<Point2D> result;
-    result.reserve(boundary.size());
-    for (const auto& pt : boundary) {
-        double dx = pt.x - c.x;
-        double dy = pt.y - c.y;
-        double dist = std::sqrt(dx * dx + dy * dy);
-        if (dist < 1e-12) {
-            result.push_back(pt);
+    // Edge-based inward offset: offset each edge inward by setback_m,
+    // then intersect adjacent offset edges to find new vertices.
+    // This handles non-convex polygons correctly (unlike centroid shrinking).
+
+    // Ensure polygon is CCW (positive signed area = CCW)
+    double signed_area = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        size_t j = (i + 1) % n;
+        signed_area += boundary[i].x * boundary[j].y;
+        signed_area -= boundary[j].x * boundary[i].y;
+    }
+    // If clockwise, reverse the offset direction
+    double sign = (signed_area >= 0.0) ? 1.0 : -1.0;
+
+    // Compute inward normals for each edge
+    struct OffsetEdge { Point2D p1, p2; };  // offset edge endpoints
+    std::vector<OffsetEdge> edges;
+    edges.reserve(n);
+
+    for (size_t i = 0; i < n; ++i) {
+        size_t j = (i + 1) % n;
+        double ex = boundary[j].x - boundary[i].x;
+        double ey = boundary[j].y - boundary[i].y;
+        double len = std::sqrt(ex * ex + ey * ey);
+        if (len < 1e-12) {
+            // Degenerate edge — use zero normal
+            edges.push_back({boundary[i], boundary[j]});
             continue;
         }
-        double ratio = std::max(0.0, (dist - setback_m) / dist);
-        result.push_back({c.x + dx * ratio, c.y + dy * ratio});
+        // Inward normal for CCW polygon: rotate edge direction +90° (left-hand normal)
+        double nx = sign * (-ey) / len;
+        double ny = sign * ex / len;
+        double ox = nx * setback_m;
+        double oy = ny * setback_m;
+        edges.push_back({
+            {boundary[i].x + ox, boundary[i].y + oy},
+            {boundary[j].x + ox, boundary[j].y + oy}
+        });
+    }
+
+    // Intersect adjacent offset edges
+    std::vector<Point2D> result;
+    result.reserve(n);
+    for (size_t i = 0; i < n; ++i) {
+        size_t j = (i + 1) % n;
+        // Line i: edges[i].p1 → edges[i].p2
+        // Line j: edges[j].p1 → edges[j].p2
+        double d1x = edges[i].p2.x - edges[i].p1.x;
+        double d1y = edges[i].p2.y - edges[i].p1.y;
+        double d2x = edges[j].p2.x - edges[j].p1.x;
+        double d2y = edges[j].p2.y - edges[j].p1.y;
+        double cross = d1x * d2y - d1y * d2x;
+        if (std::abs(cross) < 1e-12) {
+            // Parallel edges — use endpoint of first edge
+            result.push_back(edges[i].p2);
+            continue;
+        }
+        double dx = edges[j].p1.x - edges[i].p1.x;
+        double dy = edges[j].p1.y - edges[i].p1.y;
+        double t = (dx * d2y - dy * d2x) / cross;
+        result.push_back({
+            edges[i].p1.x + t * d1x,
+            edges[i].p1.y + t * d1y
+        });
     }
     return result;
 }

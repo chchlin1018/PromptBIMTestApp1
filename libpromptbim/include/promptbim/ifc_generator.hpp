@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <mutex>
 
 namespace promptbim {
 
@@ -45,6 +46,7 @@ public:
     std::string generate_string(const std::string& plan_json);
 
 private:
+    std::mutex mutex_;
     int next_id_;
     std::vector<IFCEntity> entities_;
     std::map<std::string, int> material_cache_;
