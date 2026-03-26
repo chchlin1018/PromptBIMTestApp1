@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.16.2 | **更新:** 2026-03-26
+> **版本:** v1.17.0 | **更新:** 2026-03-26
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 本文件中標記為 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 > ⚠️ **P18 違規修改本文件，導致 v1.13.0 完整內容被截斷。本版本為人工恢復。**
@@ -27,6 +27,9 @@
 
 ### notify 函數實作（複製到每個 PROMPT 的最前面）
 
+> ⚠️ **主要收件人: `+886972535899`（手機號碼，確保收到）**
+> ⚠️ **備用收件人: `chchlin1018@icloud.com`**
+
 ```bash
 # ===== ★★★ Sprint 絕對第一步：定義 notify 函數 ★★★ =====
 notify() {
@@ -34,14 +37,14 @@ notify() {
     osascript -e "
         tell application \"Messages\"
             set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
+            set targetBuddy to participant \"+886972535899\" of targetService
             send \"$msg\" to targetBuddy
         end tell
     " 2>/dev/null || \
     osascript -e "
         tell application \"Messages\"
             set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"+886972535899\" of targetService
+            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
             send \"$msg\" to targetBuddy
         end tell
     " 2>/dev/null || \
@@ -54,8 +57,8 @@ echo "✅ notify 函數已定義"
 ### iMessage 收件人
 
 ```
-主要: chchlin1018@icloud.com
-備用: +886972535899
+★ 主要: +886972535899          ← 手機號碼，最優先
+  備用: chchlin1018@icloud.com  ← iCloud 帳號
 ```
 
 ### Sprint 啟動順序（不可調換）
@@ -72,148 +75,80 @@ echo "✅ notify 函數已定義"
 
 ---
 
-## [MANDATORY] 關鍵文件保護與備份機制
+## [MANDATORY] 通知規則 — 每個 Task/Part 的「啟動」和「結束」都必須 notify
 
-> ⚠️ **這些文件一旦損壞，整個治理框架失效。必須有保護機制。**
+> ⚠️ **這是 v1.17.0 最重要的新增規則。**
+> ⚠️ **不是只在完成時 notify，而是「開始做」和「做完」都要各發一次。**
+> ⚠️ **這讓用戶即時知道 Claude Code 正在做什麼、何時做完。**
+> ⚠️ **缺少任何一則啟動或結束通知的 PROMPT 不合規。**
 
-### 受保護文件
+### 通知時機表（全部必須執行，不可省略）
 
-| 文件 | 最低大小 | 已知良好 SHA | 恢復命令 |
-|------|---------|------------|---------|
-| `CLAUDE.md` | 5,000 bytes | `dfcf0de7` | `git checkout 9599bc08 -- CLAUDE.md` |
-| `SKILL.md` | 20,000 bytes | `5a0c0620` | `git checkout 15fc0efe -- SKILL.md` |
+| # | 時機 | echo | notify | 內容 |
+|---|------|:----:|:------:|------|
+| 1 | **Sprint 啟動** | ✅ | ✅ | 總覽（Tasks/Parts 數量 + 目標版本） |
+| 2 | **每個 Task ▶️ 啟動** | ✅ | ✅ | `▶️ Task N 開始: {描述}` + 進度% |
+| 3 | **每個 Task ✅ 結束** | ✅ | ✅ | `✅ Task N 完成: {描述}` + 進度% |
+| 4 | **每個 Part ▶️ 啟動** | ✅ | ✅ | `▶️ Part X 開始: {描述}` + 含幾個 Tasks |
+| 5 | **每個 Part ✅ 結束** | ✅ | ✅ | `✅ Part X 完成` + 進度% + ⏭️ 下一步 |
+| 6 | **Task 失敗** | ✅ | ✅ | `⚠️ Task N 失敗` + 錯誤 + 嘗試修復 |
+| 7 | **修復嘗試** | ✅ | ✅ | 嘗試次數 + 修復方式 |
+| 8 | **中斷（3次失敗）** | ✅ | ✅ | 停止位置 + 原因 + 完成度% |
+| 9 | **關鍵文件損壞** | ✅ | ✅ | 恢復命令 |
+| 10 | **審計完成** | ✅ | ✅ | 評分摘要 |
+| 11 | **Git 推送完成** | ✅ | ✅ | commit hash + tag |
+| 12 | **Sprint 最終完成** | ✅ | ✅ | 100% + 測試數 |
 
-### Sprint 啟動時的完整性檢查（MANDATORY）
+### 通知模板（嚴格範本 — 新建 PROMPT 必須照抄）
 
-```bash
-# ===== 關鍵文件完整性檢查 =====
-CLAUDE_SIZE=$(wc -c < CLAUDE.md 2>/dev/null | tr -d ' ')
-SKILL_SIZE=$(wc -c < SKILL.md 2>/dev/null | tr -d ' ')
-
-if [ "$CLAUDE_SIZE" -lt 5000 ] 2>/dev/null; then
-    MSG="⛔ CLAUDE.md 已損壞！大小: ${CLAUDE_SIZE} bytes (應 >= 5000)
-🔧 恢復: git checkout 9599bc08 -- CLAUDE.md"
-    echo "$MSG" && notify "$MSG"
-    exit 1
-fi
-
-if [ "$SKILL_SIZE" -lt 20000 ] 2>/dev/null; then
-    MSG="⛔ SKILL.md 已損壞！大小: ${SKILL_SIZE} bytes (應 >= 20000)
-🔧 恢復: git checkout 15fc0efe -- SKILL.md"
-    echo "$MSG" && notify "$MSG"
-    exit 1
-fi
-
-echo "✅ 關鍵文件完整性: CLAUDE.md ${CLAUDE_SIZE}B, SKILL.md ${SKILL_SIZE}B"
-```
-
-### 備份規則
-
-1. **Claude Code 絕對禁止修改** `CLAUDE.md`、`SKILL.md`、`docs/backups/`
-2. `docs/backups/README.md` 記錄恢復指南 + SHA 表
-3. `scripts/backup_verify.sh` 可在 Sprint 前後手動執行
-
----
-
-## [MANDATORY] 專案檔案夾架構與檔名規則
-
-> ⚠️ **P22 起生效。**
-
-### Sprint Prompt: `sprints/PROMPT_P{X}.md`
-### Audit Report: `docs/audit-reports/Sprint{X}_AuditReport.md`
-### 根目錄只保留: CLAUDE.md, SKILL.md, README.md, SETUP.md, TODO.md, CHANGELOG.md, LICENSE, pyproject.toml
-
----
-
-## [MANDATORY] 自動執行模式 — 不得詢問用戶
-
-> ⚠️ **Claude Code 在執行 Sprint 時，不得中途停下來詢問用戶任何問題。**
-
-### 唯一例外（停下來通知用戶）
-
-- `.env` 中的 API Key 未設定
-- Git push 因為 remote 衝突失敗
-- Xcode 缺少必要的 signing certificate
-- **偵測到 ANTHROPIC_API_KEY 環境變數**
-- **關鍵文件完整性檢查失敗**
-
----
-
-## [MANDATORY] 每個 Sprint 一個 PROMPT 檔案
+#### Task 啟動通知 ▶️
 
 ```bash
-claude --dangerously-skip-permissions -p "請讀取 sprints/PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"
-```
-
----
-
-## [MANDATORY] iMessage 通知系統 — 含進度追蹤
-
-> ⚠️ **所有 notify 必須搭配 echo。**
-> ⚠️ **每則通知必須包含進度資訊：完成數 / 總數 + 完成百分比。**
-> ⚠️ **讓用戶一看通知就知道：做完什麼、還剩多少、完成度幾 %。**
-
-### 通知時機（全部必須執行）
-
-| # | 時機 | echo | notify | 進度 |
-|---|------|:----:|:------:|:----:|
-| 1 | **Sprint 啟動** | ✅ | ✅ | 總覽 |
-| 2 | **每個 Task 完成** | ✅ | ✅ | ✅ |
-| 3 | **每個 Part 完成** | ✅ | ✅ | ✅ |
-| 4 | **Task 失敗** | ✅ | ✅ | ✅ |
-| 5 | **修復嘗試** | ✅ | ✅ | ✅ |
-| 6 | **中斷（3次失敗）** | ✅ | ✅ | ✅ |
-| 7 | **關鍵文件損壞** | ✅ | ✅ | — |
-| 8 | **審計完成** | ✅ | ✅ | ✅ |
-| 9 | **Git 推送完成** | ✅ | ✅ | ✅ |
-| 10 | **Sprint 最終完成** | ✅ | ✅ | 100% |
-
-### 通知模板（含進度追蹤）
-
-> ⚠️ **PROMPT 創建時，必須在每個 Task/Part 通知中計算並帶入以下變數：**
-> - `TASK_DONE` / `TASK_TOTAL` — 已完成 Task 數 / 總 Task 數
-> - `PART_DONE` / `PART_TOTAL` — 已完成 Part 數 / 總 Part 數
-> - `PCT` — 完成百分比（= TASK_DONE * 100 / TASK_TOTAL）
-
-#### Task 完成通知
-
-```bash
+TASK_DONE=$((TASK_DONE))  # 尚未完成，不加 1
+PCT=$((TASK_DONE * 100 / TASK_TOTAL))
 MSG="🏗️ PromptBIM P${SPRINT}
-✅ Task ${TASK_NUM}: ${TASK_DESCRIPTION}
+▶️ Task ${TASK_NUM}/${TASK_TOTAL} 開始: ${TASK_DESCRIPTION}
 📊 進度: Task ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
 📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
 echo "$MSG" && notify "$MSG"
 ```
 
-**範例輸出：**
-```
-🏗️ PromptBIM P22
-✅ Task 7: IFC thread safety fixed (IFC-01 + IFC-02)
-📊 進度: Task 7/36 | Part 0/6 | 19%
-📍 MichaeldeMac-mini | 03/26 17:55
-```
-
-#### Part 完成通知
+#### Task 結束通知 ✅
 
 ```bash
+TASK_DONE=$((TASK_DONE + 1))
+PCT=$((TASK_DONE * 100 / TASK_TOTAL))
+MSG="🏗️ PromptBIM P${SPRINT}
+✅ Task ${TASK_NUM}/${TASK_TOTAL} 完成: ${TASK_DESCRIPTION}
+📊 進度: Task ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+echo "$MSG" && notify "$MSG"
+```
+
+#### Part 啟動通知 ▶️
+
+```bash
+MSG="🏗️ PromptBIM P${SPRINT}
+▶️ Part ${PART} 開始: ${PART_DESCRIPTION} (${PART_TASK_COUNT} tasks)
+📊 進度: Task ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+echo "$MSG" && notify "$MSG"
+```
+
+#### Part 結束通知 ✅
+
+```bash
+PART_DONE=$((PART_DONE + 1))
+PCT=$((TASK_DONE * 100 / TASK_TOTAL))
 MSG="🏗️ PromptBIM P${SPRINT} Part ${PART} ✅
-📋 ${PART_DESCRIPTION} (${TASK_COUNT} tasks)
+📋 ${PART_DESCRIPTION} (${PART_TASK_COUNT} tasks)
 📊 進度: Task ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
 ⏭️ 下一步: Part ${NEXT_PART} (${NEXT_PART_TASKS} tasks)
 📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
 echo "$MSG" && notify "$MSG"
 ```
 
-**範例輸出：**
-```
-🏗️ PromptBIM P22 Part A ✅
-📋 C++ Critical + Robustness (7 tasks)
-📊 進度: Task 13/36 | Part 1/6 | 36%
-⏭️ 下一步: Part B (8 tasks)
-📍 MichaeldeMac-mini | 03/26 18:10
-```
-
-#### Task 失敗通知
+#### Task 失敗通知 ⚠️
 
 ```bash
 MSG="🏗️ PromptBIM P${SPRINT}
@@ -224,7 +159,7 @@ MSG="🏗️ PromptBIM P${SPRINT}
 echo "$MSG" && notify "$MSG"
 ```
 
-#### 中斷通知（3 次修復失敗）
+#### 中斷通知 ❌
 
 ```bash
 MSG="🏗️ PromptBIM
@@ -236,7 +171,7 @@ MSG="🏗️ PromptBIM
 echo "$MSG" && notify "$MSG"
 ```
 
-#### Sprint 最終完成通知
+#### Sprint 完成通知 🎉
 
 ```bash
 MSG="🏗️ PromptBIM Sprint P${SPRINT} 完成 🎉
@@ -250,18 +185,60 @@ echo "$MSG" && notify "$MSG"
 
 ---
 
-## [MANDATORY] 新建 PROMPT 檔案前的合規性檢查
+## [MANDATORY] 關鍵文件保護與備份機制
+
+### 受保護文件
+
+| 文件 | 最低大小 | 恢復命令 |
+|------|---------|---------|
+| `CLAUDE.md` | 5,000 bytes | `git checkout 9599bc08 -- CLAUDE.md` |
+| `SKILL.md` | 20,000 bytes | `git checkout 15fc0efe -- SKILL.md` |
+
+### Sprint 啟動時的完整性檢查（MANDATORY）
+
+```bash
+CLAUDE_SIZE=$(wc -c < CLAUDE.md 2>/dev/null | tr -d ' ')
+SKILL_SIZE=$(wc -c < SKILL.md 2>/dev/null | tr -d ' ')
+if [ "$CLAUDE_SIZE" -lt 5000 ] 2>/dev/null || [ "$SKILL_SIZE" -lt 20000 ] 2>/dev/null; then
+    MSG="⛔ 關鍵文件損壞！CLAUDE=${CLAUDE_SIZE}B SKILL=${SKILL_SIZE}B"
+    echo "$MSG" && notify "$MSG" && exit 1
+fi
+echo "✅ 關鍵文件完整"
+```
+
+---
+
+## [MANDATORY] 專案檔案夾架構與檔名規則
+
+### Sprint Prompt: `sprints/PROMPT_P{X}.md`
+### Audit Report: `docs/audit-reports/Sprint{X}_AuditReport.md`
+
+---
+
+## [MANDATORY] 自動執行模式 — 不得詢問用戶
+
+唯一例外: API Key 未設定 / Git push 衝突 / Xcode 簽名 / ANTHROPIC_API_KEY / 關鍵文件損壞
+
+---
+
+## [MANDATORY] 新建 PROMPT 檔案前的嚴格合規性檢查
+
+> ⚠️ **每一條都必須滿足，否則 PROMPT 不合規，不得推送。**
 
 ```
-☐ 最前面有 notify 函數定義（含 chchlin1018@icloud.com + +886972535899）
+☐ 最前面有 notify 函數定義（主要: +886972535899 / 備用: chchlin1018@icloud.com）
 ☐ notify 定義後緊接啟動通知
 ☐ 啟動通知後有關鍵文件完整性檢查
+☐ 啟動通知後有環境檢查（含 ANTHROPIC_API_KEY 衝突）
 ☐ 存放路徑: sprints/PROMPT_P{X}.md
-☐ 每個 Task 通知含進度（Task N/Total | Part N/Total | %）
-☐ 每個 Part 通知含進度 + 下一步預告
+☐ ★ 每個 Task 有「啟動 ▶️」和「結束 ✅」兩則 notify ★
+☐ ★ 每個 Part 有「啟動 ▶️」和「結束 ✅」兩則 notify ★
+☐ 每則 notify 含進度（Task N/Total | Part N/Total | %）
+☐ Part 結束 notify 含 ⏭️ 下一步預告
 ☐ 包含 Task 失敗 + 中斷通知模板（含進度）
 ☐ 驗收標準含 xcodebuild + pytest + 文件同步 + pbxproj + 審計
 ☐ Audit Report 路徑: docs/audit-reports/Sprint{X}_AuditReport.md
+☐ Sprint 結束必須產生下一個 PROMPT
 ```
 
 ---
@@ -289,16 +266,18 @@ echo "$MSG" && notify "$MSG"
 
 ---
 
-## [MANDATORY] Sprint 執行流程
+## [MANDATORY] Sprint 執行流程（完整 22 步）
 
 ```
 1. 讀 PROMPT → 2. 定義 notify → 3. 啟動 notify（含總覽）
 4. 關鍵文件檢查 → 5. 環境檢查 → 6. 讀其他文件
-7. 執行 Tasks → 8. 每 Task notify（含進度%）→ 9. 每 Part notify（含進度% + 下一步）
-10. 錯誤 notify（含進度%）→ 11. xcodebuild → 12. pytest
-13. pbxproj → 14. 文件同步 → 15. 審計報告
-16. Git push → 17. notify Git → 18. tag
-19. 下個 PROMPT → 20. 完成報告 → 21. 最終 notify（100%）
+7. Part ▶️ 啟動 notify → 8. Task ▶️ 啟動 notify → 9. 執行 Task
+10. Task ✅ 結束 notify → 11. 重複 8-10 直到 Part 完畢
+12. Part ✅ 結束 notify（含下一步）→ 13. 重複 7-12 直到全部完畢
+14. 錯誤 notify（如發生）
+15. xcodebuild → 16. pytest → 17. pbxproj → 18. 文件同步
+19. 審計報告 → 20. Git push + tag → 21. 產生下一個 PROMPT
+22. Sprint 完成 notify（100%）
 ```
 
 ---
@@ -306,18 +285,21 @@ echo "$MSG" && notify "$MSG"
 ## [MANDATORY] 嚴格檢查清單
 
 ```
-□ notify 函數已定義（第一步）
-□ 啟動通知已發送（第二步，含 Sprint 總覽）
-□ 關鍵文件完整性通過（第三步）
+□ notify 函數已定義（第一步，主要收件人 +886972535899）
+□ 啟動通知已發送
+□ 關鍵文件完整性通過
 □ 環境檢查通過
+□ ★ 每個 Task 啟動有 ▶️ notify
+□ ★ 每個 Task 結束有 ✅ notify
+□ ★ 每個 Part 啟動有 ▶️ notify
+□ ★ 每個 Part 結束有 ✅ notify（含下一步）
+□ 錯誤和修復都有 notify
 □ xcodebuild BUILD SUCCEEDED
 □ pytest 全部通過
-□ 每個 Task 都有 echo + notify（含進度 %）
-□ 每個 Part 都有 echo + notify（含進度 % + 下一步）
-□ 錯誤和修復都有 echo + notify（含進度 %）
 □ 文件版本同步
 □ 審計報告已產生
-□ git push 完成
+□ git push + tag 完成
+□ 下一個 PROMPT 已建立
 □ 最終完成 notify 已發送（100%）
 ```
 
@@ -339,10 +321,12 @@ echo "$MSG" && notify "$MSG"
 - ⚠️ **不得修改 CLAUDE.md / SKILL.md / addendum / backups**
 - ⚠️ **xcodebuild + pytest 必須通過才能結束**
 - ⚠️ **不得在 Sprint 中詢問用戶**
-- ⚠️ **每個 Task/Part notify 必須含進度（N/Total + %）**
-- ⚠️ **每次錯誤必須立即 notify（含進度 %）**
+- ⚠️ **★ 每個 Task/Part 的啟動和結束都必須 notify（共 2 則）★**
+- ⚠️ **★ notify 主要收件人: +886972535899 ★**
+- ⚠️ **每次錯誤必須立即 notify**
 - ⚠️ **notify 函數必須在 PROMPT 最前面顯式定義**
 - ⚠️ **Sprint 啟動時必須檢查 CLAUDE.md + SKILL.md 大小**
+- ⚠️ **Sprint 結束必須產生下一個 PROMPT**
 
 ---
 
@@ -357,10 +341,11 @@ echo "$MSG" && notify "$MSG"
 | v1.15.1 | 通知系統強化 (Task 級通知) |
 | v1.16.0 | notify 函數顯式定義 + iMessage 收件人 + 啟動順序修正 |
 | v1.16.1 | 關鍵文件保護機制 — backup SHA + 完整性檢查 |
-| **v1.16.2** | **通知進度追蹤 — Task N/Total + Part N/Total + 完成% + 下一步預告** |
+| v1.16.2 | 通知進度追蹤 — Task N/Total + Part N/Total + 完成% |
+| **v1.17.0** | **★ Task/Part 啟動+結束雙向通知 + 主要收件人改 +886972535899 + 嚴格範本 ★** |
 
 ---
 
-*CLAUDE.md v1.16.2 | 2026-03-26*
-*通知必須含: Task 7/36 | Part 1/6 | 19% | ⏭️ 下一步: Part B*
-*iMessage: chchlin1018@icloud.com / +886972535899*
+*CLAUDE.md v1.17.0 | 2026-03-26*
+*★ 核心變更: 每個 Task/Part 啟動 ▶️ 和結束 ✅ 都必須 notify*
+*★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
