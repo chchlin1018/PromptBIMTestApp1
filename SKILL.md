@@ -1,7 +1,7 @@
-# PromptBIMTestApp1 — SKILL.md v3.4
+# PromptBIMTestApp1 — SKILL.md v3.5
 
 > Claude Code SSOT — 開發前必讀
-> 最後更新: 2026-03-26 (v3.4 memory monitoring)
+> 最後更新: 2026-03-26 (v3.5 lessons learned + memory + git safety)
 
 ---
 
@@ -9,7 +9,7 @@
 
 ## 0. [MANDATORY] Sprint 通知規則（v1.17.0 起生效）
 
-> ⚠️ **此規則從 CLAUDE.md v1.17.0 同步，嚴格執行，不可跳過。**
+> ⚠️ **此規則從 CLAUDE.md v1.19.0 同步，嚴格執行，不可跳過。**
 
 ### 通知收件人
 - **★ 主要: `+886972535899`**（手機號碼，最優先）
@@ -56,7 +56,21 @@ notify() {
 ☐ 包含失敗 + 中斷通知模板
 ☐ Sprint 結束必須產生下一個 PROMPT
 
-> 完整範本見 CLAUDE.md v1.18.0
+> 完整範本見 CLAUDE.md v1.19.0
+
+### 記憶體監控規則（v1.18.0+ MANDATORY）
+- **★ 每個 PROMPT 最前面必須定義 get_mem + check_mem 函數**
+- **★ Sprint 啟動時 check_mem — <1GB 中止**
+- **★ 每個 Task ▶️ 啟動 notify 必須含 💾 get_mem 結果**
+- **★ 每個 Part ▶️ 啟動前 check_mem — <1GB 暫停**
+- P24 教訓: Mac Mini 16GB RAM 耗盡 → Claude Code 被暫停 → Sprint 靜默中斷
+
+### Git 安全規則（v1.19.0 MANDATORY）
+- **★ Sprint 啟動前 git pull origin main（防遠端分歧）**
+- **★ 每個 Part 結束必須 git commit + push（增量保存）**
+- **★ Push 失敗 → 自動 git pull --rebase + 重試**
+- P22.1 教訓: Sprint 完成但沒 commit → 工作遺失
+- P24 教訓: Claude.ai 推 commit 造成本地分歧 → push 失敗
 
 ### 記憶體監控規則（v1.18.0 新增 — MANDATORY）
 - **★ 每個 PROMPT 最前面必須定義 get_mem + check_mem 函數**
@@ -685,7 +699,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.4 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
+*SKILL.md v3.5 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
