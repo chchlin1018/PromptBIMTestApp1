@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.6.0 | **更新:** 2026-03-26
+> **版本:** v1.7.0 | **更新:** 2026-03-26
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 本文件中標記為 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -70,9 +70,7 @@
 PROMPT.md        ← 總覽（Sprint 目錄 + 通用規則）
 PROMPT_P0.md     ← Sprint P0 專用執行指令
 PROMPT_P1.md     ← Sprint P1 專用執行指令
-PROMPT_P2.md     ← Sprint P2 專用執行指令
 ...
-PROMPT_P8.5.md   ← Sprint P8.5 專用執行指令
 ```
 
 ### Sprint 完成時，必須建立下一個 Sprint 的 PROMPT 檔案
@@ -99,19 +97,13 @@ PROMPT_P8.5.md   ← Sprint P8.5 專用執行指令
 
 ## 執行指令
 所有問題答案都是 Yes，不要中斷詢問。
-工作結束前嚴格遵循 CLAUDE.md [MANDATORY] 步驟。
-
-## 驗收標準
-{從 TODO.md 複製}
+工作結束前嚴格遵循 CLAUDE.md [MANDATORY] 步驟，特別是「全量文件同步」。
 ```
 
 ### CLI 啟動格式
 
 ```bash
-# 每個 Sprint 獨立啟動
-claude --dangerously-skip-permissions -p "請讀取 PROMPT_P0.md 並執行所有 task。不要問任何問題。"
-claude --dangerously-skip-permissions -p "請讀取 PROMPT_P1.md 並執行所有 task。不要問任何問題。"
-claude --dangerously-skip-permissions -p "請讀取 PROMPT_P2.md 並執行所有 task。不要問任何問題。"
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"
 ```
 
 ---
@@ -137,7 +129,7 @@ echo "訊息內容" > /tmp/imessage_notify.txt
 > ⚠️ 觸發檔路徑必須是 `/tmp/imessage_notify.txt`（不是 promptbim_notify.txt）
 > ⚠️ 通知失敗不影響 Sprint 成功/失敗判定（best-effort）
 
-### Sprint 啟動時通知（環境檢查完成後立即執行）
+### Sprint 啟動時通知
 
 ```bash
 SPRINT="P{X}"
@@ -192,6 +184,8 @@ Sprint P{X} complete. Checklist:
 ✅ TODO.md 已更新 (P{X} section + v{VERSION})
 ✅ CHANGELOG.md 已更新 ([{VERSION}] section + version table)
 ✅ README.md 已更新 (badges: {N} tests, v{VERSION})
+✅ docs/PromptBIM_Context_Prompt.md 已同步至最新狀態
+✅ pyproject.toml version 已同步
 ✅ git commit + push 完成
 ✅ PROMPT_P{X+1}.md 已建立
 ✅ iMessage 通知已發送（啟動 + 完成）
@@ -240,6 +234,62 @@ notify "🏗️ PromptBIM
 
 > ⚠️ **三個部分（Checklist + 下次指令 + iMessage）缺一不可。**
 > ⚠️ **Checklist 必須逐項用 ✅/❌ 標記，不得合併為一句話。**
+
+---
+
+## [MANDATORY] Sprint 完成全量文件同步
+
+> ⚠️ **每個 Sprint 完成時，必須將所有專案文件更新到反映最新狀態。**
+> ⚠️ **這是確保任何人在任何時間點讀取專案都能獲得正確資訊的核心規則。**
+> ⚠️ **新建立的 PROMPT_P{X+1}.md 也必須包含本規則的提醒。**
+
+### 必須更新的文件清單
+
+| # | 文件 | 必須反映的最新資訊 | 必要性 |
+|---|------|--------------------|:------:|
+| 1 | `TODO.md` | 當前 Sprint 所有 task 標記 ✅，版本號更新 | **必須** |
+| 2 | `CHANGELOG.md` | 新增當前 Sprint 的版本條目 + 更新版本對照表 | **必須** |
+| 3 | `README.md` | 最新測試數、版本號、功能狀態 | **必須** |
+| 4 | `docs/PromptBIM_Context_Prompt.md` | 反映最新完成的 Sprint、版本、測試數、已知問題、下一步計劃 | **必須** |
+| 5 | `pyproject.toml` | version 欄位與 CHANGELOG 一致 | **必須** |
+| 6 | `src/promptbim/__init__.py` | `__version__` 與 pyproject.toml 一致 | **必須** |
+| 7 | `SETUP.md` | 如果安裝步驟有變更 | 條件 |
+| 8 | `SKILL.md` | 如果架構/schema 有重大變更（⚠️ 僅在 PROMPT 明確要求時更新）| 條件 |
+
+### 同步驗證清單
+
+在 git commit 之前，逐項驗證：
+
+```
+□ TODO.md 中當前 Sprint 所有 task 為 ✅
+□ CHANGELOG.md 有 [v{VERSION}] 新條目
+□ CHANGELOG.md 版本對照表包含當前 Sprint
+□ README.md 中的 test count 和 version 是最新的
+□ docs/PromptBIM_Context_Prompt.md 的 Sprint 完成狀態、版本、測試數正確
+□ docs/PromptBIM_Context_Prompt.md 的「下一步」指向正確的下一個 Sprint
+□ pyproject.toml version 與 CHANGELOG 一致
+□ __init__.py __version__ 與 pyproject.toml 一致
+```
+
+### 常見遺漏（過去發生過的問題）
+
+| 問題 | 後果 | 防止方式 |
+|------|------|----------|
+| Context Prompt 仍寫 P12 待執行，但 P13 已完成 | 新對話讀取到過時資訊 | 每次更新 Context Prompt |
+| pyproject.toml 版本 0.1.0 但 CHANGELOG 已到 1.4.0 | `--version` 顯示錯誤 | 每次同步 version |
+| CHANGELOG 版本對照表缺少最近 3 個 Sprint | 版本歷史不完整 | 每次追加對照表 |
+| TODO.md 頂部版本號過時 | 文件不一致 | 每次更新頂部版本 |
+
+### PROMPT 檔案中的提醒
+
+> ⚠️ **每個新建立的 PROMPT_P{X}.md 的「執行指令」段落，必須包含以下提醒：**
+
+```markdown
+## 執行指令
+所有問題答案都是 Yes，不要中斷詢問。
+工作結束前嚴格遵循 CLAUDE.md [MANDATORY] 步驟。
+⚠️ 特別注意「Sprint 完成全量文件同步」— 所有文件必須反映最新狀態後才能 commit。
+```
 
 ---
 
@@ -367,24 +417,6 @@ fi
 
 ## [MANDATORY] Xcode 專案要求
 
-### P0 必須建立 Xcode 專案
-
-Sprint P0 必須建立 `PromptBIMTestApp1.xcodeproj`，包含：
-
-```
-PromptBIMTestApp1.xcodeproj/
-└── project.pbxproj
-
-PromptBIMTestApp1/                  # Xcode 原始碼群組
-├── PromptBIMTestApp1App.swift      # macOS App Entry (SwiftUI)
-├── ContentView.swift               # 主介面（嵌入 Python 後端）
-├── PythonBridge.swift              # Process() 呼叫 Python 後端
-├── Info.plist
-├── Assets.xcassets/
-│   └── AppIcon.appiconset/
-└── Entitlements.entitlements
-```
-
 ### xcodebuild 命令
 
 ```bash
@@ -420,14 +452,10 @@ python -m pytest tests/ -v --tb=short
 # 失敗 → 修復 → 重新跑 → 直到全部通過
 ```
 
-### Step 3: 更新所有專案文件 ✅
+### Step 3: 全量文件同步 ✅
 
-| # | 文件 | 更新內容 |
-|---|------|---------|
-| 1 | `TODO.md` | 已完成的 task 標記 ✅ |
-| 2 | `CHANGELOG.md` | 如果完成 Sprint，加入新版本條目 |
-| 3 | `SETUP.md` | 如果安裝步驟有變更 |
-| 4 | `README.md` | 如果功能有重大變更 |
+> ⚠️ **見上方 [MANDATORY] Sprint 完成全量文件同步，逐項更新所有文件。**
+> ⚠️ **特別注意 `docs/PromptBIM_Context_Prompt.md` 必須反映最新狀態。**
 
 ### Step 4: Git Commit + Push ✅
 
@@ -439,20 +467,13 @@ git push origin main
 
 ### Step 5: 建立下一個 Sprint 的 PROMPT 檔案 ✅
 
-```bash
-# 例如完成 P0 後，建立 PROMPT_P1.md
-# 內容格式見上方「每個 Sprint 一個 PROMPT 檔案」規則
-```
-
 ### Step 6: 輸出 Sprint 完成報告 ✅
 
-> ⚠️ **必須使用「Sprint 完成輸出模板」的格式，見上方 [MANDATORY] Sprint 完成輸出模板。**
-> ⚠️ **不得用自由文字取代。不得用英文一行帶過。**
+> ⚠️ **必須使用「Sprint 完成輸出模板」的格式。不得用自由文字取代。**
 
 ### Step 7: iMessage 通知 ✅
 
 > ⚠️ **必須在 Step 6 之後發送 iMessage 通知。**
-> 見上方「[MANDATORY] iMessage 通知系統」章節的「Sprint 成功完成時通知」
 
 ---
 
@@ -461,10 +482,12 @@ git push origin main
 ```
 □ xcodebuild BUILD SUCCEEDED
 □ pytest 全部通過
-□ TODO.md 已更新（完成的 task 標記 ✅）
-□ CHANGELOG.md 已更新（如果完成 Sprint）
-□ SETUP.md 已更新（如果安裝步驟變更）
-□ README.md 已更新（如果功能變更）
+□ TODO.md 已更新（完成的 task 標記 ✅，版本號更新）
+□ CHANGELOG.md 已更新（新版本條目 + 版本對照表）
+□ README.md 已更新（test count + version）
+□ docs/PromptBIM_Context_Prompt.md 已同步至最新狀態
+□ pyproject.toml version 已同步
+□ __init__.py __version__ 已同步
 □ git commit + push 完成
 □ 下一個 Sprint 的 PROMPT_P{X+1}.md 已建立
 □ Sprint 完成報告已按模板輸出（Checklist + 下次指令）
@@ -484,9 +507,11 @@ git push origin main
 | `docs/addendum/*.md` | 人工 | 規格變更 | ❌ 禁止 |
 | `PROMPT.md` | 人工 | 總覽變更 | ❌ 禁止 |
 | `PROMPT_P{X}.md` | **Claude Code** | Sprint 完成時建立下一個 | ✅ 必須建立 |
-| `README.md` | **Claude Code** | 功能/狀態變更 | ✅ 必須更新 |
+| `README.md` | **Claude Code** | 每次 Sprint 完成 | ✅ 必須更新 |
 | `TODO.md` | **Claude Code** | 每完成 1 個 task | ✅ 必須更新 |
 | `CHANGELOG.md` | **Claude Code** | 每完成 1 個 Sprint | ✅ 必須更新 |
+| `docs/PromptBIM_Context_Prompt.md` | **Claude Code** | 每完成 1 個 Sprint | ✅ **必須同步** |
+| `pyproject.toml` | **Claude Code** | 版本變更時 | ✅ 必須同步 |
 | `SETUP.md` | **Claude Code** | 安裝步驟變更 | ✅ 可更新 |
 | `src/**/*.py` | **Claude Code** | 開發時 | ✅ 核心工作 |
 | `tests/**/*.py` | **Claude Code** | 開發時 | ✅ 核心工作 |
@@ -552,4 +577,4 @@ git push origin main
 
 ---
 
-*CLAUDE.md v1.6.0 | 2026-03-26 | 變更: 新增 [MANDATORY] Sprint 完成輸出模板（強制 Checklist + 下次指令 + iMessage 三部分格式）*
+*CLAUDE.md v1.7.0 | 2026-03-26 | 變更: 新增 [MANDATORY] Sprint 完成全量文件同步（8 項必更新文件 + 同步驗證清單 + 常見遺漏警示 + PROMPT 檔案提醒規則）*
