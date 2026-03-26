@@ -1,11 +1,64 @@
-# PromptBIMTestApp1 — SKILL.md v3.2
+# PromptBIMTestApp1 — SKILL.md v3.3
 
 > Claude Code SSOT — 開發前必讀
-> 最後更新: 2026-03-26
+> 最後更新: 2026-03-26 (v3.3 notify rules)
 
 ---
 
 ## 1. 專案核心定位
+
+## 0. [MANDATORY] Sprint 通知規則（v1.17.0 起生效）
+
+> ⚠️ **此規則從 CLAUDE.md v1.17.0 同步，嚴格執行，不可跳過。**
+
+### 通知收件人
+- **★ 主要: `+886972535899`**（手機號碼，最優先）
+- 備用: `chchlin1018@icloud.com`
+
+### 雙向通知規則（MANDATORY）
+- **★ 每個 Task 的「啟動 ▶️」和「結束 ✅」都必須發送 notify**
+- **★ 每個 Part 的「啟動 ▶️」和「結束 ✅」都必須發送 notify**
+- 每則 notify 必須含進度（Task N/Total | Part N/Total | %）
+- Part 結束 notify 必須含 ⏭️ 下一步預告
+- Sprint 啟動和最終完成各一則 notify
+- 錯誤發生時立即 notify
+- 缺少任何一則啟動或結束通知的 PROMPT 不合規
+
+### notify 函數範本（必須複製到每個 PROMPT 最前面）
+```bash
+notify() {
+    local msg="$1"
+    osascript -e "
+        tell application \"Messages\"
+            set targetService to 1st account whose service type = iMessage
+            set targetBuddy to participant \"+886972535899\" of targetService
+            send \"$msg\" to targetBuddy
+        end tell
+    " 2>/dev/null || \
+    osascript -e "
+        tell application \"Messages\"
+            set targetService to 1st account whose service type = iMessage
+            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
+            send \"$msg\" to targetBuddy
+        end tell
+    " 2>/dev/null || \
+    osascript -e "display notification \"$msg\" with title \"PromptBIM\"" 2>/dev/null || \
+    echo "[NOTIFY FALLBACK] $msg"
+}
+```
+
+### PROMPT 創建 Checklist（MANDATORY — 每一條都必須滿足）
+☐ notify() 主要收件人: +886972535899
+☐ 每個 Task 有 ▶️ 啟動 notify + ✅ 結束 notify（共 2 則）
+☐ 每個 Part 有 ▶️ 啟動 notify + ✅ 結束 notify（共 2 則）
+☐ 每則 notify 含進度（Task N/Total | Part N/Total | %）
+☐ Part 結束含 ⏭️ 下一步
+☐ 包含失敗 + 中斷通知模板
+☐ Sprint 結束必須產生下一個 PROMPT
+
+> 完整範本見 CLAUDE.md v1.17.0
+
+---
 
 **用自然語言在一塊真實土地上蓋建築。**
 
@@ -625,7 +678,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.2 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
+*SKILL.md v3.3 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
