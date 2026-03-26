@@ -6,8 +6,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![C++17](https://img.shields.io/badge/C++-17-blue.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
 [![Tests](https://img.shields.io/badge/Tests-957%20passed-green.svg)]()
+[![GoogleTest](https://img.shields.io/badge/C++%20Tests-137%20passed-green.svg)]()
 [![POC](https://img.shields.io/badge/Stage-POC%20v2.8.0-orange.svg)]()
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)]()
 
@@ -86,6 +88,12 @@ See **[SETUP.md](SETUP.md)** for detailed installation instructions.
 python -m promptbim generate "12-story residential tower" -o ./output
 python -m promptbim generate "school" --template school --land site.geojson
 python -m promptbim generate "hospital" --city Kaohsiung --format ifc
+python -m promptbim generate --no-cache "villa" -o ./output  # Skip cache
+
+# Plan cache management (v2.4.0+)
+python -m promptbim cache list       # List cached plans
+python -m promptbim cache stats      # Cache hit rate
+python -m promptbim cache clear      # Clear all cache
 
 # System health check
 python -m promptbim check              # All checks
@@ -98,7 +106,7 @@ python -m promptbim gui
 python -m promptbim gui --debug        # With debug logging
 
 # Version
-python -m promptbim --version
+python -m promptbim --version          # < 0.5s (lazy import)
 ```
 
 ---
@@ -115,56 +123,75 @@ python -m promptbim --version
 
 ---
 
-## Features (20 Sprints of Development)
+## Features (27 Sprints of Development)
 
 | Feature | Description |
 |---------|-------------|
 | **Land Import** | GeoJSON / Shapefile / DXF / KML / PDF OCR / Manual / AI Image Recognition |
 | **AI Building Generation** | Claude Multi-Agent: Enhancer -> Planner -> Builder -> Checker |
+| **Async Agents** | async/await with parallel execution + rate limiter (50 RPM) |
+| **Plan Cache** | SHA-256 key, LRU eviction (100 entries), TTL 7 days |
 | **Dual BIM Output** | IFC (IfcOpenShell) + OpenUSD (pxr) + USDZ |
+| **C++ Core Engine** | libpromptbim: Compliance, Cost, MEP, Simulation, IFC, USD, GIS |
+| **SwiftUI 3D Preview** | SceneKit embedded in SwiftUI with NativeBIMBridge (C interop) |
 | **Interactive Modification** | Natural language edits -> incremental update of all linked data |
-| **Taiwan Building Code** | BCR/FAR/height/seismic/fire/accessibility (15+ rules) |
-| **MEP Auto-Routing** | Plumbing / Electrical / HVAC / Fire Protection (3D A*) |
-| **Construction Sim (4D)** | 16-phase animation + Gantt chart + GIF export |
-| **Cost Estimation (5D)** | Auto QTO + Taiwan market unit prices |
+| **Taiwan Building Code** | BCR/FAR/height/seismic/fire/accessibility (15+ rules, C++ & Python) |
+| **MEP Auto-Routing** | Plumbing / Electrical / HVAC / Fire Protection (3D A*, C++ & Python) |
+| **Construction Sim (4D)** | 16-phase animation + Gantt chart + GIF export (C++ & Python) |
+| **Cost Estimation (5D)** | Auto QTO + Taiwan market unit prices (C++ & Python) |
+| **GIS Engine C++** | GeoJSON/Shapefile/DXF parsing + WGS84↔TWD97 projection |
 | **Smart Monitoring** | 48 M&C sensor types, auto-placement + IDTF |
 | **USDZ Export** | Apple Vision Pro / Quick Look ready |
+| **Plugin Architecture** | @register_plugin decorator, 3 types: agent/parser/code_rule |
 | **MCP Server** | Claude Desktop integration (7 tools + 2 resources) |
 | **Web UI** | Streamlit browser interface |
-| **CLI** | `generate` / `check` / `gui` commands |
+| **CLI** | `generate` / `check` / `cache` / `gui` commands |
 | **Health Check** | 12-point system check + AI validation + auto-fix |
-| **Debug Logging** | Full-module debug logging with `--debug` flag |
-| **CI/CD** | GitHub Actions: lint + test + build + security audit |
+| **CI/CD** | GitHub Actions: lint + test + build + security audit + C++ tests |
 
 ---
 
 ## Architecture
 
+### Dual-Layer: C++ Core + Python AI + Swift UI
+
 ```
-Xcode SwiftUI App
-  |-- PythonBridge.swift (Process())
-       |-- python -m promptbim gui
-            |-- PySide6 MainWindow
-                 |-- ChatPanel -> Orchestrator
-                 |    |-- EnhancerAgent  -> Claude API
-                 |    |-- PlannerAgent   -> Claude API / Fallback
-                 |    |-- BuilderAgent   -> IFC + USD (pure Python, no LLM)
-                 |    +-- CheckerAgent   -> Taiwan Code Engine
-                 |-- ModelView     -> PyVista 3D
-                 |-- MapView       -> Matplotlib 2D
-                 |-- CostPanel     -> QTO + Estimator
-                 |-- MEPToggle     -> A* Pathfinder
-                 |-- SimulationTab -> 4D Scheduler
-                 +-- MonitorToggle -> Auto-placement
+┌────────────────────────────────────────────────────────┐
+│  Xcode SwiftUI App (macOS native)                      │
+│  ├─ ContentView (Dashboard + 3D Tab)                    │
+│  ├─ SceneKitView (3D Preview, embedded in SwiftUI)       │
+│  ├─ NativeBIMBridge (Swift ↔ libpromptbim C ABI)         │
+│  └─ PythonBridge (Process() → PySide6 GUI)              │
+├────────────────────────────────────────────────────────┤
+│  libpromptbim (C++17 Core, CMake, pybind11)             │
+│  ├─ compliance_engine (15 TW building code rules)        │
+│  ├─ cost_engine (QTO + unit prices)                      │
+│  ├─ mep_engine (A* pathfinding)                          │
+│  ├─ simulation_engine (4D scheduler)                     │
+│  ├─ ifc_generator (IFC4 SPF direct write)                │
+│  ├─ usd_generator (USDA direct write + USDZ packer)      │
+│  └─ gis_engine (GeoJSON/SHP/DXF + WGS84↔TWD97)          │
+├────────────────────────────────────────────────────────┤
+│  Python Backend (14+ submodules)                        │
+│  ├─ agents/ (7 AI Agents + async + rate limiter)         │
+│  ├─ bim/ (IFC/USD + components + cost + MEP + sim)       │
+│  ├─ codes/ (TW building code, plugin-based)              │
+│  ├─ plugins/ (PluginRegistry + @register_plugin)         │
+│  ├─ cache/ (SHA-256 key + JSON store + LRU + TTL)        │
+│  ├─ land/ (6 parsers + AI image recognition)             │
+│  └─ gui/ + mcp/ + web/ + voice/ + viz/                   │
+└────────────────────────────────────────────────────────┘
 ```
 
 ### Python Modules (14+ submodules)
 
 | Module | Description |
 |--------|-------------|
-| `agents/` | 7 AI Agents (enhancer/planner/builder/checker/modifier/orchestrator/land_reader) |
+| `agents/` | 7 AI Agents (enhancer/planner/builder/checker/modifier/orchestrator/land_reader) + async arun() + rate_limiter |
 | `bim/` | Geometry, IFC/USD generators, materials, components (76 types), cost, MEP, monitoring, simulation |
-| `codes/` | Taiwan building code engine (15+ rules across 4 categories) |
+| `codes/` | Taiwan building code engine (15+ rules, plugin-based) + _native_bridge.py (C++ fallback) |
+| `plugins/` | PluginRegistry + @register_plugin (3 types: agent/parser/code_rule) |
+| `cache/` | Plan cache (SHA-256 key, JSON store, LRU max 100, TTL 7 days) |
 | `gui/` | PySide6 desktop GUI with startup health check |
 | `land/` | Land parsers (GeoJSON/SHP/DXF/KML/PDF OCR/Manual/AI Image) |
 | `startup/` | Health check (12 items) + AI check + auto-fix |
@@ -172,52 +199,83 @@ Xcode SwiftUI App
 | `web/` | Streamlit web interface |
 | `voice/` | Speech-to-text (faster-whisper) |
 | `viz/` | 3D/2D visualization (PyVista, matplotlib) |
+| `schemas/` | Pydantic models with schema_version |
+| `constants.py` | Named constants (no magic numbers) |
+
+### C++ Core (libpromptbim/)
+
+| Engine | Tests | Description |
+|--------|:-----:|-------------|
+| `compliance_engine` | 12 | 15 Taiwan building code rules (BCR, FAR, height, fire, seismic, etc.) |
+| `cost_engine` | 10 | QTO + unit prices (13 categories) + cost breakdown |
+| `mep_engine` | 27 | A* pathfinding for MEP routing |
+| `simulation_engine` | 10 | 4D construction scheduler |
+| `ifc_generator` | 18 | IFC4 SPF direct write (no IfcOpenShell dependency) |
+| `usd_generator` | 18 | USDA direct write + USDZ zip packer |
+| `gis_engine` | 27 | GeoJSON/Shapefile/DXF parsing + WGS84↔TWD97 projection |
+| `geometry` | 15 | Shared poly_area, centroid, setback, buffer |
+| **Total** | **137** | All engines have pybind11 bindings + Python fallback |
 
 ---
 
 ## Development Progress
 
+### V1 POC (P0-P14)
+
 | Sprint | Status | Tests | Description |
 |--------|:------:|------:|-------------|
-| P0 | Done | 29 | Project skeleton + Xcode + environment |
-| P1 | Done | 48 | Land import + 2D view |
-| P2 | Done | 82 | IFC + USD generation core |
-| P2.5 | Done | 108 | Building component library (76 types) |
-| P3 | Done | 127 | 3D interactive preview |
-| P4 | Done | 164 | AI Agent Pipeline |
-| P4.5 | Done | 211 | Taiwan building code engine |
-| P4.8 | Done | 235 | Interactive modification engine |
-| P5 | Done | 265 | Voice + export |
-| P6 | Done | 293 | Cost estimation (5D) |
-| P7 | Done | 338 | MEP auto-routing |
-| P8 | Done | 388 | Construction simulation (4D) |
-| P8.5 | Done | 440 | Smart monitoring points |
-| P9 | Done | 516 | AI image recognition + USDZ + MCP + Web |
-| P10 | Done | 591 | Polish + remaining backlog |
-| P10.2 | Done | 603 | Debug logging system |
-| P10.3 | Done | 645 | Startup health check + AI validation |
-| P11 | Done | 668 | Xcode <-> PySide6 GUI integration + E2E |
+| P0-P10 | Done | 591 | Foundation: Land import → AI Agent → IFC/USD → Code compliance → Cost → MEP → Simulation → Monitoring → AI Image → MCP+Web |
+| P11 | Done | 668 | Xcode ↔ PySide6 GUI integration + E2E |
 | P12 | Done | 675 | Quality fixes + performance optimization |
-| P13 | Done | 705 | CLI + dependency fixes + PDF OCR |
-| P14 | Done | 705+ | CI/CD + security + documentation v2.0 |
+| P13 | Done | 705 | CLI + PDF OCR + dependency fixes |
+| P14 | Done | 698 | CI/CD + security + documentation v2.0 |
+
+### V1 Quality Hardening (P16-P17.1)
+
+| Sprint | Status | Tests | Description |
+|--------|:------:|------:|-------------|
+| P16 | Done | 725 | constants.py + tenacity retry + pip-audit |
+| P17 | Done | 792 | 8 Parts/34 Tasks: async/await, cache, plugins, rate limiter, schema versioning |
+| P17.1 | Done | 799 | Audit fix + doc consistency patch |
+
+### V2 C++ Migration (P18-P21)
+
+| Sprint | Status | Tests | C++ | Description |
+|--------|:------:|------:|:---:|-------------|
+| P18 | Done | 820 | 24 | Phase 0-1: C++ skeleton + Compliance/Cost Engine + pybind11 |
+| P19 | Done | 813 | 70 | Phase 2: MEP/Simulation C++ + tech debt cleanup |
+| P20 | Done | 930 | 110 | Phase 3: IFC/USD/USDZ Generator C++ |
+| P21 | Done | 957 | 137 | Phase 4: GIS Engine C++ + SwiftUI SceneKit 3D Preview |
+
+### Future Features (Deferred)
+
+| Sprint | Content | When |
+|--------|---------|------|
+| P22 | Web WASM + REST API + React Frontend | When deployment needed |
+| P23 | Windows Qt 6 | When Windows env available |
+| P24 | Cross-platform E2E testing | After P22+P23 |
+| P25 | C++ performance optimization | When perf bottleneck |
+| P26 | App Store / Windows Store packaging | When commercializing |
 
 ---
 
-## Tech Stack (100% Open Source)
+## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Desktop GUI | PySide6 |
-| 3D Visualization | PyVista + pyvistaqt |
-| AI | Anthropic Claude API (Multi-Agent) |
-| BIM | IfcOpenShell + usd-core (pxr) |
-| GIS | geopandas + shapely + pyproj |
-| MEP | Custom 3D A* Pathfinder |
-| Building Code | Custom Python Rule Engine |
-| Web | Streamlit |
-| MCP | FastMCP |
-| CI/CD | GitHub Actions |
-| Lint | Ruff |
+| Layer | Technology | License |
+|-------|-----------|--------|
+| macOS UI | SwiftUI + SceneKit | Apple |
+| Desktop GUI | PySide6 | LGPL-3.0 |
+| 3D Visualization | PyVista + pyvistaqt | MIT |
+| AI | Anthropic Claude API (Multi-Agent) | MIT SDK |
+| C++ Core | libpromptbim (CMake, C++17) | MIT |
+| BIM | IfcOpenShell + usd-core (pxr) | LGPL / Apache-2.0 |
+| GIS | geopandas + shapely + pyproj | BSD |
+| Python↔C++ | pybind11 | BSD |
+| Testing | pytest + GoogleTest | MIT / BSD |
+| CI/CD | GitHub Actions | - |
+| Lint | Ruff | MIT |
+
+**100% open source. Zero commercial software dependencies.**
 
 ---
 
@@ -227,10 +285,14 @@ Xcode SwiftUI App
 # Install dev dependencies
 pip install -e ".[dev]"
 
-# Run tests
-pytest                                    # All tests
+# Run Python tests
+pytest                                    # All tests (820)
 pytest -m "not api and not slow" -q       # Fast tests only
-pytest --cov=src/promptbim --cov-report=term-missing  # With coverage
+pytest --cov=src/promptbim --cov-report=term-missing
+
+# Run C++ tests (requires CMake build)
+cd libpromptbim && mkdir -p build && cd build
+cmake .. && make -j$(nproc) && ctest --output-on-failure  # 137 tests
 
 # Lint
 ruff check src/ tests/
@@ -252,12 +314,13 @@ xcodebuild -project PromptBIMTestApp1.xcodeproj \
 |------|-------------|
 | [SETUP.md](SETUP.md) | Installation & testing guide |
 | [docs/API.md](docs/API.md) | API documentation |
-| [SKILL.md](SKILL.md) | Project knowledge base (SSOT) |
+| [SKILL.md](SKILL.md) | Project knowledge base (SSOT) v3.2 |
 | [TODO.md](TODO.md) | Sprint progress tracking |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [CLAUDE.md](CLAUDE.md) | Claude Code behavior rules |
-| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Demo video script |
-| [docs/reports/](docs/reports/) | Quality reports |
+| [CLAUDE.md](CLAUDE.md) | Claude Code behavior rules v1.14.1 |
+| [docs/DesignDocForV2.md](docs/DesignDocForV2.md) | V2 mixed architecture design |
+| [docs/V2_Migration_Tasks.md](docs/V2_Migration_Tasks.md) | V2 migration task breakdown (41 tasks) |
+| [docs/reports/](docs/reports/) | Sprint audit reports |
 
 ---
 
@@ -272,6 +335,6 @@ MIT License -- see [LICENSE](LICENSE)
 - **Developer:** Michael Lin / Reality Matrix Inc.
 - **AI:** Anthropic Claude (Multi-Agent Pipeline)
 - **BIM:** IfcOpenShell + OpenUSD
-- **Built with:** Claude Code (AI-assisted development across 20 sprints)
+- **Built with:** Claude Code + Claude Desktop (AI-assisted development across 27 sprints)
 
-*Reality Matrix Inc. / Michael Lin -- 2026*
+*Reality Matrix Inc. / Michael Lin — 2026*

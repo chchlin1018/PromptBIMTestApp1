@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — 安裝與測試指南
 
-> **版本:** v1.1.0 | **更新:** 2026-03-25 | **平台:** macOS (主力) | **Python:** 3.11+
+> **版本:** v2.8.0 | **更新:** 2026-03-26 | **平台:** macOS (主力) | **Python:** 3.11+ | **C++:** 17
 > **性質:** 概念驗證 (POC) — 展示 AI 驅動 BIM 自動生成的完整工作流
 
 ---
@@ -32,12 +32,12 @@ PromptBIMTestApp1 是一個 **Prompt-to-Building** POC 系統。
 
 | 項目 | 版本 | 備註 |
 |------|------|------|
-| **macOS** | 13.0 Ventura 以上 | 建議 15.0 Sequoia |
-| **Xcode** | 16.0+ | 含 SwiftUI, macOS target |
+| **macOS** | 14.0 Sonoma 以上 | 建議 15.0+ |
+| **Xcode** | 16.0+ | 含 SwiftUI, SceneKit, macOS target |
 | **Python** | 3.11+ | 建議透過 Conda 安裝 |
 | **Conda** | Miniconda 或 Miniforge | 推薦 Miniforge (ARM native) |
+| **CMake** | 3.20+ | 編譯 C++ 核心需要 |
 | **Git** | 2.30+ | Xcode Command Line Tools 含 |
-| **F3D** | 3.3+ (選用) | `brew install f3d` |
 
 ### API Key
 
@@ -67,213 +67,113 @@ git clone https://github.com/chchlin1018/PromptBIMTestApp1.git
 cd PromptBIMTestApp1
 ```
 
-### Step 3: 建立 Conda 環境
+### Step 3: 建立 Conda 環境 + 安裝依賴
 
 ```bash
 conda create -n promptbim python=3.11 -y
 conda activate promptbim
 conda install -c conda-forge ifcopenshell -y
+pip install -e ".[dev]"
 ```
 
-### Step 4: 安裝 Python 依賴
+> `pip install -e ".[dev]"` 會一次安裝所有核心依賴 + 開發工具（pytest, ruff, pytest-cov 等）。
+> 如果只需要基本功能，可以用 `pip install -e "."` 代替。
+
+### Step 4: 設定 Claude AI API Key
 
 ```bash
-# 核心依賴
-pip install PySide6 pyvista pyvistaqt
-pip install anthropic pydantic python-dotenv rich
-pip install usd-core
-pip install geopandas shapely fiona pyproj ezdxf fastkml
-pip install numpy trimesh matplotlib Pillow
-pip install pdfplumber mapbox-earcut
-
-# 開發依賴（選用）
-pip install pytest ruff pytest-qt pytest-cov
-
-# 語音輸入（選用）
-pip install faster-whisper sounddevice
-
-# MCP Server（選用）
-pip install "mcp>=1.0"
-
-# Web UI（選用）
-pip install streamlit
-```
-
-### Step 5: 設定 Claude AI API Key
-
-#### 5a. 取得 API Key
-
-1. 前往 [Anthropic Console](https://console.anthropic.com/settings/keys)
-2. 登入帳號（或註冊新帳號）
-3. 點擊 **Create Key**
-4. 複製產生的 Key（格式：`sk-ant-api03-...`）
-
-> ⚠️ Key 只會顯示一次，請立即複製保存。
-
-#### 5b. 建立 .env 檔案
-
-```bash
-cd ~/Documents/MyProjects/PromptBIMTestApp1
 cp .env.example .env
-```
-
-#### 5c. 編輯 .env 填入 API Key
-
-```bash
+chmod 600 .env
 nano .env
+# 填入: ANTHROPIC_API_KEY=sk-ant-api03-你的Key
 ```
 
-找到這行並填入你的 Key：
-```env
-ANTHROPIC_API_KEY=sk-ant-api03-你的完整Key貼在這裡
-DEFAULT_CITY=台北市
-```
+> ⚠️ `.env` 已在 `.gitignore` 中，不會被推到 GitHub。
 
-存檔：`Ctrl + O` → `Enter` → `Ctrl + X`
-
-#### 5d. 驗證 API Key
+### Step 5: 驗證安裝
 
 ```bash
-# 確認格式正確
-grep ANTHROPIC_API_KEY .env
-# 應顯示：ANTHROPIC_API_KEY=sk-ant-api03-...
-
-# 驗證 API 連線（P10.3 完成後可用）
-python -m promptbim check --ai
+conda activate promptbim
+python -m promptbim --version   # 應顯示 v2.8.0
+python -m promptbim check       # 12 項環境檢查
 ```
 
-#### 5e. 安全提醒
+### Step 6: 編譯 C++ 核心（選用，建議）
 
-- `.env` 已在 `.gitignore` 中，**不會被推到 GitHub**
-- 不要把 API Key 寫在程式碼裡
-- 如果 Key 不小心被 commit，立刻到 Anthropic Console 撤銷並建立新的
-- 多台機器開發時，每台機器都需要各自設定 `.env`
+```bash
+cd libpromptbim
+mkdir -p build && cd build
+cmake ..
+make -j$(sysctl -n hw.ncpu)
+ctest --output-on-failure   # 應顯示 137 tests passed
+cd ../..
+```
 
-### Step 6: 用 Xcode 開啟專案
+> C++ 核心提供高效能的 Compliance/Cost/MEP/Simulation/IFC/USD/GIS 引擎。
+> 如果不編譯 C++，Python 會自動 fallback 到純 Python 實作。
 
-#### 6a. 在 Terminal 開啟
+### Step 7: 用 Xcode 開啟專案
 
 ```bash
 cd ~/Documents/MyProjects/PromptBIMTestApp1
 open PromptBIMTestApp1.xcodeproj
-```
-
-或在 Finder 雙擊 `PromptBIMTestApp1.xcodeproj`。
-
-#### 6b. 確認 Xcode 設定
-
-1. 上方工具列 Scheme 選擇：**PromptBIMTestApp1**
-2. Destination 選擇：**My Mac**（Apple Silicon）
-3. 按 `Cmd + B` Build → 應顯示 **BUILD SUCCEEDED**
-
-#### 6c. 同步 GitHub
-
-```bash
-# 每次開發前先拉最新
-git pull origin main
-
-# 你修改後推回 GitHub
-git add -A
-git commit -m "描述你的修改"
-git push origin main
-```
-
-Xcode 會自動偵測檔案變更，`git pull` 後不需重開專案。
-
-### Step 7: 安裝 F3D 3D 檢視器（選用但建議）
-
-```bash
-brew install f3d
-```
-
-### Step 8: 驗證安裝
-
-```bash
-conda activate promptbim
-python -c "
-import sys; print(f'Python: {sys.version}')
-try:
-    import ifcopenshell; print(f'✅ IfcOpenShell: {ifcopenshell.version}')
-except: print('❌ IfcOpenShell')
-try:
-    from pxr import Usd; print('✅ OpenUSD: OK')
-except: print('❌ OpenUSD (usd-core)')
-try:
-    from PySide6.QtWidgets import QApplication; print('✅ PySide6: OK')
-except: print('❌ PySide6')
-try:
-    import pyvista; print(f'✅ PyVista: {pyvista.__version__}')
-except: print('❌ PyVista')
-try:
-    import anthropic; print('✅ Anthropic SDK: OK')
-except: print('❌ Anthropic SDK')
-try:
-    import shapely; print(f'✅ Shapely: {shapely.__version__}')
-except: print('❌ Shapely')
-print('\n--- 驗證完成 ---')
-"
+# Cmd+B Build → 應顯示 BUILD SUCCEEDED
+# Cmd+R Run → SwiftUI Splash Screen + PySide6 GUI 啟動
 ```
 
 ---
 
 ## 啟動 App
 
-### GUI 模式（主要使用方式）
+### 方式 1：PySide6 GUI（主要使用方式）
 
 ```bash
 conda activate promptbim
-python -m promptbim gui
+python -m promptbim gui          # 完整 GUI
+python -m promptbim gui --debug  # Debug 模式
 ```
 
-App 啟動時會自動執行環境檢查（P10.3 功能），確認 Python 依賴、Claude API 連線、檔案系統都正常。
-
-### Debug 模式（顯示詳細 log）
+### 方式 2：Xcode SwiftUI（含 3D 預覽）
 
 ```bash
-# 方法 1: CLI 參數
-python -m promptbim gui --debug
-
-# 方法 2: 環境變數
-PROMPTBIM_DEBUG=1 python -m promptbim gui
-
-# 方法 3: .env 中設定
-# PROMPTBIM_DEBUG=1
+open PromptBIMTestApp1.xcodeproj
+# Cmd+R 啟動
+# SwiftUI App 含 Dashboard + 3D Preview (SceneKit) Tab
+# PySide6 GUI 會在另一個視窗開啟
 ```
 
-Debug 模式會輸出所有模組的詳細 log（土地解析、BIM 生成、API 請求、法規檢查等），方便開發除錯。
-Production 模式（預設）只顯示 WARNING 和 ERROR，無效能影響。
-
-### CLI 模式
+### 方式 3：CLI 直接生成
 
 ```bash
 # 查看版本
 python -m promptbim --version
 
-# 環境健康檢查
-python -m promptbim check           # 全部 12 項檢查
-python -m promptbim check --ai      # 只檢查 AI 相關
-python -m promptbim check --json    # JSON 格式輸出
-
 # 直接從 prompt 生成
-python -m promptbim generate "在 300 坪地上蓋帶游泳池的3層別墅"
+python -m promptbim generate "在 300 坪地上蓋帶游泳池的3層別墅" -o ./output
+python -m promptbim generate --land site.geojson "12層住宅大樓"
+python -m promptbim generate --no-cache "工廠" -o ./output  # 跳過快取
 
-# 指定土地檔案
-python -m promptbim generate --land reference/sample_parcel.geojson "12層住宅大樓"
+# 快取管理
+python -m promptbim cache list    # 列出快取
+python -m promptbim cache stats   # 命中率
+python -m promptbim cache clear   # 清除快取
+
+# 環境健康檢查
+python -m promptbim check         # 全部 12 項
+python -m promptbim check --ai    # 只檢查 AI
+python -m promptbim check --fix   # 自動修復
 ```
 
-### MCP Server（Claude Desktop 整合）
+### 方式 4：Web UI + MCP Server（選用）
 
 ```bash
-# 啟動 MCP Server
-python -m promptbim.mcp.server
-
-# Claude Desktop 設定檔在 mcp/config.json
-```
-
-### Web UI（Streamlit）
-
-```bash
+# Streamlit Web UI
+pip install -e ".[web]"
 streamlit run src/promptbim/web/app.py
+
+# MCP Server (Claude Desktop 整合)
+pip install -e ".[mcp]"
+python -m promptbim.mcp.server
 ```
 
 ---
@@ -286,8 +186,8 @@ streamlit run src/promptbim/web/app.py
 1. conda activate promptbim && python -m promptbim gui
 2. 在底部 Chat 面板輸入:
    "在 200 坪的地上蓋一棟帶游泳池的3層別墅"
-3. 等待 30-60 秒
-4. 2D Tab: 查看平面配置
+3. 等待 30-60 秒（AI 7-Agent Pipeline）
+4. 2D Tab: 查看平面配置 + 退縮線
 5. 3D Tab: 旋轉查看建築模型
 6. 點擊「匯出」→ 一鍵下載所有檔案
 ```
@@ -303,13 +203,14 @@ streamlit run src/promptbim/web/app.py
 6. 在 Chat 輸入 Prompt → 生成
 ```
 
-### 流程 C：語音輸入
+### 流程 C：Xcode SwiftUI 3D 預覽（v2.8.0 新增）
 
 ```
-1. 啟動 App + 匯入土地
-2. 按住 🎤 按鈕
-3. 說: "幫我在這塊地上蓋一個三層樓的標準工廠"
-4. 放開按鈕 → AI 處理 → 生成建築
+1. open PromptBIMTestApp1.xcodeproj && Cmd+R
+2. Dashboard Tab: 查看專案狀態
+3. 3D Preview Tab: SceneKit 即時預覽
+4. Generate 按鈕: 透過 NativeBIMBridge 呼叫 C++ 核心
+5. 生成結果自動載入 SceneKit 場景
 ```
 
 ---
@@ -337,72 +238,96 @@ output/
 ```bash
 conda activate promptbim
 
-# 全部測試
+# Python 測試 (820 tests)
 python -m pytest tests/ -v
+python -m pytest tests/ -m "not api and not slow" -q   # 快速測試
+python -m pytest --cov=src/promptbim --cov-report=term-missing
 
-# 快速冒煙測試（不需 API Key）
-python examples/01_simple_box.py
-ls -la output/simple_box.ifc output/simple_box.usda
+# C++ GoogleTest (137 tests)
+cd libpromptbim/build
+ctest --output-on-failure
+
+# Xcode Build
+xcodebuild -project PromptBIMTestApp1.xcodeproj \
+  -scheme PromptBIMTestApp1 -destination 'platform=macOS' build
+
+# Lint + Security
+ruff check src/ tests/
+pip-audit -r requirements-frozen.txt
+```
+
+---
+
+## 多台機器開發
+
+### Mac Mini M4（Claude Code 執行）
+
+```bash
+ssh michaellin@michaelmac-mini
+tmux new -s dev || tmux attach -t dev
+cd ~/Documents/MyProjects/PromptBIMTestApp1
+git pull origin main && conda activate promptbim
+unset ANTHROPIC_API_KEY  # 確保走 Max 訂閱而非 API 計費
+claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"
+```
+
+> ⚠️ **重要：** 每次執行 Claude Code 前必須 `unset ANTHROPIC_API_KEY`，否則會走 API 計費而非 Claude Max 訂閱。
+> `.env` 中的 API Key 是給 Python App 的 AI Agent 使用，不能刪除。
+
+### MacBook（Xcode + 測試）
+
+```bash
+cd ~/documents/myprojects/PromptBIMTestApp1
+git pull origin main
+conda activate promptbim
+pip install -e ".[dev]"  # 首次或有新依賴時執行
+open PromptBIMTestApp1.xcodeproj
 ```
 
 ---
 
 ## 常見問題
 
+### Q: GUI 啟動失敗，顯示 "No module named 'tenacity'"?
+
+```bash
+conda activate promptbim
+pip install -e ".[dev]"  # 重新安裝所有依賴
+```
+
 ### Q: Claude API Key 無效？
 
 ```bash
-# 確認 .env 格式
-cat .env | grep ANTHROPIC
+grep ANTHROPIC_API_KEY .env
 # 應顯示: ANTHROPIC_API_KEY=sk-ant-api03-...
-
-# Key 必須以 sk-ant- 開頭
-# 如果無效，到 console.anthropic.com 重新產生
+python -m promptbim check --ai
 ```
 
-### Q: Claude API 費用？
-
-每次建築生成約消耗 2000-5000 tokens，以 Claude Sonnet 計算約 USD $0.01-0.03 / 次。
-
-### Q: IfcOpenShell 安裝失敗？
+### Q: Claude Code 顯示 "credit balance too low"?
 
 ```bash
-conda install -c conda-forge ifcopenshell=0.8.1 -y
+unset ANTHROPIC_API_KEY
+echo $ANTHROPIC_API_KEY  # 確認空白
+# 重新執行 claude 指令
 ```
 
-### Q: 多台機器開發？
+### Q: Xcode Build 失敗？
 
-每台機器都需要：
-1. `git clone` 或 `git pull` 同步程式碼
-2. `conda create -n promptbim` 建立環境
-3. `cp .env.example .env` 並填入 API Key
-4. `.env` 不會被同步，每台機器各自設定
+```bash
+git pull origin main   # 確保最新代碼
+xcodebuild -project PromptBIMTestApp1.xcodeproj \
+  -scheme PromptBIMTestApp1 -destination 'platform=macOS' build 2>&1 | tail -20
+```
+
+### Q: PySide6 GUI 看不到？
+
+從 Xcode 啟動時，PySide6 GUI 是另一個獨立視窗。用 `Cmd+Tab` 切換到 Python 圖示的視窗。
+或者直接從 Terminal 啟動：`python -m promptbim gui`
+
+### Q: CJK 字型警告（DejaVu Sans）?
+
+這是 matplotlib 的字型警告，不影響功能。中文標註可能顯示為方塊，但建築生成本身完全正常。
 
 ---
 
-## 開發者指南
-
-### Claude Code CLI 自動開發
-
-```bash
-cd ~/Documents/MyProjects/PromptBIMTestApp1
-conda activate promptbim
-claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"
-```
-
-### 在 Mac Mini 上用 tmux 執行（推薦）
-
-```bash
-ssh michaellin@MichaeldeMac-mini.local
-tmux new -s dev   # 或 tmux attach -t dev
-cd ~/Documents/MyProjects/PromptBIMTestApp1
-git pull origin main && conda activate promptbim
-claude --dangerously-skip-permissions -p "請讀取 PROMPT_P{X}.md 並執行所有 task。不要問任何問題。"
-# Ctrl+B 再按 D 脱離 tmux，SSH 斷線也不影響
-```
-
-Sprint 完成時會自動透過 iMessage 通知你的 iPhone。
-
----
-
-*SETUP.md v1.1.0 | 2026-03-25 | 新增: API Key 詳細設定步驟 + Xcode 開啟方式 + Debug 模式 + 環境檢查 + MCP/Web UI 啟動*
+*SETUP.md v2.8.0 | 2026-03-26 | 更新: V2 C++ 核心 + SwiftUI 3D + 快取管理 + 多台機器開發 + API Key 計費問題修復*
