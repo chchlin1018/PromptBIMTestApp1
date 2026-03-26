@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.21.0 | **更新:** 2026-03-26
+> **版本:** v1.21.0 | **更新:** 2026-03-27
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 標記 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -15,7 +15,8 @@
 | 🔴 P22.1 | 完成但沒 commit | 忘記 git push | **每個 Part 結束必須 commit+push** |
 | 🔴 P24a | OOM 靜默中斷 | 16GB RAM 耗盡 | **check_mem + <1GB 暫停** |
 | 🔴 P24b | 殭屍 Python 26GB | pytest GUI 建立 QApplication | **QT_QPA_PLATFORM=offscreen + pkill** |
-| 🔴 P24d | **Task 通知全被跳過** | Claude Code 只發 Part 通知 | **★ task_start()/task_done() 封裝函數 ★** |
+| 🔴 P24d | Task 通知全被跳過 | Claude Code 只發 Part 通知 | **task_start()/task_done() 封裝函數** |
+| 🔴 P24e | **pytest 反覆 OOM (4次)** | **conftest/test 檔案 import PySide6 + Claude Code 同時啟動多個 pytest** | **★ conftest.py 頂部 os.environ + 禁止同時多 pytest ★** |
 | 🟧 P24c | Git 遠端分歧 | Claude.ai 同時推 commit | **Sprint 前 git pull** |
 
 ---
@@ -23,7 +24,6 @@
 ## [MANDATORY] Sprint 啟動函數 — 絕對第一步
 
 > ⚠️ 每個 PROMPT 最前面必須包含以下完整定義
-> ⚠️ **★ v1.21.0: 新增 task_start/task_done/part_start/part_done 封裝函數 ★**
 > ⚠️ **★ PROMPT 中每個 Task 必須用 `task_start N "描述"` 和 `task_done` 包夾 ★**
 
 ```bash
@@ -69,9 +69,7 @@ check_mem() {
     return 0
 }
 
-# --- ★★★ Task/Part 封裝函數 (v1.21.0 新增) ★★★ ---
-# P24d 教訓: Claude Code 跳過 Task 通知，只發 Part 通知
-# 解法: 用封裝函數強制每個 Task 前後都發 iMessage
+# --- Task/Part 封裝函數 (v1.21.0) ---
 task_start() {
     local num=$1; local desc="$2"
     TASK_NUM=$num; TASK_DESC="$desc"
@@ -92,7 +90,7 @@ $(hostname -s) $(date '+%m/%d %H:%M')"
 }
 part_start() {
     local id="$1"; local desc="$2"; local count=$3
-    PART_ID="$id"; PART_DESC="$desc"; PART_TASKS=$count
+    PART_ID="$id"; PART_DESC="$desc"
     check_mem || { notify "⛔ P${SPRINT} OOM at Part ${id} 💾$(get_mem)"; exit 1; }
     local m=$(get_mem)
     MSG="🏗️ P${SPRINT} ▶️ Part ${id}: ${desc} (${count} tasks)
@@ -121,26 +119,9 @@ export QT_QPA_PLATFORM=offscreen
 echo "✅ 全部函數+環境已就緒"
 ```
 
-### PROMPT 中的使用方式（MANDATORY）
-
-> ⚠️ **每個 Task 必須用 task_start / task_done 包夾，不可省略**
-
-```bash
-# ===== 正確寫法（MANDATORY）=====
-task_start 1 "Generate Demo IFC"
-# ... 實際執行 Task 1 的代碼 ...
-task_done
-
-task_start 2 "Generate Demo USDA"
-# ... 實際執行 Task 2 的代碼 ...
-task_done
+### iMessage 收件人
 ```
-
-```bash
-# ===== 錯誤寫法（違規！）=====
-# 直接執行 Task 沒有呼叫 task_start/task_done → 沒有通知
-echo "Task 1..."
-# ... 代碼 ...
+★ 主要: +886972535899 | 備用: chchlin1018@icloud.com
 ```
 
 ---
@@ -163,12 +144,54 @@ echo "Task 1..."
 
 ## [MANDATORY] pytest 安全規則
 
+> ⚠️ **P24e 根因: pytest 收集 test 檔案時 import PySide6 → 建立 QApplication → OOM**
+> ⚠️ **Claude Code 同時啟動多個 pytest 進程 → 記憶體倍增**
+> ⚠️ **4 次 OOM 事件(python 佔 26GB+18GB)，swap 高達 10.77GB**
+
+### conftest.py 必須包含（防止 PySide6 OOM）
+
+```python
+# tests/conftest.py 最頂部（所有 import 之前）
+import os
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+os.environ.setdefault('DISPLAY', ':99')
+```
+
+### pytest 執行命令（MANDATORY）
+
 ```bash
+# ★★★ 標準 pytest 命令 ★★★
 export QT_QPA_PLATFORM=offscreen
+# 先殺所有殭屍 pytest（防止多進程同時跑）
 pkill -f "python.*pytest" 2>/dev/null; sleep 1
-python -m pytest tests/ --timeout=10 --ignore=tests/test_gui --ignore=tests/test_mcp -x -m "not api and not slow" --tb=short -q
+# 執行（只能有一個 pytest 進程！）
+python -m pytest tests/ \
+    --timeout=10 \
+    --ignore=tests/test_gui \
+    --ignore=tests/test_mcp \
+    --ignore=tests/test_e2e_integration.py \
+    -x \
+    --tb=short -q
+# 結束後清理
 pkill -f "python.*pytest" 2>/dev/null
 ```
+
+### 參數說明
+
+| 參數 | 用途 |
+|------|------|
+| `QT_QPA_PLATFORM=offscreen` | 禁止 PySide6 真正 GUI |
+| `--timeout=10` | 每個 test 最多 10 秒 |
+| `--ignore=tests/test_gui` | 跳過 GUI 測試 |
+| `--ignore=tests/test_mcp` | 跳過 MCP 測試 |
+| `--ignore=tests/test_e2e_integration.py` | 跳過 E2E（20KB，觸發 PySide6） |
+| `-x` | 第一個失敗就停 |
+
+### ⚠️ 禁止同時多個 pytest 進程
+
+> Claude Code 傾向同時啟動多個 pytest（例如驗證不同 Part 的測試）。
+> 在 16GB Mac Mini 上，**絕對不能同時跑兩個以上的 pytest 進程**。
+> 每次跑 pytest 前必須先 `pkill -f "python.*pytest"`。
 
 ---
 
@@ -193,10 +216,11 @@ pkill -f "python.*pytest" 2>/dev/null
 ☐ notify + get_mem + check_mem + task_start + task_done + part_start + part_done 函數定義
 ☐ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
 ☐ 啟動順序: 函數→清理→check_mem→git pull→notify→文件檢查→環境檢查
-☐ ★ 每個 Task 用 task_start N "描述" 和 task_done 包夾（不可省略）★
-☐ ★ 每個 Part 用 part_start ID "描述" N 和 part_done "下一步" 包夾 ★
-☐ pytest: QT_QPA_PLATFORM=offscreen + --timeout=10 + --ignore=test_gui + -x
-☐ Sprint 結束產生下一個 PROMPT（合規 v1.21.0）
+☐ ★ 每個 Task 用 task_start/task_done 包夾 ★
+☐ ★ 每個 Part 用 part_start/part_done 包夾 ★
+☐ pytest: offscreen + --timeout=10 + --ignore=test_gui + --ignore=test_e2e + -x
+☐ pytest 前後都 pkill（禁止多進程同時跑）
+☐ Sprint 結束產生下一個 PROMPT（合規本版本）
 ☐ 不修改 CLAUDE.md / SKILL.md
 ```
 
@@ -211,7 +235,7 @@ pkill -f "python.*pytest" 2>/dev/null
  9. part_start → 10. task_start → 11. 執行 → 12. task_done
 13. 重複 10-12 → 14. Part git commit+push → 15. part_done
 16. 重複 9-15 → 17. 錯誤 notify(💾)
-18. xcodebuild → 19. pytest(安全模式) → 20. pbxproj
+18. xcodebuild → 19. pytest(安全模式，單進程) → 20. pbxproj
 21. 文件同步 → 22. 審計報告 → 23. git push+tag
 24. 產生下一個 PROMPT → 25. Sprint ✅ notify → 26. pkill 清理
 ```
@@ -224,11 +248,12 @@ pkill -f "python.*pytest" 2>/dev/null
 |------|------|
 | v1.17.0 | 雙向通知 + +886972535899 |
 | v1.18.0 | P24a OOM → get_mem + check_mem |
+| v1.19.0 | 歷史教訓 + Git 安全 + 26 步 |
 | v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
-| **v1.21.0** | **★ P24d Task 通知被跳過 → task_start/task_done 封裝函數強制執行 ★** |
+| v1.21.0 | P24d Task 通知跳過 → task_start/task_done 封裝 |
+| **v1.21.0+** | **P24e pytest 反覆 OOM → conftest.py 頂部設定 + 禁止多 pytest + ignore e2e** |
 
 ---
 
-*CLAUDE.md v1.21.0 | 2026-03-26*
-*★ 核心: task_start()/task_done() 封裝函數 — 每個 Task 必須呼叫，不可省略*
+*CLAUDE.md v1.21.0 | 2026-03-27*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
