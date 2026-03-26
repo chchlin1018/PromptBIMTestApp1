@@ -51,11 +51,27 @@ ALL_RULES: list[BaseRule] = [
 ]
 
 
+def get_all_rules() -> list[BaseRule]:
+    """Return all rules including plugin-registered ones (PLG-01 fix)."""
+    rules = list(ALL_RULES)
+    try:
+        from promptbim.plugins.base import PluginRegistry, PluginType
+        registry = PluginRegistry()
+        for plugin in registry.get_plugins(PluginType.CODE_RULE):
+            if hasattr(plugin, "instance") and isinstance(plugin.instance, BaseRule):
+                rules.append(plugin.instance)
+                logger.debug("Added plugin rule: %s", plugin.name)
+    except Exception:
+        pass
+    return rules
+
+
 def run_all_checks(plan, land, zoning) -> list[CheckResult]:
     """Run every registered rule against *plan*. Returns flat list of results."""
-    logger.debug("run_all_checks: starting with %d registered rules", len(ALL_RULES))
+    rules = get_all_rules()
+    logger.debug("run_all_checks: starting with %d registered rules", len(rules))
     results: list[CheckResult] = []
-    for rule in ALL_RULES:
+    for rule in rules:
         try:
             rule_results = rule.check(plan, land, zoning)
             results.extend(rule_results)

@@ -80,9 +80,14 @@ class AutoMonitorPlacer:
         num_floors = len(plan.stories)
 
         for story in plan.stories:
-            # Per-space placements
+            # Per-space placements (with sensor-space validation, MON-01 fix)
             for space in story.spaces:
                 applicable = get_types_for_space(space.space_type)
+                if not applicable:
+                    _logger.debug(
+                        "No applicable sensors for space '%s' (type=%s)",
+                        space.name, space.space_type,
+                    )
                 for mt in applicable:
                     count = self._engine.compute_count(mt.id, space.area_sqm)
                     if count <= 0:

@@ -7,6 +7,7 @@ duration ratios for scheduling.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -162,40 +163,58 @@ def get_phase_by_id(phase_id: str) -> ConstructionPhase | None:
     return None
 
 
+class ComponentType(Enum):
+    """SIM-01 fix: Enum-based component classification to prevent misclassification."""
+    ROOF = "P08"
+    FOUNDATION = "P02"
+    SLAB = "P06"
+    WALL_PARTITION = "P12"
+    WALL_EXTERIOR = "P09"
+    COLUMN = "P04"
+    BEAM = "P05"
+    DOOR_WINDOW = "P10"
+    MEP_ROUGHIN = "P11"
+    ELEVATOR = "P13"
+    FINISH = "P14"
+    FIXTURE = "P15"
+    MEP_FINISH = "P16"
+
+
+# Keyword-to-enum mapping (ordered by specificity — more specific first)
+_COMPONENT_KEYWORDS: list[tuple[list[str], ComponentType]] = [
+    (["roof"], ComponentType.ROOF),
+    (["ground_slab"], ComponentType.FOUNDATION),
+    (["slab"], ComponentType.SLAB),
+    (["wall_partition", "wall_interior", "partition_wall", "interior_wall"], ComponentType.WALL_PARTITION),
+    (["wall"], ComponentType.WALL_EXTERIOR),
+    (["column"], ComponentType.COLUMN),
+    (["beam"], ComponentType.BEAM),
+    (["door", "window"], ComponentType.DOOR_WINDOW),
+    (["duct", "pipe", "cable"], ComponentType.MEP_ROUGHIN),
+    (["elevator", "escalator"], ComponentType.ELEVATOR),
+    (["ceiling", "floor_tile", "covering"], ComponentType.FINISH),
+    (["sanitary", "furniture"], ComponentType.FIXTURE),
+    (["light", "fire", "sprinkler"], ComponentType.MEP_FINISH),
+]
+
+
 def classify_component(label: str) -> str | None:
     """Map a building component label to a phase ID.
 
-    Uses simple heuristic matching against component label strings
-    (e.g. '1F_wall_0', 'ground_slab', 'roof').
+    Uses keyword matching with enum-based classification (SIM-01 fix).
+    More specific compound keywords are checked first to prevent
+    misclassification (e.g., 'wall_exterior_frame' won't match partition).
     """
     label_lower = label.lower()
 
-    if "roof" in label_lower:
-        return "P08"
-    if "ground_slab" in label_lower:
-        return "P02"
-    if "slab" in label_lower:
-        return "P06"
-    if "wall" in label_lower:
-        # Distinguish wall types
-        if "partition" in label_lower or "interior" in label_lower:
-            return "P12"
-        return "P09"  # default to exterior walls
-    if "column" in label_lower:
-        return "P04"
-    if "beam" in label_lower:
-        return "P05"
-    if "door" in label_lower or "window" in label_lower:
-        return "P10"
-    if "duct" in label_lower or "pipe" in label_lower or "cable" in label_lower:
-        return "P11"
-    if "elevator" in label_lower or "escalator" in label_lower:
-        return "P13"
-    if "ceiling" in label_lower or "floor" in label_lower or "covering" in label_lower:
-        return "P14"
-    if "sanitary" in label_lower or "furniture" in label_lower:
-        return "P15"
-    if "light" in label_lower or "fire" in label_lower or "sprinkler" in label_lower:
-        return "P16"
+    for keywords, comp_type in _COMPONENT_KEYWORDS:
+        for kw in keywords:
+            if kw in label_lower:
+                # For wall classification, check compound keywords first
+                if comp_type == ComponentType.WALL_EXTERIOR:
+                    # Double-check it's not a partition/interior
+                    if "partition" in label_lower or "interior" in label_lower:
+                        return ComponentType.WALL_PARTITION.value
+                return comp_type.value
 
     return None
