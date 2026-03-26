@@ -62,6 +62,9 @@ class IFCGenerator:
         self._init_file()
         self._create_project(plan.name)
 
+        # Pre-warm material cache to avoid repeated lookups during story generation
+        self._prewarm_materials(plan)
+
         for story in plan.stories:
             self._add_story(story, plan)
 
@@ -78,6 +81,14 @@ class IFCGenerator:
         file_size = output_path.stat().st_size / 1024
         _logger.debug("IFC written: %s (%.0f KB, %.2fs)", output_path, file_size, _elapsed)
         return output_path
+
+    def _prewarm_materials(self, plan: BuildingPlan) -> None:
+        """Pre-create all materials used in the plan to avoid per-element lookups."""
+        wall_types = {w.wall_type for s in plan.stories for w in s.walls}
+        for wt in wall_types:
+            self._get_or_create_material(wall_material(wt))
+        self._get_or_create_material(slab_material())
+        self._get_or_create_material(roof_material(plan.roof.roof_type))
 
     # ------------------------------------------------------------------
     # Initialisation

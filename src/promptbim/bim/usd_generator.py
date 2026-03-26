@@ -58,6 +58,9 @@ class USDGenerator:
         root = UsdGeom.Xform.Define(self._stage, "/Building")
         root.GetPrim().SetMetadata("kind", "assembly")
 
+        # Pre-warm material cache to avoid per-element lookups
+        self._prewarm_materials(plan)
+
         for story in plan.stories:
             self._add_story(story, plan)
 
@@ -72,19 +75,24 @@ class USDGenerator:
         self._stage.GetRootLayer().Save()
         _elapsed = _time.time() - _t0
 
-        # Count prims and materials
-        prim_count = sum(1 for _ in self._stage.TraverseAll())
         mat_count = len(self._material_cache)
         file_size = output_path.stat().st_size / 1024
         _logger.debug(
-            "USD written: %s (%d prims, %d materials, %.0f KB, %.2fs)",
+            "USD written: %s (%d materials, %.0f KB, %.2fs)",
             output_path,
-            prim_count,
             mat_count,
             file_size,
             _elapsed,
         )
         return output_path
+
+    def _prewarm_materials(self, plan: BuildingPlan) -> None:
+        """Pre-create all materials used in the plan."""
+        wall_types = {w.wall_type for s in plan.stories for w in s.walls}
+        for wt in wall_types:
+            self._get_or_create_material(wall_material(wt))
+        self._get_or_create_material(slab_material())
+        self._get_or_create_material(roof_material(plan.roof.roof_type))
 
     # ------------------------------------------------------------------
     # Story
