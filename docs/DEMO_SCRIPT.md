@@ -1,7 +1,8 @@
 # PromptBIM Demo Script
 
-> Version: v1.0.0 | Date: 2026-03-26
+> Version: v2.12.0 | Date: 2026-03-27
 > Total estimated duration: ~8 minutes
+> Updated: P25 — Performance benchmarks, Windows support, API docs
 
 ---
 

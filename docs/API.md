@@ -1,6 +1,6 @@
 # PromptBIM API Documentation
 
-> Version: v2.10.0 | Updated: 2026-03-26
+> Version: v2.12.0 | Updated: 2026-03-27
 
 ---
 
@@ -8,12 +8,13 @@
 
 PromptBIM is an AI-powered BIM (Building Information Modeling) building generator. It takes natural language descriptions and real land parcel data to produce IFC, USD/USDZ building models with compliance checking and cost estimation.
 
-**v2.10.0 Highlights:**
-- MCP Server with async generation (`agenerate_building`)
-- Voice input (faster-whisper + macOS native STT)
-- Dark/Light theme, collapsible sidebar, 2D cadastral view
-- Thread-safe PythonBridge, path injection protection
-- C++ ABI v2.10.0 with concurrency-safe API
+**v2.12.0 Highlights:**
+- Pipeline performance benchmarks with CI integration
+- IFC/USD generation optimization (material pre-warming)
+- Memory leak detection and startup time analysis
+- Windows platform support (CI, path compat, setup scripts)
+- Auto-generated API documentation (pdoc)
+- Cross-platform test markers and compatibility tests
 
 ---
 
@@ -339,4 +340,16 @@ python -m promptbim check [--ai]
 
 ---
 
-*API.md v2.10.0 | 2026-03-26 | Sprint P23*
+## Auto-Generated API Docs
+
+Full API reference can be generated locally:
+
+```bash
+pip install pdoc
+python scripts/generate_api_docs.py --output docs/api
+# Open docs/api/index.html in your browser
+```
+
+---
+
+*API.md v2.12.0 | 2026-03-27 | Sprint P25*
