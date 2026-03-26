@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.12.0 | **更新:** 2026-03-26
+> **版本:** v1.13.0 | **更新:** 2026-03-26
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 本文件中標記為 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -216,22 +216,63 @@ notify "$MSG"
 
 > ⚠️ **每次 Sprint 完成後，在最終 commit 之前，必須執行自我審計並產出以下文件。**
 > ⚠️ **這些步驟在全量文件同步之後、git commit 之前執行。**
+> ⚠️ **審計範圍包含代碼、文檔、Xcode 專案三大領域，缺一不可。**
 
 ### 步驟 1: 產生 Sprint 審計報告
 
 - 檔案名稱：`docs/reports/Sprint{X}_AuditReport.md`
-- 內容：自我檢查本次 Sprint 的代碼品質、測試覆蓋、潛在問題
 - 格式參考：專案根目錄的 `AuditReport.md`（全專案審計報告）
-- 必須包含：
-  - 本次 Sprint 新增/修改的檔案列表
-  - 代碼品質觀察（DRY、命名、例外處理）
-  - 測試覆蓋觀察（新增測試數、是否有未測試的路徑）
+- **必須包含以下所有審計項目：**
+
+#### A. 代碼品質審計
+  - 本次 Sprint 新增/修改的檔案列表（含行數統計）
+  - 代碼品質觀察（DRY、命名、例外處理、型別提示）
+  - 測試覆蓋觀察（新增測試數、覆蓋率變化、是否有未測試的路徑）
   - 潛在問題或技術債
-  - 評分（A/B/C/D）
+
+#### B. 文檔完整性審計
+  - 逐一驗證以下 8 項文件是否已更新到最新狀態：
+
+```
+☐ TODO.md — 所有 task 標記 ✅，版本號正確
+☐ CHANGELOG.md — 有新版本條目，版本對照表已更新
+☐ README.md — 測試數、版本號正確
+☐ docs/PromptBIM_Context_Prompt.md — Sprint 完成狀態、版本、測試數正確
+☐ pyproject.toml — version 與 CHANGELOG 一致
+☐ src/promptbim/__init__.py — __version__ 與 pyproject.toml 一致
+☐ Info.plist — CFBundleShortVersionString 與 pyproject.toml 一致
+☐ SKILL.md — 如有架構變更，是否需要更新（標記需要/不需要）
+```
+
+  - 如有任何文件不一致，**必須在審計報告中標記為 ❌ 並說明差異**
+
+#### C. Xcode pbxproj 完整性審計
+  - 執行 pbxproj 檢查腳本，將結果納入報告：
+
+```
+☐ xcodebuild BUILD SUCCEEDED
+☐ 所有 .swift 檔案在 pbxproj 中正確引用
+☐ Info.plist CFBundleVersion = {Sprint 號}
+☐ Info.plist CFBundleShortVersionString = {目標版本}
+☐ NSSupportsAutomaticTermination = false
+☐ NSSupportsSuddenTermination = false
+☐ Signing 設定正確
+☐ Bundle ID = com.realitymatrix.PromptBIMTestApp1
+```
+
+  - 如有任何項目未通過，**必須在審計報告中標記為 ❌ 並說明問題**
+
+#### D. 評分
+  - 綜合評分：A / B / C / D
+  - 代碼品質分數
+  - 文檔完整性分數（8 項中幾項 ✅）
+  - Xcode 完整性分數（8 項中幾項 ✅）
+
 - 完成後在 terminal 印出：
 
 ```bash
 echo "📋 已產生 Sprint 審計報告: docs/reports/Sprint${X}_AuditReport.md"
+echo "📊 評分: ${GRADE} | 代碼: ${CODE_GRADE} | 文檔: ${DOC_SCORE}/8 | Xcode: ${XCODE_SCORE}/8"
 ```
 
 ### 步驟 2: 根據審計報告產生建議 Sprint Prompt
@@ -240,10 +281,10 @@ echo "📋 已產生 Sprint 審計報告: docs/reports/Sprint${X}_AuditReport.md
 - 檔案名稱：`PROMPT_P{X}.1.md`（建議性質，非必須執行）
 - 內容：根據審計報告中的潛在問題和技術債，整理為可執行的 Task 清單
 - 必須通過 CLAUDE.md 合規性檢查
-- 如果審計報告評分為 A 且無建議，可以跳過此步驟，但必須在 terminal 說明：
+- 如果審計報告評分為 A 且文檔 8/8 且 Xcode 8/8，可以跳過：
 
 ```bash
-echo "✅ Sprint 審計評分 A，無需產生建議修復 Prompt"
+echo "✅ Sprint 審計評分 A（文檔 8/8, Xcode 8/8），無需產生建議修復 Prompt"
 ```
 
 - 如果有產生建議 Prompt：
@@ -279,7 +320,7 @@ MSG="🏗️ PromptBIM
 📝 最新 commit: $(git log --oneline -1)
 📄 變更 $(git diff --name-only HEAD~1 | wc -l | tr -d ' ') 個檔案
 🏷️ git tag ${VERSION}
-📋 審計報告: docs/reports/Sprint${X}_AuditReport.md
+📋 審計: ${GRADE} | 文檔 ${DOC_SCORE}/8 | Xcode ${XCODE_SCORE}/8
 📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
 echo "$MSG"
 notify "$MSG"
@@ -306,7 +347,8 @@ Sprint P{X} complete. Checklist:
 ✅ pyproject.toml version 已同步
 ✅ __init__.py __version__ 已同步
 ✅ Sprint 審計報告已產生 (docs/reports/Sprint{X}_AuditReport.md)
-✅ 建議修復 Prompt 已產生（或評分 A 無需產生）
+✅ 審計: {GRADE} | 文檔 {DOC_SCORE}/8 | Xcode {XCODE_SCORE}/8
+✅ 建議修復 Prompt 已產生（或審計全 A 免產生）
 ✅ git commit + push 完成（含審計報告）
 ✅ Git 最新狀態已顯示在 terminal + notify
 ✅ PROMPT_P{X+1}.md 已建立（已通過合規性檢查）
@@ -404,14 +446,14 @@ else echo "⚠️ 執行 git pull..."; git pull origin main; fi
 10. 全量文件同步 ✅
 
 ### 自我審計階段
-11. **★ 產生 `docs/reports/Sprint{X}_AuditReport.md` ★**
+11. **★ 產生 `docs/reports/Sprint{X}_AuditReport.md`（含代碼 + 文檔 + Xcode 三項審計）★**
 12. **★ 如有建議，產生 `PROMPT_P{X}.1.md` ★**
-13. echo 審計報告 + 建議 Prompt 產生狀態
+13. echo 審計報告 + 評分 + 建議 Prompt 產生狀態
 
 ### 推送階段
 14. Git Commit + Push（含審計報告）✅
 15. **★ echo Git 最新狀態到 terminal ★**
-16. **★ echo + notify Git 推送完成（含狀態摘要）★**
+16. **★ echo + notify Git 推送完成（含審計評分摘要）★**
 17. git tag v{VERSION} + push tags
 
 ### 完成階段
@@ -432,8 +474,8 @@ else echo "⚠️ 執行 git pull..."; git pull origin main; fi
 □ README.md 已更新
 □ docs/PromptBIM_Context_Prompt.md 已同步
 □ pyproject.toml + __init__.py version 已同步
-□ Sprint 審計報告已產生
-□ 建議修復 Prompt 已處理（產生或標記 A 免產生）
+□ Sprint 審計報告已產生（含代碼 + 文檔 8/8 + Xcode 8/8 檢查）
+□ 建議修復 Prompt 已處理（產生或全 A 免產生）
 □ git commit + push 完成（含審計報告）
 □ Git 最新狀態已顯示在 terminal + notify
 □ 下一個 PROMPT_P{X+1}.md 已建立
@@ -498,4 +540,4 @@ else echo "⚠️ 執行 git pull..."; git pull origin main; fi
 
 ---
 
-*CLAUDE.md v1.12.0 | 2026-03-26 | 變更: 新增 [MANDATORY] Sprint 完成後自我審計（AuditReport 產生 + 建議 Prompt 自動產生 + Git 狀態 terminal 顯示 + notify）*
+*CLAUDE.md v1.13.0 | 2026-03-26 | 變更: 自我審計擴充為三大領域（A.代碼品質 + B.文檔完整性 8 項逐一驗證 + C.Xcode pbxproj 8 項逐一驗證）+ 審計評分含文檔分數和 Xcode 分數 + notify 含審計評分摘要*
