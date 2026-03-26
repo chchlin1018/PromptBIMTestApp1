@@ -6,6 +6,7 @@ and parking requirements.
 
 from __future__ import annotations
 
+from promptbim.bim.geometry import poly_area
 from promptbim.codes.base import BaseRule, CheckResult
 from promptbim.debug import get_logger
 
@@ -22,27 +23,15 @@ def _total_floor_area(plan) -> float:
     total = 0.0
     for story in plan.stories:
         if story.slab_boundary and len(story.slab_boundary) >= 3:
-            total += _polygon_area(story.slab_boundary)
+            total += poly_area(story.slab_boundary)
         elif story.spaces:
             total += sum(s.area_sqm for s in story.spaces)
     return total
 
 
-def _polygon_area(coords: list[tuple[float, float]]) -> float:
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
-
-
 def _footprint_area(plan) -> float:
     if plan.building_footprint and len(plan.building_footprint) >= 3:
-        return _polygon_area(plan.building_footprint)
+        return poly_area(plan.building_footprint)
     return 0.0
 
 

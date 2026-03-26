@@ -208,6 +208,14 @@ class Orchestrator:
             self._emit("builder", "Rebuilding IFC + USD...", 0.7)
             self.build_result = self._builder.build(new_plan)
             self._emit("builder", "Done!", 1.0)
+
+            # Persist modification history (H-3)
+            try:
+                history_path = self._output_dir / "modification_history.json"
+                self._modifier.history.save_history(history_path)
+                logger.debug("Saved modification history to %s", history_path)
+            except Exception:
+                logger.warning("Failed to save modification history", exc_info=True)
         else:
             self._emit("modifier", f"Modification failed: {record.error}", 1.0)
 

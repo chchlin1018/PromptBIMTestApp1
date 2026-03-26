@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from promptbim.bim.geometry import poly_area
 from promptbim.mcp.server import (
-    _shoelace_area,
     _state,
     import_land,
     set_zoning,
@@ -163,13 +163,13 @@ class TestResources:
 
 class TestShoelaceArea:
     def test_unit_square(self):
-        assert abs(_shoelace_area([(0, 0), (1, 0), (1, 1), (0, 1)]) - 1.0) < 0.001
+        assert abs(poly_area([(0, 0), (1, 0), (1, 1), (0, 1)]) - 1.0) < 0.001
 
     def test_rectangle(self):
-        assert abs(_shoelace_area([(0, 0), (20, 0), (20, 15), (0, 15)]) - 300.0) < 0.001
+        assert abs(poly_area([(0, 0), (20, 0), (20, 15), (0, 15)]) - 300.0) < 0.001
 
     def test_too_few_points(self):
-        assert _shoelace_area([(0, 0), (1, 0)]) == 0.0
+        assert poly_area([(0, 0), (1, 0)]) == 0.0
 
 
 class TestMCPServerRegistration:

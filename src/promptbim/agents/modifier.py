@@ -375,7 +375,9 @@ class ModifierAgent(BaseAgent):
             return plan
 
         # Enforce height limit
-        max_stories = int(zoning.height_limit_m / 3.0) if zoning.height_limit_m > 0 else 99
+        from promptbim.constants import DEFAULT_STORY_HEIGHT_M
+
+        max_stories = int(zoning.height_limit_m / DEFAULT_STORY_HEIGHT_M) if zoning.height_limit_m > 0 else 99
         target = min(target, max_stories)
         target = max(target, 1)
 

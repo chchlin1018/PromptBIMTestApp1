@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 from promptbim.land.parsers.image_preprocess import (
     is_supported_image,
@@ -133,7 +134,7 @@ def build_parcel_from_ai_data(
 
     area = data.get("area_sqm")
     if area is None:
-        area = _shoelace_area(boundary)
+        area = poly_area(boundary)
 
     perimeter = _polygon_perimeter(boundary)
 
@@ -170,19 +171,6 @@ def _build_result(data: dict, source_path: Path) -> AIRecognitionResult:
         confidence=float(data.get("confidence", 0.5)),
         notes=data.get("notes", ""),
     )
-
-
-def _shoelace_area(coords: list[tuple[float, float]]) -> float:
-    """Compute polygon area via shoelace formula."""
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
 
 
 def _polygon_perimeter(coords: list[tuple[float, float]]) -> float:

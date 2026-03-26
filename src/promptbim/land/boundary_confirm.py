@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 
@@ -79,7 +80,7 @@ def adjust_vertex(
         "Adjusted vertex %d: (%.4f,%.4f) -> (%.4f,%.4f)", vertex_index, old[0], old[1], new_x, new_y
     )
 
-    area = _shoelace_area(boundary)
+    area = poly_area(boundary)
     perimeter = _polygon_perimeter(boundary)
 
     return parcel.model_copy(
@@ -99,7 +100,7 @@ def validate_boundary(boundary: list[tuple[float, float]]) -> list[str]:
         issues.append("Boundary must have at least 3 vertices")
         return issues
 
-    area = _shoelace_area(boundary)
+    area = poly_area(boundary)
     if area < 0.01:
         issues.append(f"Area too small: {area:.4f} m²")
 
@@ -107,18 +108,6 @@ def validate_boundary(boundary: list[tuple[float, float]]) -> list[str]:
         issues.append("Boundary has self-intersections")
 
     return issues
-
-
-def _shoelace_area(coords: list[tuple[float, float]]) -> float:
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
 
 
 def _polygon_perimeter(coords: list[tuple[float, float]]) -> float:

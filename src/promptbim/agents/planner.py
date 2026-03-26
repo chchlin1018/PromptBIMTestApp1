@@ -88,7 +88,9 @@ class PlannerAgent(BaseAgent):
     SYSTEM_PROMPT = PLANNER_SYSTEM_PROMPT
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(max_tokens=8192, **kwargs)
+        from promptbim.constants import API_MAX_TOKENS_PLANNER
+
+        super().__init__(max_tokens=API_MAX_TOKENS_PLANNER, **kwargs)
 
     def plan(
         self,
@@ -101,11 +103,26 @@ class PlannerAgent(BaseAgent):
 
         Returns a :class:`BuildingPlan`. Falls back to a simple box if
         the API call fails.
+
+        Raises:
+            ValueError: If *buildable_area* has fewer than 3 vertices or zero area.
         """
+        # --- Input validation (H-1) ---
+        if not buildable_area or len(buildable_area) < 3:
+            raise ValueError(
+                f"buildable_area must have >= 3 vertices, got {len(buildable_area) if buildable_area else 0}"
+            )
+        from promptbim.bim.geometry import poly_area as _pa
+
+        ba_area = _pa(buildable_area)
+        if ba_area <= 0:
+            raise ValueError(f"buildable_area has non-positive area ({ba_area}); vertices may be collinear")
+
         logger.debug(
-            "Planning: land=%.1f sqm, buildable=%d pts, stories=%d",
+            "Planning: land=%.1f sqm, buildable=%d pts (%.1f sqm), stories=%d",
             land.area_sqm,
             len(buildable_area),
+            ba_area,
             requirement.num_stories,
         )
         user_msg = self._build_user_message(requirement, land, zoning, buildable_area)
@@ -160,16 +177,31 @@ class PlannerAgent(BaseAgent):
         requirement: BuildingRequirement,
     ) -> BuildingPlan:
         if response.ok and response.json_data:
-            try:
-                plan = BuildingPlan.model_validate(response.json_data)
-                # Ensure land_boundary and buildable_area are set
-                if not plan.land_boundary:
-                    plan.land_boundary = land.boundary
-                if not plan.buildable_area:
-                    plan.buildable_area = buildable_area
-                return plan
-            except Exception:
-                logger.exception("Failed to parse Planner response as BuildingPlan")
+            data = response.json_data
+
+            # H-4: Validate required fields before Pydantic parsing
+            required_fields = ("stories", "building_footprint")
+            missing = [f for f in required_fields if not data.get(f)]
+            if missing:
+                logger.warning(
+                    "Planner JSON missing required fields %s — falling back", missing
+                )
+            else:
+                # Check stories have content
+                stories = data.get("stories", [])
+                if not stories or not isinstance(stories, list):
+                    logger.warning("Planner JSON has empty/invalid stories — falling back")
+                else:
+                    try:
+                        plan = BuildingPlan.model_validate(data)
+                        # Ensure land_boundary and buildable_area are set
+                        if not plan.land_boundary:
+                            plan.land_boundary = land.boundary
+                        if not plan.buildable_area:
+                            plan.buildable_area = buildable_area
+                        return plan
+                    except Exception:
+                        logger.exception("Failed to parse Planner response as BuildingPlan")
 
         # Fallback: simple rectangular box
         logger.warning("Planner fallback — generating simple box")
@@ -185,6 +217,7 @@ def _fallback_box(
     """Generate a simple rectangular building as a fallback."""
     from shapely.geometry import Polygon as ShapelyPolygon
 
+    from promptbim.constants import DEFAULT_STORY_HEIGHT_M
     from promptbim.schemas.plan import (
         OpeningDef,
         RoofPlan,
@@ -239,7 +272,7 @@ def _fallback_box(
 
     bcr = actual_footprint_area / land.area_sqm if land.area_sqm > 0 else 0
     num_stories = max(1, requirement.num_stories)
-    max_stories = int(zoning.height_limit_m / 3.0)
+    max_stories = int(zoning.height_limit_m / DEFAULT_STORY_HEIGHT_M)
     num_stories = min(num_stories, max_stories)
 
     # Check FAR limit
@@ -252,7 +285,7 @@ def _fallback_box(
     stories = []
     for i in range(num_stories):
         floor_name = f"{i + 1}F"
-        elevation = i * 3.0
+        elevation = i * DEFAULT_STORY_HEIGHT_M
 
         walls = [
             WallDef(start=(bx0, by0), end=(bx1, by0), wall_type="exterior"),
@@ -288,7 +321,7 @@ def _fallback_box(
             StoryPlan(
                 name=floor_name,
                 elevation_m=elevation,
-                height_m=3.0,
+                height_m=DEFAULT_STORY_HEIGHT_M,
                 walls=walls,
                 spaces=spaces,
                 openings=openings,

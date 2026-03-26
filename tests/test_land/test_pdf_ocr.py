@@ -3,23 +3,24 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from promptbim.land.parsers.pdf_ocr import PDFLandParser, _shoelace_area
+from promptbim.bim.geometry import poly_area
+from promptbim.land.parsers.pdf_ocr import PDFLandParser
 
 
 class TestShoelaceArea:
     def test_rectangle(self):
         coords = [(0, 0), (10, 0), (10, 5), (0, 5)]
-        assert abs(_shoelace_area(coords) - 50.0) < 0.01
+        assert abs(poly_area(coords) - 50.0) < 0.01
 
     def test_triangle(self):
         coords = [(0, 0), (10, 0), (5, 8)]
-        assert abs(_shoelace_area(coords) - 40.0) < 0.01
+        assert abs(poly_area(coords) - 40.0) < 0.01
 
     def test_empty(self):
-        assert _shoelace_area([]) == 0.0
+        assert poly_area([]) == 0.0
 
     def test_two_points(self):
-        assert _shoelace_area([(0, 0), (1, 1)]) == 0.0
+        assert poly_area([(0, 0), (1, 1)]) == 0.0
 
 
 class TestPDFLandParser:

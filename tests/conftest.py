@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from promptbim.bim.components.registry import ComponentRegistry
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import (
     BuildingPlan,
@@ -13,6 +14,13 @@ from promptbim.schemas.plan import (
     WallDef,
 )
 from promptbim.schemas.zoning import ZoningRules
+
+
+@pytest.fixture(autouse=True)
+def _reset_component_registry():
+    """Reset ComponentRegistry between tests to prevent cross-pollution (H-2)."""
+    yield
+    ComponentRegistry.reset()
 
 
 @pytest.fixture

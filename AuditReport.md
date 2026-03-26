@@ -405,30 +405,30 @@ ci.yml: lint → test → build → security
 
 | # | 問題 | 位置 | 說明 |
 |---|------|------|------|
-| C-1 | **Claude API 無重試機制** | `agents/base.py` | 單次 API 失敗導致整個管線失敗，建議加入指數退避重試 |
-| C-2 | **API 呼叫無 timeout** | `agents/base.py` | 無超時設定，可能無限掛起 |
-| C-3 | **Shoelace 面積公式重複 6 次** | 多處 (見 4.3) | 違反 DRY 原則，增加維護成本與不一致風險 |
+| C-1 | ~~Claude API 無重試機制~~ | `agents/base.py` | ✅ **P16 已修復** — tenacity 指數退避重試 (max 3, 5xx only) |
+| C-2 | ~~API 呼叫無 timeout~~ | `agents/base.py` | ✅ **P16 已修復** — 30s timeout (configurable) |
+| C-3 | ~~Shoelace 面積公式重複 6 次~~ | 多處 (見 4.3) | ✅ **P16 已修復** — 統一使用 bim.geometry.poly_area() |
 
 ### 9.2 High (重要改善)
 
 | # | 問題 | 位置 | 說明 |
 |---|------|------|------|
-| H-1 | **buildable_area 無輸入驗證** | `agents/planner.py` | 空陣列或少於 3 頂點的多邊形不會報錯 |
-| H-2 | **ComponentRegistry 類別變數** | `bim/components/registry.py` | `_components` 為類別變數，永不清除，測試間可能交叉污染 |
-| H-3 | **修改歷史不持久化** | `agents/modifier.py` | ModificationHistory 僅存在記憶體，程式退出即遺失 |
-| H-4 | **JSON 回應無 Schema 驗證** | `agents/planner.py` | Claude 回傳 JSON 直接傳入 Pydantic，缺欄位靠預設值補，可能產生不完整計畫 |
-| H-5 | **座標精度損失** | `schemas/modification.py` | `plan_snapshot_json: dict` 經 JSON 序列化/反序列化後浮點精度降低 |
+| H-1 | ~~buildable_area 無輸入驗證~~ | `agents/planner.py` | ✅ **P16 已修復** — >= 3 頂點 + 面積 > 0 驗證 |
+| H-2 | ~~ComponentRegistry 類別變數~~ | `bim/components/registry.py` | ✅ **P16 已修復** — reset() + autouse fixture |
+| H-3 | ~~修改歷史不持久化~~ | `agents/modifier.py` | ✅ **P16 已修復** — save_history/load_history JSON |
+| H-4 | ~~JSON 回應無 Schema 驗證~~ | `agents/planner.py` | ✅ **P16 已修復** — 必填欄位檢查 |
+| H-5 | ~~座標精度損失~~ | `schemas/modification.py` | ✅ **P16 已修復** — model_dump/model_validate |
 
 ### 9.3 Medium (一般改善)
 
 | # | 問題 | 位置 | 說明 |
 |---|------|------|------|
-| M-1 | **魔術數字** | 多處 (見 4.4) | `3.0`（層高）, `0.2`（牆厚）等應提取為常數 |
+| M-1 | ~~魔術數字~~ | 多處 (見 4.4) | ✅ **P16 已修復** — constants.py |
 | M-2 | **退縮假設矩形地塊** | `land/setback.py` | 非矩形地塊使用均勻退縮而非逐邊計算 |
-| M-3 | **IFC/USD 覆寫無備份** | `agents/builder.py` | 生成新檔案直接覆蓋舊檔，無備份機制 |
+| M-3 | ~~IFC/USD 覆寫無備份~~ | `agents/builder.py` | ✅ **P16 已修復** — .bak 備份 |
 | M-4 | **無 async/await** | agents/* | 同步阻塞式 API 呼叫，GUI 可能凍結 |
-| M-5 | **ContentView 版本號硬編碼** | `ContentView.swift` | 顯示 "v1.4.0" 而非 "v2.0.0" |
-| M-6 | **未使用的 State 變數** | `ContentView.swift` | `showSetupHelp` 已宣告未使用 |
+| M-5 | ~~ContentView 版本號硬編碼~~ | `ContentView.swift` | ✅ **P16 已修復** — v2.1.0 |
+| M-6 | ~~未使用的 State 變數~~ | `ContentView.swift` | ✅ **P16 已修復** — 已移除 |
 
 ### 9.4 Low (建議改善)
 

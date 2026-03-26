@@ -63,3 +63,8 @@ class ComponentRegistry:
     def clear(cls) -> None:
         """Clear all registered components (for testing)."""
         cls._components.clear()
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset registry to a clean class-level dict (test isolation)."""
+        cls._components = {}

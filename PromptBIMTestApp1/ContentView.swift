@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var bridge: PythonBridge
-    @State private var showSetupHelp = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +16,7 @@ struct ContentView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("v1.4.0")
+                Text("v2.1.0")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

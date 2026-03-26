@@ -125,12 +125,16 @@ class TestQuantityTakeOff:
         assert abs(site[0].quantity - 300.0) < 0.1
 
     def test_polygon_area_triangle(self):
-        area = QuantityTakeOff._polygon_area([(0, 0), (10, 0), (0, 10)])
+        from promptbim.bim.geometry import poly_area
+
+        area = poly_area([(0, 0), (10, 0), (0, 10)])
         assert abs(area - 50.0) < 0.01
 
     def test_polygon_area_empty(self):
-        assert QuantityTakeOff._polygon_area([]) == 0.0
-        assert QuantityTakeOff._polygon_area([(0, 0)]) == 0.0
+        from promptbim.bim.geometry import poly_area
+
+        assert poly_area([]) == 0.0
+        assert poly_area([(0, 0)]) == 0.0
 
     def test_empty_plan(self):
         plan = BuildingPlan(name="Empty")

@@ -1,6 +1,6 @@
 [project]
 name = "promptbim"
-version = "2.0.0"
+version = "2.1.0"
 description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -31,6 +31,7 @@ dependencies = [
     "matplotlib>=3.8",
     "Pillow>=10.0",
     # Infra
+    "tenacity>=8.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
     "python-dotenv>=1.0",

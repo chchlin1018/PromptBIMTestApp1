@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     default_city: str = Field(default="Taipei", description="Default city for zoning lookup")
     log_level: str = Field(default="INFO", description="Log level")
 
+    # API
+    api_timeout_seconds: float = Field(default=30.0, description="Anthropic API call timeout in seconds")
+
     # Debug
     debug_mode: bool = Field(default=False, description="Enable debug logging")
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
 
@@ -284,7 +285,7 @@ class PDFLandParser:
         # Calculate area from boundary if not in metadata
         area = metadata.get("area_sqm", 0.0)
         if area <= 0 and coords:
-            area = _shoelace_area(coords)
+            area = poly_area(coords)
 
         name = metadata.get("lot_number", pdf_path.stem)
 
@@ -298,16 +299,3 @@ class PDFLandParser:
             or None,
         )
         return [parcel]
-
-
-def _shoelace_area(coords: list[tuple[float, float]]) -> float:
-    """Shoelace formula for polygon area."""
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0

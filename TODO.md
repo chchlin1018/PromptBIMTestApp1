@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.0.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.1.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -38,8 +38,9 @@
 | P12 | 品質修復 + 效能優化 + Demo 準備 | 1 | ✅ | P0~P11 |
 | P13 | CLI 完整化 + 依賴修復 + PDF OCR | 1 | ✅ | P4, P9, P12 |
 | P14 | CI/CD + 安全強化 + 文件最終化 | 1 | ✅ | P0~P13 |
+| P16 | 全面品質修整 (Quality Remediation) | 1 | ✅ | P14, AuditReport |
 
-**預估總開發時間: ~45 天**
+**預估總開發時間: ~46 天**
 
 ---
 
@@ -423,6 +424,34 @@
 - ✅ T12: pytest + xcodebuild + git tag v2.0.0 + iMessage
 
 **驗收標準:** CI workflow; ruff clean; pip-audit; coverage >70%; README v2.0; SKILL.md updated; API docs; git tag v2.0.0
+
+---
+
+## P16: 全面品質修整 (~1 天)
+
+### Part A: Critical 修復
+- ✅ T1: API 呼叫重試機制 (C-1) — tenacity 指數退避, max 3 次, 5xx only
+- ✅ T2: API 呼叫 timeout (C-2) — 30s default, configurable
+- ✅ T3: 統一 Shoelace 面積計算 (C-3) — 刪除 6 處重複, 統一用 bim.geometry.poly_area
+
+### Part B: High 修復
+- ✅ T4: buildable_area 輸入驗證 (H-1) — >= 3 頂點 + 面積 > 0
+- ✅ T5: ComponentRegistry 測試隔離 (H-2) — reset() + autouse fixture
+- ✅ T6: 修改歷史持久化 (H-3) — save_history/load_history JSON
+- ✅ T7: Planner JSON Schema 驗證 (H-4) — 必填欄位檢查
+- ✅ T8: 座標精度保護 (H-5) — model_dump/model_validate 保持精度
+
+### Part C: Medium 修復
+- ✅ T9: 魔術數字提取為常數 (M-1) — constants.py
+- ✅ T10: IFC/USD 生成前備份 (M-3) — .bak 保留 1 份
+- ✅ T11: Swift ContentView 版本號修復 (M-5+M-6) — v2.1.0 + 刪除未用變數
+- ✅ T12: CI pip-audit 修復 (P14-M1) — 移除 || true
+
+### Part D: 文件同步與驗收
+- ✅ T13: Context Prompt 精確化 — 725 passed, v2.1.0, coverage 85%+
+- ✅ T14: 全量文件同步 — TODO/CHANGELOG/README/pyproject/init/AuditReport/PROMPT_P17
+
+**驗收標準:** 725 passed; BUILD SUCCEEDED; ruff clean; 14 issues fixed; git tag v2.1.0
 
 ---
 

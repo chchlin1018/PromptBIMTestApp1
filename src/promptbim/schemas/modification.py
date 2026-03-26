@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -59,10 +61,15 @@ class ModificationRecord(BaseModel):
     intent: ModificationIntent | None = Field(default=None)
     impacts: list[ImpactItem] = Field(default_factory=list)
     plan_snapshot_json: dict = Field(
-        default_factory=dict, description="BuildingPlan JSON before this change"
+        default_factory=dict, description="BuildingPlan JSON before this change (via model_dump)"
     )
     success: bool = Field(default=True)
     error: str | None = Field(default=None)
+
+    @staticmethod
+    def snapshot_from_plan(plan) -> dict:
+        """Create a precision-safe snapshot using Pydantic model_dump (H-5)."""
+        return plan.model_dump()
 
 
 class ModificationHistory(BaseModel):
@@ -86,3 +93,18 @@ class ModificationHistory(BaseModel):
         if self.records:
             return self.records.pop()
         return None
+
+    def save_history(self, path: str | Path) -> None:
+        """Persist history to a JSON file."""
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
+
+    @classmethod
+    def load_history(cls, path: str | Path) -> "ModificationHistory":
+        """Load history from a JSON file."""
+        path = Path(path)
+        if not path.exists():
+            return cls()
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return cls.model_validate(data)

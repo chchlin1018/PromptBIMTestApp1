@@ -29,6 +29,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 
 logger = get_logger("mcp.server")
@@ -86,7 +87,7 @@ def import_land(
     coords = [(pt[0], pt[1]) for pt in boundary]
 
     if area_sqm is None:
-        area_sqm = _shoelace_area(coords)
+        area_sqm = poly_area(coords)
 
     parcel = LandParcel(
         name=name,
@@ -398,18 +399,6 @@ def get_current_land() -> str:
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
-
-
-def _shoelace_area(coords: list[tuple[float, float]]) -> float:
-    n = len(coords)
-    if n < 3:
-        return 0.0
-    area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += coords[i][0] * coords[j][1]
-        area -= coords[j][0] * coords[i][1]
-    return abs(area) / 2.0
 
 
 # --------------------------------------------------------------------------

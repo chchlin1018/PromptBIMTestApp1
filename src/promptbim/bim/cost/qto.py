@@ -11,6 +11,7 @@ import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 
 if TYPE_CHECKING:
@@ -44,12 +45,12 @@ class QuantityTakeOff:
             items.extend(self._extract_walls(story))
             items.extend(self._extract_slab(story, plan))
             items.extend(self._extract_openings(story))
-            slab_area = self._polygon_area(story.slab_boundary or plan.building_footprint)
+            slab_area = poly_area(story.slab_boundary or plan.building_footprint)
             total_floor_area += slab_area
 
         # Roof
         if plan.stories:
-            roof_area = self._polygon_area(plan.building_footprint)
+            roof_area = poly_area(plan.building_footprint)
             if roof_area > 0:
                 items.append(
                     QTOItem(
@@ -102,8 +103,8 @@ class QuantityTakeOff:
             )
 
         # Site work (based on land boundary)
-        land_area = self._polygon_area(plan.land_boundary)
-        footprint_area = self._polygon_area(plan.building_footprint)
+        land_area = poly_area(plan.land_boundary)
+        footprint_area = poly_area(plan.building_footprint)
         site_area = land_area - footprint_area if land_area > footprint_area else 0
         if site_area > 0:
             items.append(
@@ -143,7 +144,7 @@ class QuantityTakeOff:
 
     def _extract_slab(self, story: StoryPlan, plan: BuildingPlan) -> list[QTOItem]:
         boundary = story.slab_boundary or plan.building_footprint
-        area = self._polygon_area(boundary)
+        area = poly_area(boundary)
         if area <= 0:
             return []
         return [
@@ -186,20 +187,6 @@ class QuantityTakeOff:
                     )
                 )
         return items
-
-    @staticmethod
-    def _polygon_area(coords: list[tuple[float, float]]) -> float:
-        """Shoelace formula for polygon area."""
-        if len(coords) < 3:
-            return 0.0
-        n = len(coords)
-        area = 0.0
-        for i in range(n):
-            j = (i + 1) % n
-            area += coords[i][0] * coords[j][1]
-            area -= coords[j][0] * coords[i][1]
-        return abs(area) / 2.0
-
 
 def _wall_length(w: WallDef) -> float:
     return math.hypot(w.end[0] - w.start[0], w.end[1] - w.start[1])

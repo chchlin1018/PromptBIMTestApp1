@@ -6,6 +6,47 @@
 
 ---
 
+## [2.1.0] - 2026-03-26
+
+### Fixed (Sprint P16: Comprehensive Quality Remediation)
+
+#### Critical (C-1 ~ C-3)
+- `agents/base.py` — API retry with exponential backoff (tenacity, max 3 attempts, 5xx only)
+- `agents/base.py` — API call timeout (default 30s, configurable via `api_timeout_seconds`)
+- Unified Shoelace area calculation — removed 6 duplicate `_shoelace_area` / `_polygon_area` functions, all now use `bim.geometry.poly_area()`
+
+#### High (H-1 ~ H-5)
+- `agents/planner.py` — `buildable_area` input validation (>= 3 vertices, area > 0)
+- `bim/components/registry.py` — `reset()` class method + autouse conftest fixture for test isolation
+- `schemas/modification.py` — `save_history()` / `load_history()` JSON persistence for ModificationHistory
+- `agents/planner.py` — Required field validation before Pydantic parse (stories, building_footprint)
+- `schemas/modification.py` — `snapshot_from_plan()` for precision-safe plan snapshots via `model_dump()`
+
+#### Medium (M-1, M-3, M-5, M-6)
+- `constants.py` — Extracted magic numbers: `DEFAULT_STORY_HEIGHT_M`, `DEFAULT_WALL_THICKNESS_M`, `API_MAX_TOKENS_*`, etc.
+- `agents/builder.py` — File backup before overwrite (.bak, keeps 1 backup)
+- `ContentView.swift` — Version display updated to v2.1.0, removed unused `showSetupHelp` state variable
+- `.github/workflows/ci.yml` — Removed `|| true` from pip-audit, removed invalid `--ignore-vuln PYSEC-0`
+
+### Added
+- `src/promptbim/constants.py` — Project-wide named constants
+- `tenacity>=8.0` in pyproject.toml dependencies
+- `config.py` — `api_timeout_seconds` setting (default 30.0)
+- `tests/test_quality_remediation.py` — 20 new tests for all remediation items
+- `tests/test_agents/test_base_retry.py` — 7 tests for retry + timeout behaviour
+
+### Changed
+- `pyproject.toml` — Version bumped to 2.1.0
+- `__init__.py` — Fallback version updated to 2.1.0
+
+### Stats
+- Tests: 725 passed (20 new)
+- xcodebuild: BUILD SUCCEEDED
+- ruff check: All checks passed
+- git tag: v2.1.0
+
+---
+
 ## [2.0.0] - 2026-03-26
 
 ### Added (Sprint P14: CI/CD + Security + Documentation v2.0)

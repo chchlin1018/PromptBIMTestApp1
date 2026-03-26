@@ -38,6 +38,10 @@ class BuilderAgent:
         ifc_path = self._output_dir / f"{safe_name}.ifc"
         usd_path = self._output_dir / f"{safe_name}.usda"
 
+        # Backup existing files before overwriting (M-3)
+        _backup_if_exists(ifc_path)
+        _backup_if_exists(usd_path)
+
         errors: list[str] = []
 
         # Generate IFC
@@ -89,6 +93,19 @@ class BuildResult:
     @property
     def ok(self) -> bool:
         return len(self.errors) == 0 and (self.ifc_path is not None or self.usd_path is not None)
+
+
+def _backup_if_exists(path: Path) -> None:
+    """Rename an existing file to .bak (keeping only 1 backup)."""
+    if path.exists():
+        bak = path.with_suffix(path.suffix + ".bak")
+        try:
+            if bak.exists():
+                bak.unlink()
+            path.rename(bak)
+            logger.debug("Backed up %s → %s", path.name, bak.name)
+        except OSError:
+            logger.warning("Failed to backup %s", path, exc_info=True)
 
 
 def _safe_filename(name: str) -> str:
