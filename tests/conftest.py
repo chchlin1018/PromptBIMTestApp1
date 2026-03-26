@@ -1,14 +1,13 @@
 """Shared pytest fixtures for PromptBIM tests."""
 
+from __future__ import annotations
+
 # P24e MANDATORY: Set QT_QPA_PLATFORM before any PySide6 import to prevent OOM
 import os
+import sys
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 os.environ.setdefault("DISPLAY", ":99")
-
-from __future__ import annotations
-
-import sys
 
 import pytest
 

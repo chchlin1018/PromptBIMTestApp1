@@ -6,6 +6,41 @@
 
 ---
 
+## [2.12.0] - 2026-03-27
+
+### Added (Sprint P25: Performance + Windows + Documentation)
+
+#### Performance + Benchmarks (6 features)
+- Pipeline benchmark CI integration with JSON output (`scripts/benchmark_pipeline.py --json`)
+- IFC generation optimization with material pre-warming
+- USD generation optimization with material pre-warming
+- Memory analysis + leak detection script (`scripts/benchmark_memory.py`)
+- Startup time analyzer (`scripts/measure_startup.py`)
+- 5 new performance benchmark tests (`test_perf_p25.py`)
+
+#### Windows Platform Support (6 features)
+- Enhanced Windows CI with QT_QPA_PLATFORM=offscreen and benchmark step
+- Windows path compatibility audit (os.path -> pathlib.Path)
+- Windows conda setup script v4.0 with smoke test
+- Cross-platform test markers (macos_only, windows_only, unix_only)
+- Windows-specific bug fixes (encoding, makedirs)
+- 4 new Windows compatibility tests (`test_windows_compat.py`)
+
+#### Documentation + API (6 features)
+- Auto-generated API documentation script (`scripts/generate_api_docs.py`)
+- API.md updated to v2.12.0 with P25 highlights
+- CONTRIBUTING.md with development setup guide
+- SECURITY.md with vulnerability reporting policy
+- Architecture design doc updated to v1.1
+- 3 new documentation integrity tests (`test_docs_p25.py`)
+
+### Fixed
+- `tests/conftest.py` P24e mandatory fix: `os.environ["QT_QPA_PLATFORM"] = "offscreen"` at top
+- `health_check.py` os.path -> pathlib.Path for Windows compat
+- `__main__.py` JSON write with explicit encoding
+
+---
+
 ## [2.11.0] - 2026-03-27
 
 ### Added (Sprint P24: Demo 3D + Advanced BIM)
