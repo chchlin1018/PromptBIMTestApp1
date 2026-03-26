@@ -16,58 +16,70 @@
 | 🔴 P24a | OOM 靜默中斷 | 16GB RAM 耗盡 | **check_mem + <1GB 暫停** |
 | 🔴 P24b | 殭屍 Python 26GB | pytest GUI 建立 QApplication | **QT_QPA_PLATFORM=offscreen + pkill** |
 | 🔴 P24d | Task 通知全被跳過 | Claude Code 只發 Part 通知 | **task_start()/task_done() 封裝函數** |
-| 🔴 P24e | pytest 反覆 OOM (4次) | conftest import PySide6 + 多 pytest 同時跑 | **conftest.py 頂部 + 禁止多 pytest + ignore e2e** |
+| 🔴 P24e | pytest 反覆 OOM (4次) | conftest import PySide6 + 多 pytest | **conftest.py 頂部 + 禁止多 pytest + ignore e2e** |
 | 🟧 P24c | Git 遠端分歧 | Claude.ai 同時推 commit | **Sprint 前 git pull** |
 
 ---
 
-## [MANDATORY] PROJECT_STATUS.md — 專案狀態追蹤 (v1.22.0 新增)
+## [MANDATORY] PROJECT_STATUS.md — 專案狀態追蹤 (v1.22.0)
 
 > ⚠️ **Sprint 啟動時必須先讀取 `docs/PROJECT_STATUS.md`，了解專案最新狀態**
 > ⚠️ **Sprint 結束時（無論成功或失敗）必須更新 `docs/PROJECT_STATUS.md`**
 > ⚠️ **錯誤、中斷、OOM 等異常也必須記錄到 PROJECT_STATUS.md**
 
-### 啟動時讀取（MANDATORY — 在定義函數之後、check_mem 之前）
+### 啟動時讀取（MANDATORY）
 
 ```bash
-# ★★★ 讀取專案狀態 ★★★
 echo "📋 讀取 PROJECT_STATUS.md..."
 cat docs/PROJECT_STATUS.md
 echo "✅ 專案狀態已讀取"
 ```
 
-### 結束時更新（MANDATORY — 無論成功或失敗都要執行）
-
-Sprint 結束時（步驟 23 之後），必須更新 `docs/PROJECT_STATUS.md` 的以下內容：
-
-```markdown
-## 2. Sprint 進度
-| P{X} | v{X} | ✅ 完成 / ❌ 失敗 / ⚠️ 部分完成 | 說明 |
-
-## 最後更新
-- 更新時間: $(date)
-- Sprint: P{X}
-- 結果: 成功/失敗/中斷
-- 錯誤: （如有）
-- 完成 Tasks: N/Total
-- 記憶體: $(get_mem)
-```
-
-### 錯誤/中斷時也必須更新
+### 結束時更新（MANDATORY — 成功/失敗/中斷都要）
 
 ```bash
-# 在錯誤處理或中斷時，除了發送 notify，還必須更新 PROJECT_STATUS.md
-# 範例：
+# Sprint 結束時更新狀態
 cat >> docs/PROJECT_STATUS.md << EOF
 
-### ⚠️ Sprint P${SPRINT} 異常記錄 — $(date '+%Y-%m-%d %H:%M')
-- **狀態:** 中斷/失敗
-- **停在:** Task ${TASK_NUM}/${TASK_TOTAL} (${TASK_DESC})
-- **原因:** ${ERROR_DESCRIPTION}
+### Sprint P${SPRINT} 執行結果 — $(date '+%Y-%m-%d %H:%M')
+- **狀態:** ✅ 完成 / ❌ 失敗 / ⚠️ 中斷
+- **版本:** v${VERSION}
+- **Tasks:** ${TASK_DONE}/${TASK_TOTAL}
 - **記憶體:** $(get_mem)
-- **需要:** 人工介入處理
+- **錯誤:** （如有）
 EOF
-git add docs/PROJECT_STATUS.md && git commit -m "[status] P${SPRINT} error log" && git push origin main 2>/dev/null
+git add docs/PROJECT_STATUS.md && git commit -m "[status] P${SPRINT} result" && git push origin main 2>/dev/null
+```
+
+---
+
+## [MANDATORY] 通知格式規範
+
+> ⚠️ **所有 notify 必須使用多行格式，不得簡化為單行**
+> ⚠️ **包括 Sprint 啟動通知、完成通知、錯誤通知都必須多行**
+
+### Sprint 啟動通知範本（MANDATORY）
+
+```bash
+MEM=$(get_mem)
+MSG="🏗️ PromptBIM Sprint P${SPRINT} 啟動
+📋 ${SPRINT_DESC}
+🎯 ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts → v${VERSION}
+💾 ${MEM}
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+notify "$MSG"
+```
+
+### Sprint 完成通知範本（MANDATORY）
+
+```bash
+MEM=$(get_mem)
+MSG="🏗️ PromptBIM Sprint P${SPRINT} 完成 🎉
+🏷️ v${VERSION} | ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts
+📊 完成度: 100% ✅
+💾 ${MEM}
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+notify "$MSG"
 ```
 
 ---
@@ -183,10 +195,10 @@ echo "✅ 全部函數+環境已就緒"
  1. 讀 PROMPT
  2. ★ 定義函數(notify+get_mem+check_mem+task_start+task_done+part_start+part_done)
  3. ★ 殭屍清理 + QT_QPA_PLATFORM=offscreen
- 4. ★ 讀取 docs/PROJECT_STATUS.md（了解專案最新狀態）     ← v1.22.0 新增
+ 4. ★ 讀取 docs/PROJECT_STATUS.md
  5. ★ check_mem（<1GB 中止）
  6. ★ git pull origin main
- 7. 啟動 notify（含 💾）
+ 7. 啟動 notify（含 💾，多行格式）
  8. 文件檢查（CLAUDE ≥5000B, SKILL ≥20000B）
  9. 環境檢查（ANTHROPIC_API_KEY）
 10. 開始 Part A → Task 1
@@ -197,7 +209,6 @@ echo "✅ 全部函數+環境已就緒"
 ## [MANDATORY] pytest 安全規則
 
 > ⚠️ **禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
-> ⚠️ **每次 pytest 前後都必須 pkill**
 
 ```bash
 export QT_QPA_PLATFORM=offscreen
@@ -231,16 +242,17 @@ pkill -f "python.*pytest" 2>/dev/null
 ## [MANDATORY] PROMPT 合規性檢查
 
 ```
-☐ notify + get_mem + check_mem + task_start + task_done + part_start + part_done 函數定義
+☐ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done
 ☐ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
-☐ ★ 啟動時讀取 docs/PROJECT_STATUS.md ★                          ← v1.22.0 新增
-☐ 啟動順序: 函數→清理→讀PROJECT_STATUS→check_mem→git pull→notify→文件檢查→環境檢查
+☐ ★ 啟動時讀取 docs/PROJECT_STATUS.md ★
+☐ 啟動順序: 函數→清理→讀STATUS→check_mem→git pull→notify→文件檢查→環境檢查
+☐ ★ 啟動/完成/錯誤通知必須多行格式（不得單行簡化）★
 ☐ ★ 每個 Task 用 task_start/task_done 包夾 ★
 ☐ ★ 每個 Part 用 part_start/part_done 包夾 ★
-☐ pytest: offscreen + --timeout=10 + --ignore=test_gui + --ignore=test_e2e + -x + pkill 前後
-☐ ★ Sprint 結束時更新 docs/PROJECT_STATUS.md（成功/失敗/錯誤）★  ← v1.22.0 新增
-☐ ★ 錯誤/中斷時也必須更新 docs/PROJECT_STATUS.md ★               ← v1.22.0 新增
-☐ Sprint 結束產生下一個 PROMPT（合規本版本）
+☐ pytest: offscreen + --timeout=10 + --ignore gui/mcp/e2e + -x + pkill 前後
+☐ ★ Sprint 結束時更新 docs/PROJECT_STATUS.md（成功/失敗/錯誤）★
+☐ ★ 錯誤/中斷時也必須更新 docs/PROJECT_STATUS.md ★
+☐ Sprint 結束產生下一個 PROMPT
 ☐ 不修改 CLAUDE.md / SKILL.md
 ```
 
@@ -250,8 +262,8 @@ pkill -f "python.*pytest" 2>/dev/null
 
 ```
  1. 讀 PROMPT → 2. 定義函數 → 3. pkill + offscreen
- 4. ★ 讀取 docs/PROJECT_STATUS.md ★                    ← v1.22.0 新增
- 5. check_mem → 6. git pull → 7. 啟動 notify(💾)
+ 4. ★ 讀取 docs/PROJECT_STATUS.md ★
+ 5. check_mem → 6. git pull → 7. 啟動 notify(💾，多行)
  8. 文件檢查 → 9. 環境檢查
 10. part_start → 11. task_start → 12. 執行 → 13. task_done
 14. 重複 11-13 → 15. Part git commit+push → 16. part_done
@@ -259,8 +271,8 @@ pkill -f "python.*pytest" 2>/dev/null
 19. xcodebuild → 20. pytest(安全模式，單進程) → 21. pbxproj
 22. 文件同步 → 23. 審計報告 → 24. git push+tag
 25. 產生下一個 PROMPT
-26. ★ 更新 docs/PROJECT_STATUS.md（結果+錯誤）★        ← v1.22.0 新增
-27. Sprint ✅ notify → 28. pkill 清理
+26. ★ 更新 docs/PROJECT_STATUS.md（結果+錯誤）★
+27. Sprint ✅ notify(多行) → 28. pkill 清理
 ```
 
 ---
@@ -273,12 +285,10 @@ pkill -f "python.*pytest" 2>/dev/null
 | v1.18.0 | P24a OOM → get_mem + check_mem |
 | v1.19.0 | 歷史教訓 + Git 安全 + 26 步 |
 | v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
-| v1.21.0 | P24d Task 通知跳過 → task_start/task_done 封裝 |
-| v1.21.0+ | P24e pytest 反覆 OOM → conftest.py + 禁止多 pytest + ignore e2e |
-| **v1.22.0** | **★ PROJECT_STATUS.md: 啟動時讀取 + 結束時更新（含錯誤記錄）+ 28 步流程** |
+| v1.21.0 | P24d Task 通知跳過 → task_start/task_done |
+| **v1.22.0** | **PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步** |
 
 ---
 
 *CLAUDE.md v1.22.0 | 2026-03-27*
-*★ v1.22.0: Sprint 啟動讀 PROJECT_STATUS.md + 結束更新（含錯誤）+ 28 步流程*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*

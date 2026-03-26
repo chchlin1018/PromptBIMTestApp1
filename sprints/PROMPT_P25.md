@@ -1,9 +1,9 @@
-# PROMPT_P25.md v2.0 — Performance + Windows + Documentation
+# PROMPT_P25.md v2.1 — Performance + Windows + Documentation
 
 > **Sprint:** P25 | **目標:** v2.12.0 | **基於:** P24 (v2.11.0)
-> **CLAUDE.md:** v1.21.0 | **SKILL.md:** v3.7
+> **CLAUDE.md:** v1.22.0 | **SKILL.md:** v3.7
 > **範圍:** 3 Parts / 18 Tasks
-> **v2.0 變更:** 移除 Part D（驗收由人工執行）+ P24e pytest 安全規則完整合規
+> **v2.1 變更:** 加入 PROJECT_STATUS.md 讀取/更新 + 通知統一多行格式
 
 ---
 
@@ -52,7 +52,7 @@ check_mem() {
     return 0
 }
 
-# --- 3. Task/Part 封裝函數 (CLAUDE.md v1.21.0 MANDATORY) ---
+# --- 3. Task/Part 封裝函數 (CLAUDE.md v1.21.0+ MANDATORY) ---
 task_start() {
     local num=$1; local desc="$2"
     TASK_NUM=$num; TASK_DESC="$desc"
@@ -92,7 +92,7 @@ part_done() {
     echo "$MSG" && notify "$MSG"
 }
 
-# --- 4. 殭屍清理 + 環境 (P24b+P24e MANDATORY) ---
+# --- 4. 殭屍清理 + 環境 ---
 echo "🧹 清理殭屍 Python..."
 pkill -f "python.*pytest" 2>/dev/null
 pkill -f "python.*promptbim" 2>/dev/null
@@ -108,10 +108,25 @@ echo "✅ 全部函數+環境已就緒"
 
 ```bash
 SPRINT=25; TASK_TOTAL=18; PART_TOTAL=3; TASK_DONE=0; PART_DONE=0; PCT=0
+SPRINT_DESC="Performance + Windows + Documentation"
+VERSION="2.12.0"
+
+# ★ 讀取 PROJECT_STATUS.md (CLAUDE.md v1.22.0 MANDATORY) ★
+echo "📋 讀取 PROJECT_STATUS.md..."
+cat docs/PROJECT_STATUS.md
+echo "✅ 專案狀態已讀取"
+
 check_mem || exit 1
 git pull origin main 2>/dev/null
+
+# ★ 啟動通知（多行格式 — CLAUDE.md v1.22.0 MANDATORY）★
 MEM=$(get_mem)
-notify "🏗️ P25 啟動 | 18 Tasks/3 Parts → v2.12.0 | 💾${MEM}"
+MSG="🏗️ PromptBIM Sprint P${SPRINT} 啟動
+📋 ${SPRINT_DESC}
+🎯 ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts → v${VERSION}
+💾 ${MEM}
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+notify "$MSG"
 
 # 文件檢查
 CLAUDE_SIZE=$(wc -c < CLAUDE.md 2>/dev/null|tr -d ' ')
@@ -224,7 +239,7 @@ part_done "Sprint 完成"
 ## Sprint 完成
 
 ```bash
-# ★ 最終 pytest（安全模式 — P24e 合規）★
+# ★ 最終 pytest（安全模式 — CLAUDE.md MANDATORY）★
 export QT_QPA_PLATFORM=offscreen
 pkill -f "python.*pytest" 2>/dev/null; sleep 1
 python -m pytest tests/ \
@@ -235,8 +250,8 @@ python -m pytest tests/ \
     -x --tb=short -q
 pkill -f "python.*pytest" 2>/dev/null
 
-# 文件同步
-# TODO/CHANGELOG/README/pyproject/__init__/Info.plist → v2.12.0
+# 文件同步 v2.12.0
+# TODO/CHANGELOG/README/pyproject/__init__/Info.plist
 
 # 審計報告
 # docs/audit-reports/Sprint25_AuditReport.md
@@ -245,11 +260,28 @@ pkill -f "python.*pytest" 2>/dev/null
 git add -A && git commit -m "[P25] Sprint complete — v2.12.0" && git push origin main
 git tag v2.12.0 && git push origin v2.12.0
 
-# 產生 PROMPT_P26.md（合規 v1.21.0）
+# 產生 PROMPT_P26.md（合規 v1.22.0）
 
-# 最終通知
+# ★ 更新 PROJECT_STATUS.md (CLAUDE.md v1.22.0 MANDATORY) ★
+cat >> docs/PROJECT_STATUS.md << EOF
+
+### Sprint P${SPRINT} 執行結果 — $(date '+%Y-%m-%d %H:%M')
+- **狀態:** ✅ 完成
+- **版本:** v${VERSION}
+- **Tasks:** ${TASK_DONE}/${TASK_TOTAL}
+- **記憶體:** $(get_mem)
+EOF
+git add docs/PROJECT_STATUS.md && git commit -m "[status] P${SPRINT} complete" && git push origin main 2>/dev/null
+
+# ★ 完成通知（多行格式 — CLAUDE.md v1.22.0 MANDATORY）★
 MEM=$(get_mem)
-notify "🏗️ P25 完成 🎉 | v2.12.0 | 18/18 Tasks | 100% ✅ | 💾${MEM}"
+MSG="🏗️ PromptBIM Sprint P${SPRINT} 完成 🎉
+🏷️ v${VERSION} | ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts
+📊 完成度: 100% ✅
+💾 ${MEM}
+📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
+notify "$MSG"
+
 pkill -f "python.*pytest" 2>/dev/null
 ```
 
@@ -261,23 +293,25 @@ pkill -f "python.*pytest" 2>/dev/null
 ☐ ★ 18 個 task_start + 18 個 task_done 通知已發送
 ☐ ★ 3 個 part_start + 3 個 part_done 通知已發送
 ☐ ★ 3 次 Part 結束 git commit+push
+☐ ★ 啟動時讀取 PROJECT_STATUS.md
+☐ ★ 完成時更新 PROJECT_STATUS.md
+☐ ★ 所有通知為多行格式（不得單行）
 ☐ Pipeline benchmark < 5s (3層住宅)
 ☐ Windows CI green on GitHub Actions
 ☐ API documentation auto-generated
 ☐ xcodebuild BUILD SUCCEEDED
-☐ pytest 安全模式通過 (offscreen + timeout + ignore gui/mcp/e2e + -x)
+☐ pytest 安全模式通過
 ☐ git tag v2.12.0
 ☐ docs/audit-reports/Sprint25_AuditReport.md
-☐ sprints/PROMPT_P26.md（合規 v1.21.0）
+☐ sprints/PROMPT_P26.md（合規 v1.22.0）
 ☐ 不得修改 CLAUDE.md / SKILL.md
 ```
 
 ---
 
-## pytest 安全規則（P24e 合規 — MANDATORY）
+## pytest 安全規則（MANDATORY）
 
 > ⚠️ **禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
-> ⚠️ **每次 pytest 前後都必須 pkill**
 
 ```bash
 export QT_QPA_PLATFORM=offscreen
@@ -293,8 +327,7 @@ pkill -f "python.*pytest" 2>/dev/null
 
 ---
 
-*PROMPT_P25.md v2.0 | 2026-03-27*
-*CLAUDE.md: v1.21.0 | SKILL.md: v3.7*
-*★ 3 Parts / 18 Tasks（移除 Part D 驗收 — 由人工執行）*
-*★ 完整合規: task_start/task_done + pkill + offscreen + ignore e2e*
-*★ 預期 iMessage: 18×2 Task + 3×2 Part + 啟動 + 完成 = ~42 則*
+*PROMPT_P25.md v2.1 | 2026-03-27*
+*CLAUDE.md: v1.22.0 | SKILL.md: v3.7*
+*★ 3 Parts / 18 Tasks | 預期 ~42 則 iMessage*
+*★ v2.1: PROJECT_STATUS.md 讀取/更新 + 通知統一多行格式*
