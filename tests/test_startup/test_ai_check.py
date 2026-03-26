@@ -112,3 +112,27 @@ class TestCheckModelAvailable:
     def test_default_model(self):
         result = check_model_available()
         assert result.status == "pass"
+
+
+class TestValidateApiKeyBoundary:
+    """Task 13: validate_api_key edge cases including .strip() (QA-09)."""
+
+    def test_empty_string(self):
+        from promptbim.config import validate_api_key
+
+        assert validate_api_key("") is False
+
+    def test_whitespace_only(self):
+        from promptbim.config import validate_api_key
+
+        assert validate_api_key("   ") is False
+
+    def test_valid_key_with_leading_whitespace(self):
+        from promptbim.config import validate_api_key
+
+        assert validate_api_key("  sk-ant-api03-test1234567890abcdef") is True
+
+    def test_valid_key_with_trailing_newline(self):
+        from promptbim.config import validate_api_key
+
+        assert validate_api_key("sk-ant-api03-test1234567890abcdef\n") is True

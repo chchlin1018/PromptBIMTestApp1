@@ -29,6 +29,12 @@ class MapView(QWidget):
         self._buildable_area: list[tuple[float, float]] = []
         self._basemap_style: str = "none"
 
+    def clear(self):
+        """Clear the map view."""
+        self._parcel = None
+        self._buildable_area = []
+        self._redraw()
+
     def set_parcel(
         self, parcel: LandParcel, buildable_area: list[tuple[float, float]] | None = None
     ):

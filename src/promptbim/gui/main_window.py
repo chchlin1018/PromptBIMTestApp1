@@ -88,6 +88,56 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
         logger.debug("MainWindow.__init__ complete — %d tabs", self._tabs.count())
 
+        # Load demo data if no existing project
+        self._demo_loaded = False
+        self._try_load_demo()
+
+    def _try_load_demo(self):
+        """Load demo data on startup if no existing project is active."""
+        if self._parcel is not None:
+            return
+        try:
+            from promptbim.demo.demo_data import get_demo_land, get_demo_plan, get_demo_zoning
+
+            land = get_demo_land()
+            zoning = get_demo_zoning()
+            plan = get_demo_plan()
+
+            self._parcel = land
+            self._zoning = zoning
+            self._demo_loaded = True
+
+            self._land_panel.update_parcel(land)
+            self._land_panel.update_zoning(zoning)
+
+            buildable = compute_setback(land, zoning)
+            self._map_view.set_parcel(land, buildable)
+            self._site_plan.set_data(parcel=land, buildable_area=buildable)
+            self._chat_panel.set_context(land, zoning)
+            self.set_building_plan(plan)
+
+            self._chat_panel.append_system_message(
+                "歡迎使用 PromptBIM！這是一個範例專案 — 台北市信義區 3 層住宅。"
+                "您可以在聊天面板輸入指令修改建築，或從 File > 清除展示資料 重新開始。"
+            )
+            self.statusBar().showMessage(
+                f"Demo Project Loaded: {land.name} ({land.area_sqm:.1f} m²)"
+            )
+            logger.info("Demo data loaded on startup")
+        except Exception:
+            logger.debug("Demo data load skipped", exc_info=True)
+
+    def clear_demo(self):
+        """Clear demo data and return to blank state."""
+        self._parcel = None
+        self._zoning = ZoningRules()
+        self._demo_loaded = False
+        self._model_view.clear()
+        self._map_view.clear()
+        self._site_plan.clear()
+        self.statusBar().showMessage(f"PromptBIM v{__version__} ready — demo cleared")
+        logger.info("Demo data cleared")
+
     def _show_import_dialog(self):
         dialog = ImportLandDialog(self)
         dialog.parcel_imported.connect(self._on_parcel_imported)

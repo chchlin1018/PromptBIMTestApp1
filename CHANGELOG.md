@@ -6,6 +6,36 @@
 
 ---
 
+## [2.9.1] - 2026-03-26
+
+### Fixed (Sprint P22.1: Code Quality + Test Gap + Demo Data)
+
+#### Code Quality (QA-01~09)
+- **QA-01 CRITICAL**: Cache `get()` now uses `fcntl.LOCK_SH` shared read lock
+- **QA-02 CRITICAL**: Orchestrator `modify()` no longer crashes — `_output_dir` saved in `__init__`
+- **QA-03**: Added `CheckResult` to `TYPE_CHECKING` imports
+- **QA-04**: Orchestrator intermediate results now private with `@property` accessors
+- **QA-05**: Removed direct access to builder's private `_output_dir`
+- **QA-06**: DRY refactor — extracted `_prepare_pipeline()`, `_build_result_obj()`, `_store_cache()`
+- **QA-07**: `NativeBIMBridge.generateIFC/USD` now returns `PBResult<String>` with Bool wrapper
+- **QA-08**: `PythonBridge.runCommand` reads pipe before waiting (prevents deadlock)
+- **QA-09**: `validate_api_key` now `.strip()`s input
+
+### Added
+
+#### Demo Data System
+- Built-in demo project: Taipei Xinyi District 3-story residential
+- App starts with demo data instead of blank screen
+- CLI support: `python -m promptbim demo --load` / `--clear`
+- Clear demo via GUI or CLI to start fresh
+
+#### Tests
+- pytest: +20 tests (cache concurrency, orchestrator DI/modify, constraint dedup, API key boundary, MEP registry)
+- GoogleTest: +13 tests (IFC stress, mixed threading, NaN/overflow geometry, non-convex setback)
+- XCTest: +5 tests (PBResult integration, NativeBIMBridge result types)
+
+---
+
 ## [2.9.0] - 2026-03-26
 
 ### Fixed (Sprint P22: Senior Audit Full Remediation)

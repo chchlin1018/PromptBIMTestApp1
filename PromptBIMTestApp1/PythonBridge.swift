@@ -284,6 +284,23 @@ class PythonBridge: ObservableObject {
             do {
                 try process.run()
 
+                // QA-08 fix: Read pipe asynchronously BEFORE waiting for exit
+                // to prevent deadlock when output exceeds pipe buffer (~64KB).
+                var stdoutData = Data()
+                var stderrData = Data()
+                let readGroup = DispatchGroup()
+
+                readGroup.enter()
+                DispatchQueue.global().async {
+                    stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+                    readGroup.leave()
+                }
+                readGroup.enter()
+                DispatchQueue.global().async {
+                    stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                    readGroup.leave()
+                }
+
                 // SW-01 fix: Timeout-guarded wait to prevent indefinite hang
                 let deadline = DispatchTime.now() + timeout
                 let waitGroup = DispatchGroup()
@@ -300,8 +317,10 @@ class PythonBridge: ObservableObject {
                     return
                 }
 
-                let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: data, encoding: .utf8)
+                // Wait for pipe reads to finish
+                readGroup.wait()
+
+                let output = String(data: stdoutData, encoding: .utf8)
                 completion(output)
             } catch {
                 completion(nil)

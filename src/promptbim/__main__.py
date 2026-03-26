@@ -60,6 +60,11 @@ def app():
     cache_sub.add_parser("clear", help="Clear all cached entries")
     cache_sub.add_parser("stats", help="Show cache statistics")
 
+    # demo subcommand
+    demo_parser = subparsers.add_parser("demo", help="Demo data management")
+    demo_parser.add_argument("--load", action="store_true", help="Load demo data and save resources")
+    demo_parser.add_argument("--clear", action="store_true", help="Clear demo resource files")
+
     # check subcommand
     check_parser = subparsers.add_parser("check", help="Run system health checks")
     check_parser.add_argument("--json", action="store_true", help="Output results as JSON")
@@ -82,6 +87,8 @@ def app():
         _run_generate(args)
     elif args.command == "cache":
         _run_cache(args)
+    elif args.command == "demo":
+        _run_demo(args)
     elif args.command == "check":
         _run_check(args)
     else:
@@ -230,6 +237,27 @@ def _run_cache(args):
 def _cli_status(status):
     """Print pipeline progress to console."""
     print(f"  [{status.stage}] {status.message} ({status.progress:.0%})")
+
+
+def _run_demo(args):
+    """Handle demo subcommands."""
+    import shutil
+
+    from promptbim.demo.demo_data import DEMO_RESOURCES_DIR, save_demo_resources
+
+    if args.load:
+        paths = save_demo_resources()
+        print("Demo resources saved:")
+        for name, path in paths.items():
+            print(f"  {name}: {path}")
+    elif args.clear:
+        if DEMO_RESOURCES_DIR.exists():
+            shutil.rmtree(DEMO_RESOURCES_DIR)
+            print("Demo resources cleared.")
+        else:
+            print("No demo resources to clear.")
+    else:
+        print("Usage: promptbim demo [--load|--clear]")
 
 
 def _launch_gui():

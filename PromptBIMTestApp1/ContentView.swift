@@ -138,6 +138,33 @@ struct ContentView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
+            } else if !bridge.guiLaunched && bridge.pythonAvailable {
+                // Demo project indicator while waiting for GUI
+                VStack(spacing: 20) {
+                    Spacer()
+                    Image(systemName: "building.2.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.accentColor)
+                    Text("Demo Project Loaded")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Text("Taipei Xinyi District — 3-story Residential")
+                        .foregroundColor(.secondary)
+                    Text("Launching PySide6 GUI with demo data...")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        if bridge.pythonAvailable && !bridge.guiLaunched {
+                            bridge.launchPySide6GUI()
+                        }
+                    }
+                }
             } else if !bridge.pythonAvailable {
                 VStack(spacing: 16) {
                     Spacer()
@@ -175,26 +202,6 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-            } else {
-                VStack(spacing: 20) {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(1.5)
-                    Text("PromptBIM is starting...")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                    Text("Launching PySide6 GUI...")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        if bridge.pythonAvailable && !bridge.guiLaunched {
-                            bridge.launchPySide6GUI()
-                        }
-                    }
-                }
             }
         }
     }

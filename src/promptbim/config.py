@@ -53,6 +53,7 @@ def validate_api_key(key: str) -> bool:
     """
     if not key:
         return False
+    key = key.strip()
     return key.startswith("sk-ant-") and len(key) >= 20
 
 

@@ -41,3 +41,38 @@ class TestMEPSystems:
         assert len(CEILING_LAYER_Z_OFFSET) == 4
         # HVAC should be highest (closest to ceiling, least negative)
         assert CEILING_LAYER_Z_OFFSET["hvac"] > CEILING_LAYER_Z_OFFSET["plumbing"]
+
+
+class TestMEPRegistry:
+    """Task 12: MEP system registry tests."""
+
+    def test_register_custom_system(self):
+        from promptbim.bim.mep.systems import get_registered_systems, register_system
+
+        register_system("district_heating", "District Heating", (0.9, 0.3, 0.1), -0.20)
+        systems = get_registered_systems()
+        assert "district_heating" in systems
+        assert systems["district_heating"]["label"] == "District Heating"
+
+    def test_registered_system_appears_in_colors(self):
+        from promptbim.bim.mep.systems import register_system
+
+        register_system("pneumatic_waste", "Pneumatic Waste", (0.5, 0.5, 0.5), -0.60)
+        assert SYSTEM_COLORS["pneumatic_waste"] == (0.5, 0.5, 0.5)
+        assert SYSTEM_LABELS["pneumatic_waste"] == "Pneumatic Waste"
+
+    def test_default_four_systems_registered(self):
+        from promptbim.bim.mep.systems import get_registered_systems
+
+        systems = get_registered_systems()
+        for sys_id in ("hvac", "plumbing", "electrical", "fire_protection"):
+            assert sys_id in systems
+
+    def test_register_overrides_existing(self):
+        from promptbim.bim.mep.systems import get_registered_systems, register_system
+
+        register_system("hvac", "Custom HVAC", (0.1, 0.1, 0.1), -0.05)
+        systems = get_registered_systems()
+        assert systems["hvac"]["label"] == "Custom HVAC"
+        # Restore
+        register_system("hvac", "HVAC", (0.2, 0.8, 0.2), -0.10)

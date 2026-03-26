@@ -58,3 +58,36 @@ TEST(Geometry, WallLengthMissing) {
     nlohmann::json wall = {{"start", {0, 0}}};
     EXPECT_DOUBLE_EQ(wall_length(wall), 0.0);
 }
+
+// P22.1: NaN validation tests
+TEST(Geometry, PolyAreaNaNCoords) {
+    nlohmann::json coords = {{0,0}, {std::numeric_limits<double>::quiet_NaN(),0}, {10,10}, {0,10}};
+    double area = poly_area(coords);
+    // Should not crash; result may be NaN or 0
+    (void)area;
+}
+
+TEST(Geometry, WallLengthNaN) {
+    nlohmann::json wall = {{"start", {0, 0}}, {"end", {std::numeric_limits<double>::quiet_NaN(), 4}}};
+    double len = wall_length(wall);
+    // Should not crash
+    (void)len;
+}
+
+TEST(Geometry, PolyAreaInfCoords) {
+    nlohmann::json coords = {{0,0}, {std::numeric_limits<double>::infinity(),0}, {10,10}, {0,10}};
+    double area = poly_area(coords);
+    (void)area; // Should not crash
+}
+
+// P22.1: Overflow tests
+TEST(Geometry, PolyAreaLargeCoords) {
+    nlohmann::json coords = {{0,0}, {1e15,0}, {1e15,1e15}, {0,1e15}};
+    double area = poly_area(coords);
+    EXPECT_GT(area, 0.0);
+}
+
+TEST(Geometry, WallLengthZero) {
+    nlohmann::json wall = {{"start", {5, 5}}, {"end", {5, 5}}};
+    EXPECT_DOUBLE_EQ(wall_length(wall), 0.0);
+}

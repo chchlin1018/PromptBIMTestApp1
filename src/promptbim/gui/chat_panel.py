@@ -347,3 +347,7 @@ class ChatPanel(QWidget):
 
     def _append_system(self, text: str) -> None:
         self._history.append(f'<span style="color:#999">{text}</span>')
+
+    def append_system_message(self, text: str) -> None:
+        """Public wrapper for adding system messages."""
+        self._append_system(text)

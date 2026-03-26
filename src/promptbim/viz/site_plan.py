@@ -30,6 +30,12 @@ class SitePlanView(QWidget):
         self._buildable_area: list[tuple[float, float]] = []
         self._plan: BuildingPlan | None = None
 
+    def clear(self):
+        """Clear the site plan view."""
+        self._parcel = None
+        self._plan = None
+        self._redraw()
+
     def set_data(
         self,
         parcel: LandParcel | None = None,

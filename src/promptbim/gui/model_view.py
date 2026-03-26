@@ -63,6 +63,15 @@ class ModelView(QWidget):
         self._floor_meshes: dict[str, list[tuple[pv.PolyData, str, str]]] = {}
         self._floor_names: list[str] = []
 
+    def clear(self):
+        """Clear the 3D model view."""
+        self._plan = None
+        self._all_meshes = []
+        self._floor_meshes = {}
+        self._floor_names = []
+        if hasattr(self, '_plotter') and self._plotter:
+            self._plotter.clear()
+
     def set_plan(self, plan: BuildingPlan):
         """Load a BuildingPlan and display the 3D model."""
         import time as _time

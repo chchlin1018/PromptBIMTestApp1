@@ -85,3 +85,76 @@ TEST(ThreadSafety, ConcurrentGISParsing) {
     for (auto& t : threads) t.join();
     EXPECT_EQ(success_count.load(), NUM_THREADS);
 }
+
+// P22.1: IFC thread safety stress test — high contention
+TEST(ThreadSafety, IFCStressHighContention) {
+    constexpr int NUM_THREADS = 8;
+    std::atomic<int> success_count{0};
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.emplace_back([&]() {
+            IFCGenerator gen;
+            std::string ifc = gen.generate_string(THREAD_PLAN);
+            if (!ifc.empty() && ifc.find("IFCWALL") != std::string::npos) {
+                success_count++;
+            }
+        });
+    }
+
+    for (auto& t : threads) t.join();
+    EXPECT_EQ(success_count.load(), NUM_THREADS);
+}
+
+// P22.1: Mixed read/write thread safety
+TEST(ThreadSafety, ConcurrentIFCAndGIS) {
+    constexpr int NUM_THREADS = 4;
+    std::atomic<int> ifc_success{0};
+    std::atomic<int> gis_success{0};
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        // Even threads do IFC, odd threads do GIS
+        if (i % 2 == 0) {
+            threads.emplace_back([&]() {
+                IFCGenerator gen;
+                std::string ifc = gen.generate_string(THREAD_PLAN);
+                if (!ifc.empty()) ifc_success++;
+            });
+        } else {
+            threads.emplace_back([&]() {
+                GISEngine engine;
+                auto lp = engine.parse_geojson(THREAD_GEOJSON);
+                if (lp.boundary.size() == 4) gis_success++;
+            });
+        }
+    }
+
+    for (auto& t : threads) t.join();
+    EXPECT_EQ(ifc_success.load(), NUM_THREADS / 2);
+    EXPECT_EQ(gis_success.load(), NUM_THREADS / 2);
+}
+
+// P22.1: Thread safety with CABI functions
+TEST(ThreadSafety, CABIConcurrentPlanParse) {
+    constexpr int NUM_THREADS = 4;
+    std::atomic<int> success_count{0};
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.emplace_back([&]() {
+            PBPlan* plan = pb_plan_from_json(THREAD_PLAN);
+            if (plan != nullptr) {
+                char* json = pb_plan_to_json(plan);
+                if (json != nullptr) {
+                    success_count++;
+                    pb_free_string(json);
+                }
+                pb_plan_free(plan);
+            }
+        });
+    }
+
+    for (auto& t : threads) t.join();
+    EXPECT_EQ(success_count.load(), NUM_THREADS);
+}

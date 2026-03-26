@@ -342,3 +342,52 @@ TEST(GISCABI, LandToJsonNull) {
     char* json = pb_land_to_json(nullptr);
     EXPECT_EQ(json, nullptr);
 }
+
+// P22.1: GIS non-convex setback edge cases
+TEST(GISGeometry, NonConvexLShapeSetback) {
+    // L-shaped parcel
+    std::vector<Point2D> l_shape = {
+        {0,0}, {20,0}, {20,10}, {10,10}, {10,20}, {0,20}
+    };
+    auto result = GISEngine::apply_setback(l_shape, 2.0);
+    // Should not crash on non-convex polygon
+    EXPECT_GT(result.size(), 0u);
+    double original_area = GISEngine::compute_area(l_shape);
+    double setback_area = GISEngine::compute_area(result);
+    EXPECT_LT(setback_area, original_area);
+}
+
+TEST(GISGeometry, NonConvexTShapeSetback) {
+    // T-shaped parcel
+    std::vector<Point2D> t_shape = {
+        {0,0}, {30,0}, {30,10}, {20,10}, {20,20}, {10,20}, {10,10}, {0,10}
+    };
+    auto result = GISEngine::apply_setback(t_shape, 1.5);
+    EXPECT_GT(result.size(), 0u);
+}
+
+TEST(GISGeometry, TrapezoidSetback) {
+    // Trapezoid (non-rectangular, still convex)
+    std::vector<Point2D> trapezoid = {
+        {5,0}, {25,0}, {20,15}, {10,15}
+    };
+    auto result = GISEngine::apply_setback(trapezoid, 2.0);
+    EXPECT_GT(result.size(), 0u);
+    double original_area = GISEngine::compute_area(trapezoid);
+    double setback_area = GISEngine::compute_area(result);
+    EXPECT_LT(setback_area, original_area);
+}
+
+// P22.1: Sanitizer-friendly tests
+TEST(GISGeometry, EmptyPolygonSetback) {
+    std::vector<Point2D> empty;
+    auto result = GISEngine::apply_setback(empty, 2.0);
+    EXPECT_EQ(result.size(), 0u);
+}
+
+TEST(GISGeometry, SinglePointSetback) {
+    std::vector<Point2D> point = {{5,5}};
+    auto result = GISEngine::apply_setback(point, 2.0);
+    // Should handle gracefully
+    (void)result;
+}

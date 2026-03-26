@@ -127,37 +127,53 @@ class NativeBIMBridge {
     }
 
     /// Generate an IFC file from a building plan JSON.
-    func generateIFC(planJSON: String, outputPath: String) -> Bool {
-        guard let fromJSON = _pb_plan_from_json,
-              let genIFC = _pb_generate_ifc,
-              let planFree = _pb_plan_free
-        else { return false }
+    /// Returns PBResult with the output path on success.
+    func generateIFCResult(planJSON: String, outputPath: String) -> PBResult<String> {
+        guard isAvailable else { return .fail(.libraryNotLoaded) }
+        guard let fromJSON = _pb_plan_from_json else { return .fail(.symbolMissing("pb_plan_from_json")) }
+        guard let genIFC = _pb_generate_ifc else { return .fail(.symbolMissing("pb_generate_ifc")) }
+        guard let planFree = _pb_plan_free else { return .fail(.symbolMissing("pb_plan_free")) }
 
         guard let plan = fromJSON(planJSON) else {
-            NSLog("[NativeBIMBridge] Failed to parse plan JSON")
-            return false
+            return .fail(.invalidInput("Failed to parse plan JSON"))
         }
         defer { planFree(plan) }
 
         let result = genIFC(plan, outputPath)
-        return result == 0
+        if result == 0 {
+            return .ok(outputPath)
+        }
+        return .fail(.generationFailed("IFC generation returned code \(result)"))
+    }
+
+    /// Backward-compatible Bool wrapper.
+    func generateIFC(planJSON: String, outputPath: String) -> Bool {
+        return generateIFCResult(planJSON: planJSON, outputPath: outputPath).success
     }
 
     /// Generate a USDA file from a building plan JSON.
-    func generateUSD(planJSON: String, outputPath: String) -> Bool {
-        guard let fromJSON = _pb_plan_from_json,
-              let genUSD = _pb_generate_usd,
-              let planFree = _pb_plan_free
-        else { return false }
+    /// Returns PBResult with the output path on success.
+    func generateUSDResult(planJSON: String, outputPath: String) -> PBResult<String> {
+        guard isAvailable else { return .fail(.libraryNotLoaded) }
+        guard let fromJSON = _pb_plan_from_json else { return .fail(.symbolMissing("pb_plan_from_json")) }
+        guard let genUSD = _pb_generate_usd else { return .fail(.symbolMissing("pb_generate_usd")) }
+        guard let planFree = _pb_plan_free else { return .fail(.symbolMissing("pb_plan_free")) }
 
         guard let plan = fromJSON(planJSON) else {
-            NSLog("[NativeBIMBridge] Failed to parse plan JSON")
-            return false
+            return .fail(.invalidInput("Failed to parse plan JSON"))
         }
         defer { planFree(plan) }
 
         let result = genUSD(plan, outputPath)
-        return result == 0
+        if result == 0 {
+            return .ok(outputPath)
+        }
+        return .fail(.generationFailed("USD generation returned code \(result)"))
+    }
+
+    /// Backward-compatible Bool wrapper.
+    func generateUSD(planJSON: String, outputPath: String) -> Bool {
+        return generateUSDResult(planJSON: planJSON, outputPath: outputPath).success
     }
 
     /// Generate a USDZ file from a USDA file.

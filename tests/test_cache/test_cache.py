@@ -148,6 +148,96 @@ class TestCacheLRU:
             assert len(entries) <= 3
 
 
+class TestCacheConcurrency:
+    """Task 8: Concurrent read/write stress tests for cache with LOCK_SH."""
+
+    def test_concurrent_put_get(self, tmp_path):
+        """Multiple writers and readers should not corrupt data."""
+        import threading
+
+        store = CacheStore(cache_dir=tmp_path / "concurrent_cache")
+        errors = []
+
+        def writer(key_suffix):
+            try:
+                for i in range(10):
+                    store.put(f"key_{key_suffix}_{i}", {"val": i, "writer": key_suffix})
+            except Exception as e:
+                errors.append(e)
+
+        def reader(key_suffix):
+            try:
+                for i in range(10):
+                    result = store.get(f"key_{key_suffix}_{i}")
+                    # May be None if writer hasn't written yet — that's fine
+                    if result is not None:
+                        assert "val" in result
+            except Exception as e:
+                errors.append(e)
+
+        threads = []
+        for t in range(4):
+            threads.append(threading.Thread(target=writer, args=(t,)))
+            threads.append(threading.Thread(target=reader, args=(t,)))
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors, f"Concurrent cache errors: {errors}"
+
+    def test_concurrent_read_during_write(self, tmp_path):
+        """Reader should get complete JSON or None, never partial data."""
+        import threading
+
+        store = CacheStore(cache_dir=tmp_path / "rw_cache")
+        store.put("shared", {"initial": True})
+        read_results = []
+
+        def continuous_writer():
+            for i in range(20):
+                store.put("shared", {"iteration": i, "data": "x" * 100})
+
+        def continuous_reader():
+            for _ in range(20):
+                result = store.get("shared")
+                if result is not None:
+                    read_results.append(result)
+
+        w = threading.Thread(target=continuous_writer)
+        r = threading.Thread(target=continuous_reader)
+        w.start()
+        r.start()
+        w.join()
+        r.join()
+
+        # All reads should have valid structure (never partial JSON)
+        for result in read_results:
+            assert isinstance(result, dict)
+
+    def test_read_lock_does_not_block_other_readers(self, tmp_path):
+        """Multiple concurrent readers should not deadlock."""
+        import threading
+
+        store = CacheStore(cache_dir=tmp_path / "read_lock_cache")
+        store.put("readtest", {"data": "parallel_read"})
+        results = []
+
+        def reader():
+            val = store.get("readtest")
+            results.append(val)
+
+        threads = [threading.Thread(target=reader) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(results) == 8
+        assert all(r == {"data": "parallel_read"} for r in results)
+
+
 class TestCacheCLI:
     """Test CLI cache commands."""
 

@@ -29,7 +29,13 @@ class CacheStore:
             return None
 
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            # Use shared read lock to prevent reading truncated writes
+            with open(path, encoding="utf-8") as f:
+                fcntl.flock(f, fcntl.LOCK_SH)
+                try:
+                    data = json.loads(f.read())
+                finally:
+                    fcntl.flock(f, fcntl.LOCK_UN)
         except (json.JSONDecodeError, OSError):
             logger.warning("Corrupt cache entry: %s", key[:12])
             path.unlink(missing_ok=True)
