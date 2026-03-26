@@ -10,7 +10,7 @@
 [![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
 [![Tests](https://img.shields.io/badge/Tests-1060%2B%20passed-green.svg)]()
 [![GoogleTest](https://img.shields.io/badge/C++%20Tests-165%2B%20passed-green.svg)]()
-[![POC](https://img.shields.io/badge/Stage-POC%20v2.10.0-orange.svg)]()
+[![POC](https://img.shields.io/badge/Stage-POC%20v2.11.0-orange.svg)]()
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)]()
 
 ---

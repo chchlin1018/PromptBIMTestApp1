@@ -6,6 +6,48 @@
 
 ---
 
+## [2.11.0] - 2026-03-27
+
+### Added (Sprint P24: Demo 3D + Advanced BIM)
+
+#### Demo 3D Auto-Generation (8 features)
+- IFC file generation from demo BuildingPlan (`generate_demo_ifc()`)
+- USDA file generation from demo BuildingPlan (`generate_demo_usda()`)
+- SVG floor plan + site plan generation (`generate_demo_svg()`)
+- Fallback sample IFC generation for offline use (`ensure_fallback_ifc()`)
+- Unified demo resource generation (`generate_all_demo_resources()`)
+- GUI startup auto-loads demo 3D models (IFC + USDA + SVG)
+- Swift SceneKit auto-loads demo USDA on 3D tab appear
+- Demo 3D test suite (+5 tests)
+
+#### Advanced BIM (6 features)
+- Multi-story parking layout auto-generation (`bim/parking.py`)
+- PBR material system with 9 built-in materials (`bim/materials.py`)
+- Structural system auto-generation: columns, beams, foundations (`bim/structural.py`)
+- MEP pipe routing with HVAC/Plumbing/Electrical/Fire templates (`bim/mep/`)
+- Stairs + elevator shaft auto-generation (`bim/vertical.py`)
+- Advanced BIM test suite (+6 tests)
+
+#### CI/CD + Startup Optimization (6 features)
+- GitHub Actions CI with Linux pytest + macOS Xcode + C++ matrix
+- App startup time optimization via lazy imports (<3s target)
+- Version sync script (`scripts/sync_version.sh`)
+- Developer setup script (`scripts/dev_setup.sh`)
+- Pre-commit hooks (ruff + version consistency)
+- CI/CD test suite (+4 tests)
+
+#### Integration Tests (4 features)
+- E2E pipeline integration tests (+5 tests)
+- MCP server integration tests (+3 tests)
+- Swift ↔ Python bridge integration tests (+4 tests)
+- Coverage threshold raised to 75%
+
+### Changed
+- All version strings unified to 2.11.0 across pyproject.toml, __init__.py, Info.plist
+- CFBundleVersion bumped to 25
+
+---
+
 ## [2.10.0] - 2026-03-26
 
 ### Fixed (Sprint P23: Audit Fixes — 32 Issues from AuditReport_03261945)

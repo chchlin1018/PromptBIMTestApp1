@@ -11,7 +11,7 @@
  * Caller must free strings returned by pb_*() functions using pb_free_string().
  * Caller must free opaque structs using the corresponding pb_*_free() function.
  *
- * Version: 2.10.0
+ * Version: 2.11.0
  */
 
 #pragma once
@@ -26,7 +26,7 @@ extern "C" {
  * Version
  * ========================================================================= */
 
-/** Returns "2.10.0" — owned by the library, do NOT free. */
+/** Returns "2.11.0" — owned by the library, do NOT free. */
 const char* pb_version(void);
 
 /* =========================================================================

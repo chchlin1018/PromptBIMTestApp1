@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.10.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.11.0 | **更新:** 2026-03-27 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -46,8 +46,10 @@
 | P21 | V2 Migration Phase 4 — GIS Engine C++ + macOS SwiftUI 3D | 1 | ✅ | P20 |
 | P22 | Senior Audit Full Remediation | 1 | ✅ | P21, AuditReport |
 | P22.1 | Code Quality + Test Gap + Demo Data | 1 | ✅ | P22, AuditReport_03261820 |
+| P23 | Senior Audit Full Remediation | 1 | ✅ | P22.1, AuditReport |
+| P24 | Demo 3D + Advanced BIM | 1 | ✅ | P23 |
 
-**預估總開發時間: ~53 天**
+**預估總開發時間: ~55 天**
 
 ---
 

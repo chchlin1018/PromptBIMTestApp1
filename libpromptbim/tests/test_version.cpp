@@ -20,7 +20,7 @@
 TEST(Version, VersionString) {
     const char* v = pb_version();
     ASSERT_NE(v, nullptr);
-    EXPECT_STREQ(v, "2.10.0");
+    EXPECT_STREQ(v, "2.11.0");
 }
 
 TEST(Memory, FreeNullIsNoop) {
@@ -49,7 +49,7 @@ TEST(Concurrency, VersionFromMultipleThreads) {
     for (int i = 0; i < NUM_THREADS; ++i) {
         threads.emplace_back([&]() {
             const char* v = pb_version();
-            if (v != nullptr && std::strcmp(v, "2.10.0") == 0) {
+            if (v != nullptr && std::strcmp(v, "2.11.0") == 0) {
                 success++;
             }
         });
