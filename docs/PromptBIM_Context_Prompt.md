@@ -12,8 +12,8 @@
 - **GitHub：** https://github.com/chchlin1018/PromptBIMTestApp1 (private, owner: chchlin1018)
 - **組織：** Reality Matrix Inc. / Michael Lin (林志錚)
 - **性質：** POC (Proof of Concept)
-- **版本：** v2.6.0（P19 完成）
-- **測試：** 813 passed (+ 70 GoogleTests), 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
+- **版本：** v2.7.0（P20 完成）
+- **測試：** 820 passed (+ 110 GoogleTests = 930 total), 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
 
 ---
 

@@ -68,5 +68,5 @@ TEST(UTF8, SimulationPhaseNames) {
 
 TEST(UTF8, VersionString) {
     const char* ver = pb_version();
-    EXPECT_STREQ(ver, "2.6.0");
+    EXPECT_STREQ(ver, "2.7.0");
 }

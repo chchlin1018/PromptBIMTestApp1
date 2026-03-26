@@ -11,7 +11,7 @@
  * Caller must free strings returned by pb_*() functions using pb_free_string().
  * Caller must free opaque structs using the corresponding pb_*_free() function.
  *
- * Version: 2.6.0
+ * Version: 2.7.0
  */
 
 #pragma once
@@ -26,7 +26,7 @@ extern "C" {
  * Version
  * ========================================================================= */
 
-/** Returns "2.6.0" — owned by the library, do NOT free. */
+/** Returns "2.7.0" — owned by the library, do NOT free. */
 const char* pb_version(void);
 
 /* =========================================================================
@@ -97,8 +97,18 @@ char* pb_check_compliance(
 char* pb_estimate_cost(const char* plan_json);
 
 /* =========================================================================
- * BIM Engine (Phase 3 — placeholder)
- * ========================================================================= */
+ * BIM Engine (Phase 3 — IMPLEMENTED, Sprint P20)
+ * =========================================================================
+ *
+ * IFC Generator: writes IFC4 SPF (STEP Physical File) directly in C++.
+ * USD Generator: writes USDA (ASCII) files directly in C++.
+ * USDZ Packer:  packages USDA into uncompressed zip archive per spec.
+ *
+ * PBPlan lifecycle:
+ *   1. pb_plan_from_json(json) → allocates PBPlan*
+ *   2. pb_generate_ifc/usd(plan, path) → writes file
+ *   3. pb_plan_free(plan) → deallocates
+ */
 
 typedef struct PBPlan PBPlan;
 

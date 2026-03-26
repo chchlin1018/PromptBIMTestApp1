@@ -6,6 +6,52 @@
 
 ---
 
+## [2.7.0] - 2026-03-26
+
+### Added (Sprint P20: V2 Migration Phase 3 — BIM Core IFC + USD C++)
+
+#### IFC Generator C++ (Phase 3)
+- `libpromptbim/src/bim/ifc_generator.cpp` — IFC4 SPF (STEP Physical File) writer in pure C++
+- `libpromptbim/include/promptbim/ifc_generator.hpp` — IFC generator C++ interface
+- Writes valid IFC4 text files directly (no IfcOpenShell C++ dependency)
+- Generates: IFCPROJECT, IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY, IFCWALL, IFCSLAB, IFCROOF
+- Geometry: IFCEXTRUDEDAREASOLID with placement matrices (rotation + translation)
+- Materials: IFCMATERIAL + IFCCOLOURRGB + IFCSURFACESTYLERENDERING
+- C ABI: `pb_plan_from_json()`, `pb_plan_free()`, `pb_plan_to_json()`, `pb_generate_ifc()`
+
+#### USD Generator C++ (Phase 3)
+- `libpromptbim/src/bim/usd_generator.cpp` — USDA (ASCII) writer in pure C++
+- `libpromptbim/include/promptbim/usd_generator.hpp` — USD generator C++ interface
+- Writes valid USDA files with Z-up, meters per unit
+- Structure: Building Xform → Story Xform → Wall/Slab Mesh
+- Materials: UsdPreviewSurface with diffuseColor, roughness, metallic, opacity
+- Mesh generation: wall_mesh (8-vertex box), slab_mesh (extruded polygon), flat_roof_mesh
+
+#### USDZ Packer C++ (Phase 3)
+- Minimal zip implementation for USDZ (uncompressed per spec, 64-byte alignment)
+- CRC-32 computation, local file header, central directory, end of central directory
+- C ABI: `pb_generate_usd()`, `pb_generate_usdz()`
+
+#### GoogleTest Additions (+40 tests, total 110)
+- `tests/test_ifc_generator.cpp` — 19 IFC tests (structure, entities, materials, C ABI, file I/O)
+- `tests/test_bim_engine.cpp` — 21 USD/USDZ/BIM tests (USDA structure, USDZ zip, C ABI, cross-format)
+
+#### pybind11 Enhancements
+- `bindings.cpp` — Added IFCGenerator, USDGenerator, package_usdz bindings
+- `_native_bridge.py` — Added `generate_ifc()`, `generate_usd()`, `package_usdz()` with Python fallback
+
+#### Internal
+- `src/bim/pb_plan_internal.h` — Shared PBPlan struct for IFC/USD C ABI
+- Phase 3 BIM stubs removed from `future_stubs.cpp` (replaced by real implementations)
+
+### Changed
+- Version: v2.6.0 → v2.7.0 across all files
+- CMakeLists.txt: added `src/bim/ifc_generator.cpp`, `src/bim/usd_generator.cpp`
+- vcpkg.json: version sync to 2.7.0
+- promptbim.h: BIM Engine section updated from "placeholder" to "IMPLEMENTED"
+
+---
+
 ## [2.6.0] - 2026-03-26
 
 ### Added (Sprint P19: V2 Migration Phase 2 — MEP + Simulation C++ + P18 Tech Debt)

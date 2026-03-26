@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.6.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.7.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -42,8 +42,9 @@
 | P17 | 全面修整 + 架構強化 + Async + 快取 | 1 | ✅ | P16 |
 | P18 | V2 Migration Phase 0-1 — C++ 骨架 + Engine 遷移 | 1 | ✅ | P17 |
 | P19 | V2 Migration Phase 2 — MEP + Simulation C++ + P18 技術債 | 1 | ✅ | P18 |
+| P20 | V2 Migration Phase 3 — BIM Core (IFC + USD C++) | 1 | ✅ | P19 |
 
-**預估總開發時間: ~49 天**
+**預估總開發時間: ~50 天**
 
 ---
 
@@ -511,6 +512,24 @@
 - ✅ T34: git tag v2.4.0 — 版本標籤建立並推送
 
 **驗收標準:** 34 tasks 全部完成; BUILD SUCCEEDED; pytest passed; async/await 可用; plan cache 可用; git tag v2.4.0
+
+---
+
+## P20: V2 Migration Phase 3 — BIM Core (IFC + USD C++) (~1 天)
+
+### Part A: IFC Generator C++ 遷移
+- ✅ Task 1: 研究 IfcOpenShell C++ API（結論: 直接寫 IFC-SPF 格式，避免重量級依賴）
+- ✅ Task 2: IFC Generator C++ 實作 (`src/bim/ifc_generator.cpp` + `include/promptbim/ifc_generator.hpp`)
+- ✅ Task 3: IFC Generator GoogleTest (`tests/test_ifc_generator.cpp` — 19 tests)
+- ✅ Task 4: IFC Generator pybind11 binding + `_native_bridge.py` fallback
+
+### Part B: USD Generator C++ + USDZ + pybind11
+- ✅ Task 5: USD Generator C++ 實作 (`src/bim/usd_generator.cpp` + `include/promptbim/usd_generator.hpp`)
+- ✅ Task 6: USDZ Packer C++ 實作 (uncompressed zip, 64-byte alignment)
+- ✅ Task 7: BIM Engine GoogleTest (`tests/test_bim_engine.cpp` — 21 tests)
+- ✅ Task 8: BIM Engine pybind11 binding + `_native_bridge.py` IFC/USD/USDZ fallback
+
+**驗收標準:** GoogleTest 110 passed; pytest 820 passed; xcodebuild BUILD SUCCEEDED; v2.7.0
 
 ---
 

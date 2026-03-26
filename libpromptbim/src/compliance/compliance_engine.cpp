@@ -598,6 +598,6 @@ char* pb_check_compliance(const char* plan_json,
     }
 }
 
-const char* pb_version(void) { return "2.6.0"; }
+const char* pb_version(void) { return "2.7.0"; }
 
 void pb_free_string(char* str) { std::free(str); }

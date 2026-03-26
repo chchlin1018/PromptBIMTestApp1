@@ -9,6 +9,9 @@ Supported engines:
   - Cost Engine (estimate_cost_json)
   - MEP Engine (plan_mep_json) — v2.6.0+
   - Simulation Engine (generate_schedule_json) — v2.6.0+
+  - IFC Generator (generate_ifc) — v2.7.0+
+  - USD Generator (generate_usd) — v2.7.0+
+  - USDZ Packer (package_usdz) — v2.7.0+
 
 Usage (internal):
     from promptbim.codes._native_bridge import (
@@ -192,3 +195,91 @@ def _python_schedule_fallback(plan_json: str, total_days: int = 360) -> str:
         return json.dumps(sched.to_dict())
     except Exception as exc:
         return json.dumps({"error": str(exc)})
+
+
+# ---------------------------------------------------------------------------
+# IFC Generator (v2.7.0+)
+# ---------------------------------------------------------------------------
+
+def generate_ifc(plan_json: str, output_path: str) -> int:
+    """Generate IFC file. Returns 0 on success, -1 on error.
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        return _NATIVE_MODULE.generate_ifc(plan_json, output_path)
+
+    return _python_ifc_fallback(plan_json, output_path)
+
+
+def _python_ifc_fallback(plan_json: str, output_path: str) -> int:
+    """Python IFC generator — fallback when C++ is unavailable."""
+    try:
+        from promptbim.bim.ifc_generator import IFCGenerator
+        from promptbim.schemas.plan import BuildingPlan
+
+        plan = BuildingPlan.model_validate_json(plan_json)
+        gen  = IFCGenerator()
+        gen.generate(plan, output_path)
+        return 0
+    except Exception as exc:
+        logger.error("IFC generation failed: %s", exc)
+        return -1
+
+
+# ---------------------------------------------------------------------------
+# USD Generator (v2.7.0+)
+# ---------------------------------------------------------------------------
+
+def generate_usd(plan_json: str, output_path: str) -> int:
+    """Generate USD file. Returns 0 on success, -1 on error.
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        return _NATIVE_MODULE.generate_usd(plan_json, output_path)
+
+    return _python_usd_fallback(plan_json, output_path)
+
+
+def _python_usd_fallback(plan_json: str, output_path: str) -> int:
+    """Python USD generator — fallback when C++ is unavailable."""
+    try:
+        from promptbim.bim.usd_generator import USDGenerator
+        from promptbim.schemas.plan import BuildingPlan
+
+        plan = BuildingPlan.model_validate_json(plan_json)
+        gen  = USDGenerator()
+        gen.generate(plan, output_path)
+        return 0
+    except Exception as exc:
+        logger.error("USD generation failed: %s", exc)
+        return -1
+
+
+# ---------------------------------------------------------------------------
+# USDZ Packer (v2.7.0+)
+# ---------------------------------------------------------------------------
+
+def package_usdz(usd_path: str, output_path: str) -> int:
+    """Package USDA into USDZ. Returns 0 on success, -1 on error.
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        return _NATIVE_MODULE.package_usdz(usd_path, output_path)
+
+    return _python_usdz_fallback(usd_path, output_path)
+
+
+def _python_usdz_fallback(usd_path: str, output_path: str) -> int:
+    """Python USDZ packer — fallback (simple zip archive)."""
+    try:
+        import zipfile
+
+        with zipfile.ZipFile(output_path, "w", zipfile.ZIP_STORED) as zf:
+            zf.write(usd_path, arcname="model.usda")
+        return 0
+    except Exception as exc:
+        logger.error("USDZ packaging failed: %s", exc)
+        return -1

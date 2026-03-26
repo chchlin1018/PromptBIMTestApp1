@@ -12,6 +12,8 @@
 #include "promptbim/cost_engine.hpp"
 #include "promptbim/mep_engine.hpp"
 #include "promptbim/simulation_engine.hpp"
+#include "promptbim/ifc_generator.hpp"
+#include "promptbim/usd_generator.hpp"
 #include "promptbim/promptbim.h"
 
 namespace py = pybind11;
@@ -121,4 +123,61 @@ Returns:
         py::arg("plan_json"),
         py::arg("total_days") = 360,
         "Generate construction schedule. Returns JSON string.");
+
+    // -----------------------------------------------------------------------
+    // IFC Generator (Phase 3 — Sprint P20)
+    // -----------------------------------------------------------------------
+    py::class_<promptbim::IFCGenerator>(m, "IFCGenerator")
+        .def(py::init<>())
+        .def("generate",
+            &promptbim::IFCGenerator::generate,
+            py::arg("plan_json"),
+            py::arg("output_path"),
+            "Generate an IFC4 file. Returns 0 on success, -1 on error.")
+        .def("generate_string",
+            &promptbim::IFCGenerator::generate_string,
+            py::arg("plan_json"),
+            "Generate IFC content as a string.");
+
+    m.def("generate_ifc",
+        [](const std::string& plan_json, const std::string& output_path) {
+            promptbim::IFCGenerator gen;
+            return gen.generate(plan_json, output_path);
+        },
+        py::arg("plan_json"),
+        py::arg("output_path"),
+        "Generate IFC file. Returns 0 on success.");
+
+    // -----------------------------------------------------------------------
+    // USD Generator (Phase 3 — Sprint P20)
+    // -----------------------------------------------------------------------
+    py::class_<promptbim::USDGenerator>(m, "USDGenerator")
+        .def(py::init<>())
+        .def("generate",
+            &promptbim::USDGenerator::generate,
+            py::arg("plan_json"),
+            py::arg("output_path"),
+            "Generate a USDA file. Returns 0 on success, -1 on error.")
+        .def("generate_string",
+            &promptbim::USDGenerator::generate_string,
+            py::arg("plan_json"),
+            "Generate USDA content as a string.");
+
+    m.def("generate_usd",
+        [](const std::string& plan_json, const std::string& output_path) {
+            promptbim::USDGenerator gen;
+            return gen.generate(plan_json, output_path);
+        },
+        py::arg("plan_json"),
+        py::arg("output_path"),
+        "Generate USD file. Returns 0 on success.");
+
+    // -----------------------------------------------------------------------
+    // USDZ Packer (Phase 3 — Sprint P20)
+    // -----------------------------------------------------------------------
+    m.def("package_usdz",
+        &promptbim::USDGenerator::package_usdz,
+        py::arg("usd_path"),
+        py::arg("output_path"),
+        "Package USDA into USDZ. Returns 0 on success.");
 }

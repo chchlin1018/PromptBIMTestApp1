@@ -7,8 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-883%20passed-green.svg)]()
-[![POC](https://img.shields.io/badge/Stage-POC%20v2.6.0-orange.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-930%20passed-green.svg)]()
+[![POC](https://img.shields.io/badge/Stage-POC%20v2.7.0-orange.svg)]()
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)]()
 
 ---
