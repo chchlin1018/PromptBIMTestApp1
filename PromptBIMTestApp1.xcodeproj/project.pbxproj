@@ -13,6 +13,11 @@
 		A1000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000004 /* Assets.xcassets */; };
 		A1000005 /* SceneKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* SceneKitView.swift */; };
 		A1000006 /* NativeBIMBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* NativeBIMBridge.swift */; };
+		A1000008 /* PBResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* PBResult.swift */; };
+		B1000001 /* PBResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* PBResultTests.swift */; };
+		B1000002 /* BIMSceneBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000002 /* BIMSceneBuilderTests.swift */; };
+		B1000003 /* NativeBIMBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000003 /* NativeBIMBridgeTests.swift */; };
+		B1000004 /* PythonBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000004 /* PythonBridgeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,7 +29,13 @@
 		A2000006 /* PromptBIMTestApp1.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PromptBIMTestApp1.entitlements; sourceTree = "<group>"; };
 		A2000007 /* SceneKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneKitView.swift; sourceTree = "<group>"; };
 		A2000008 /* NativeBIMBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBIMBridge.swift; sourceTree = "<group>"; };
+		A200000A /* PBResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PBResult.swift; sourceTree = "<group>"; };
 		A2000010 /* PromptBIMTestApp1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PromptBIMTestApp1.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2000001 /* PBResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PBResultTests.swift; sourceTree = "<group>"; };
+		B2000002 /* BIMSceneBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BIMSceneBuilderTests.swift; sourceTree = "<group>"; };
+		B2000003 /* NativeBIMBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBIMBridgeTests.swift; sourceTree = "<group>"; };
+		B2000004 /* PythonBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonBridgeTests.swift; sourceTree = "<group>"; };
+		B2000010 /* PromptBIMTestApp1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PromptBIMTestApp1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,13 +46,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B3000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		B4000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A8000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A5000001;
+			remoteInfo = PromptBIMTestApp1;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		B4000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A5000001 /* PromptBIMTestApp1 */;
+			targetProxy = B4000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXGroup section */
 		A4000001 = {
 			isa = PBXGroup;
 			children = (
 				A4000002 /* PromptBIMTestApp1 */,
+				B4000003 /* PromptBIMTestApp1Tests */,
 				A4000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +91,7 @@
 				A2000003 /* PythonBridge.swift */,
 				A2000007 /* SceneKitView.swift */,
 				A2000008 /* NativeBIMBridge.swift */,
+				A200000A /* PBResult.swift */,
 				A2000004 /* Assets.xcassets */,
 				A2000005 /* Info.plist */,
 				A2000006 /* PromptBIMTestApp1.entitlements */,
@@ -65,8 +103,20 @@
 			isa = PBXGroup;
 			children = (
 				A2000010 /* PromptBIMTestApp1.app */,
+				B2000010 /* PromptBIMTestApp1Tests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B4000003 /* PromptBIMTestApp1Tests */ = {
+			isa = PBXGroup;
+			children = (
+				B2000001 /* PBResultTests.swift */,
+				B2000002 /* BIMSceneBuilderTests.swift */,
+				B2000003 /* NativeBIMBridgeTests.swift */,
+				B2000004 /* PythonBridgeTests.swift */,
+			);
+			path = PromptBIMTestApp1Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -90,6 +140,23 @@
 			productReference = A2000010 /* PromptBIMTestApp1.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B5000001 /* PromptBIMTestApp1Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7000003 /* Build configuration list for PBXNativeTarget "PromptBIMTestApp1Tests" */;
+			buildPhases = (
+				B6000001 /* Sources */,
+				B3000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B4000002 /* PBXTargetDependency */,
+			);
+			name = PromptBIMTestApp1Tests;
+			productName = PromptBIMTestApp1Tests;
+			productReference = B2000010 /* PromptBIMTestApp1Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -102,6 +169,10 @@
 				TargetAttributes = {
 					A5000001 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					B5000001 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = A5000001;
 					};
 				};
 			};
@@ -119,6 +190,7 @@
 			projectRoot = "";
 			targets = (
 				A5000001 /* PromptBIMTestApp1 */,
+				B5000001 /* PromptBIMTestApp1Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -166,6 +238,18 @@
 				A1000003 /* PythonBridge.swift in Sources */,
 				A1000005 /* SceneKitView.swift in Sources */,
 				A1000006 /* NativeBIMBridge.swift in Sources */,
+				A1000008 /* PBResult.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1000001 /* PBResultTests.swift in Sources */,
+				B1000002 /* BIMSceneBuilderTests.swift in Sources */,
+				B1000003 /* NativeBIMBridgeTests.swift in Sources */,
+				B1000004 /* PythonBridgeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,7 +381,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PromptBIMTestApp1/Info.plist;
@@ -305,7 +389,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -322,7 +406,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PromptBIMTestApp1/Info.plist;
@@ -330,11 +414,43 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B9000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 22;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 2.9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PromptBIMTestApp1.app/Contents/MacOS/PromptBIMTestApp1";
+			};
+			name = Debug;
+		};
+		B9000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 22;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 2.9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PromptBIMTestApp1.app/Contents/MacOS/PromptBIMTestApp1";
 			};
 			name = Release;
 		};
@@ -355,6 +471,15 @@
 			buildConfigurations = (
 				A9000003 /* Debug */,
 				A9000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7000003 /* Build configuration list for PBXNativeTarget "PromptBIMTestApp1Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B9000001 /* Debug */,
+				B9000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -51,8 +51,15 @@ class NativeBIMBridge {
                 bindFunctions(handle)
                 isAvailable = true
                 NSLog("[NativeBIMBridge] Loaded libpromptbim from: \(path)")
+                // SW-06 fix: Version check to detect ABI mismatch
                 if let ver = version() {
                     NSLog("[NativeBIMBridge] Version: \(ver)")
+                    let expectedMajor = "2."
+                    if !ver.hasPrefix(expectedMajor) {
+                        NSLog("[NativeBIMBridge] ⚠️ Version mismatch: expected \(expectedMajor)x, got \(ver)")
+                    }
+                } else {
+                    NSLog("[NativeBIMBridge] ⚠️ Could not read library version — ABI mismatch possible")
                 }
                 return
             }
@@ -87,20 +94,29 @@ class NativeBIMBridge {
         return candidates
     }
 
+    /// SW-05 fix: Safe dlsym binding with null check to prevent undefined behavior.
+    private func safeBind<T>(_ handle: UnsafeMutableRawPointer, _ symbol: String, _ type: T.Type) -> T? {
+        guard let sym = dlsym(handle, symbol) else {
+            NSLog("[NativeBIMBridge] Symbol not found: \(symbol)")
+            return nil
+        }
+        return unsafeBitCast(sym, to: type)
+    }
+
     private func bindFunctions(_ handle: UnsafeMutableRawPointer) {
-        _pb_version = unsafeBitCast(dlsym(handle, "pb_version"), to: (@convention(c) () -> UnsafePointer<CChar>?).self)
-        _pb_free_string = unsafeBitCast(dlsym(handle, "pb_free_string"), to: (@convention(c) (UnsafeMutablePointer<CChar>?) -> Void).self)
-        _pb_plan_from_json = unsafeBitCast(dlsym(handle, "pb_plan_from_json"), to: (@convention(c) (UnsafePointer<CChar>?) -> OpaquePointer?).self)
-        _pb_plan_free = unsafeBitCast(dlsym(handle, "pb_plan_free"), to: (@convention(c) (OpaquePointer?) -> Void).self)
-        _pb_plan_to_json = unsafeBitCast(dlsym(handle, "pb_plan_to_json"), to: (@convention(c) (OpaquePointer?) -> UnsafeMutablePointer<CChar>?).self)
-        _pb_generate_ifc = unsafeBitCast(dlsym(handle, "pb_generate_ifc"), to: (@convention(c) (OpaquePointer?, UnsafePointer<CChar>?) -> Int32).self)
-        _pb_generate_usd = unsafeBitCast(dlsym(handle, "pb_generate_usd"), to: (@convention(c) (OpaquePointer?, UnsafePointer<CChar>?) -> Int32).self)
-        _pb_generate_usdz = unsafeBitCast(dlsym(handle, "pb_generate_usdz"), to: (@convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> Int32).self)
-        _pb_land_from_geojson_string = unsafeBitCast(dlsym(handle, "pb_land_from_geojson_string"), to: (@convention(c) (UnsafePointer<CChar>?) -> OpaquePointer?).self)
-        _pb_land_to_json = unsafeBitCast(dlsym(handle, "pb_land_to_json"), to: (@convention(c) (OpaquePointer?) -> UnsafeMutablePointer<CChar>?).self)
-        _pb_land_free = unsafeBitCast(dlsym(handle, "pb_land_free"), to: (@convention(c) (OpaquePointer?) -> Void).self)
-        _pb_check_compliance = unsafeBitCast(dlsym(handle, "pb_check_compliance"), to: (@convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>?).self)
-        _pb_estimate_cost = unsafeBitCast(dlsym(handle, "pb_estimate_cost"), to: (@convention(c) (UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>?).self)
+        _pb_version = safeBind(handle, "pb_version", (@convention(c) () -> UnsafePointer<CChar>?).self)
+        _pb_free_string = safeBind(handle, "pb_free_string", (@convention(c) (UnsafeMutablePointer<CChar>?) -> Void).self)
+        _pb_plan_from_json = safeBind(handle, "pb_plan_from_json", (@convention(c) (UnsafePointer<CChar>?) -> OpaquePointer?).self)
+        _pb_plan_free = safeBind(handle, "pb_plan_free", (@convention(c) (OpaquePointer?) -> Void).self)
+        _pb_plan_to_json = safeBind(handle, "pb_plan_to_json", (@convention(c) (OpaquePointer?) -> UnsafeMutablePointer<CChar>?).self)
+        _pb_generate_ifc = safeBind(handle, "pb_generate_ifc", (@convention(c) (OpaquePointer?, UnsafePointer<CChar>?) -> Int32).self)
+        _pb_generate_usd = safeBind(handle, "pb_generate_usd", (@convention(c) (OpaquePointer?, UnsafePointer<CChar>?) -> Int32).self)
+        _pb_generate_usdz = safeBind(handle, "pb_generate_usdz", (@convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> Int32).self)
+        _pb_land_from_geojson_string = safeBind(handle, "pb_land_from_geojson_string", (@convention(c) (UnsafePointer<CChar>?) -> OpaquePointer?).self)
+        _pb_land_to_json = safeBind(handle, "pb_land_to_json", (@convention(c) (OpaquePointer?) -> UnsafeMutablePointer<CChar>?).self)
+        _pb_land_free = safeBind(handle, "pb_land_free", (@convention(c) (OpaquePointer?) -> Void).self)
+        _pb_check_compliance = safeBind(handle, "pb_check_compliance", (@convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>?).self)
+        _pb_estimate_cost = safeBind(handle, "pb_estimate_cost", (@convention(c) (UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>?).self)
     }
 
     // MARK: - Public API

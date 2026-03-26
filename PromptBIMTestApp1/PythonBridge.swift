@@ -220,8 +220,11 @@ class PythonBridge: ObservableObject {
             process.standardError = errorPipe
 
             process.terminationHandler = { [weak self] proc in
+                // SW-02 fix: Always re-enable sudden termination when process ends
+                ProcessInfo.processInfo.enableSuddenTermination()
                 DispatchQueue.main.async {
                     self?.guiLaunched = false
+                    self?.guiProcess = nil
                     if proc.terminationStatus != 0 {
                         // Read stderr for error info
                         let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
@@ -242,6 +245,7 @@ class PythonBridge: ObservableObject {
                     self.statusMessage = "PySide6 GUI launched"
                 }
             } catch {
+                // SW-02 fix: Always re-enable sudden termination on failure
                 ProcessInfo.processInfo.enableSuddenTermination()
                 DispatchQueue.main.async {
                     self.statusMessage = "Failed to launch PySide6 GUI: \(error.localizedDescription)"
@@ -263,20 +267,40 @@ class PythonBridge: ObservableObject {
 
     // MARK: - Command Execution
 
-    func runCommand(arguments: [String], completion: @escaping (String?) -> Void) {
+    /// Default subprocess timeout in seconds (SW-01 fix: prevent indefinite hangs).
+    static let defaultTimeoutSeconds: TimeInterval = 60.0
+
+    func runCommand(arguments: [String], timeout: TimeInterval = PythonBridge.defaultTimeoutSeconds, completion: @escaping (String?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async { [pythonPath] in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: pythonPath)
             process.arguments = arguments
 
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = pipe
+            let stdoutPipe = Pipe()
+            let stderrPipe = Pipe()
+            process.standardOutput = stdoutPipe
+            process.standardError = stderrPipe
 
             do {
                 try process.run()
-                process.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+                // SW-01 fix: Timeout-guarded wait to prevent indefinite hang
+                let deadline = DispatchTime.now() + timeout
+                let waitGroup = DispatchGroup()
+                waitGroup.enter()
+                DispatchQueue.global().async {
+                    process.waitUntilExit()
+                    waitGroup.leave()
+                }
+                let result = waitGroup.wait(timeout: deadline)
+                if result == .timedOut {
+                    NSLog("[PythonBridge] Process timed out after \(timeout)s, terminating")
+                    process.terminate()
+                    completion(nil)
+                    return
+                }
+
+                let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
                 let output = String(data: data, encoding: .utf8)
                 completion(output)
             } catch {
