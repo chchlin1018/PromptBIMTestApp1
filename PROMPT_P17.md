@@ -1,11 +1,12 @@
 # PROMPT_P17.md — Sprint P17: 全面修整 + 架構強化 + CI 修復 (Final Polish & Architecture Hardening)
 
-> 版本: v1.0 | 建立時間: 2026-03-26
+> 版本: v1.1 | 建立時間: 2026-03-26 | 更新: 加入接續 Sprint 提醒
 > 前置 Sprint: P16 ✅ 完成（品質修整, 725 tests, v2.1.0）
 > 前置 Sprint: P15 ⬜ 未執行（併入本 Sprint）
 > 依賴: AuditReport.md, CLAUDE.md v1.8.0, SKILL.md, docs/DesignDocForV2.md
 > 品質分析: P14 + P16 品質分析報告（Claude Opus 4.6）
 > 目標版本: v2.2.0
+> ⬇️ 接續: PROMPT_P17.1.md（async/await）→ PROMPT_P17.2.md（Plan 快取）
 
 ---
 
@@ -291,41 +292,6 @@
 
 ---
 
-## 問題來源追溯
-
-| Task | 來源 | 原始 ID |
-|------|------|----------|
-| 1 | P16 品質分析 + 實測 | requirements-frozen.txt 損壞 |
-| 2 | P16 品質分析 | 假 CVE-2026-4539 |
-| 3 | P16 品質分析 | CI 可執行性 |
-| 4 | AuditReport.md | M-2 |
-| 5 | AuditReport.md 架構風險 | Rate Limiter |
-| 6 | AuditReport.md | L-1 |
-| 7 | AuditReport.md | L-3 |
-| 8 | AuditReport.md | L-5 |
-| 9 | AuditReport.md | L-2 |
-| 10 | AuditReport.md | L-4 |
-| 11 | PROMPT_P15.md | 目標 2 (Lazy Import) |
-| 12 | PROMPT_P15.md | 目標 3 (Plugin System) |
-| 13 | PROMPT_P15.md | 目標 1 (V2 Review) |
-| 14 | AuditReport.md 測試缺口 | 網路故障 |
-| 15 | AuditReport.md 測試缺口 | Fuzzing |
-| 16 | AuditReport.md 測試缺口 | 檔案權限 |
-| 17 | P16 品質分析 | N1 (ContentView 硬編碼) |
-| 18 | 文件維護 | AuditReport 更新 |
-| 19 | 文件維護 | 品質報告歸檔 |
-| 20 | CLAUDE.md v1.7.0/v1.8.0 | 全量文件同步 + pbxproj |
-
----
-
-## 注意事項
-
-- **async/await（AuditReport M-4）不在本 Sprint 範圍。** 改為 async 需要重構整個 Agent 層 + GUI 層，工作量等同一個完整 Sprint。建議在 P18 或 V2 遷移中處理。
-- **Plan 快取機制不在本 Sprint 範圍。** 需要設計快取 key（prompt hash + land hash）和失效策略，建議在 V2 中處理。
-- **P15 的 Test Refactor（目標 4）已在 P16 部分完成**（conftest.py fixtures, ComponentRegistry reset）。如有額外需求在 Task 14-16 中涵蓋。
-
----
-
 ## 執行指令
 
 所有問題答案都是 Yes，不要中斷詢問。
@@ -338,4 +304,20 @@
 
 ---
 
-*PROMPT_P17.md v1.0 | 2026-03-26 | 合規性檢查: CLAUDE.md v1.8.0 ✅ | SKILL.md ✅*
+## 🔗 接續 Sprint 提醒
+
+> **P17 完成後，請立即執行 P17.1（async/await）。**
+> P17.1 完成後再執行 P17.2（Plan 快取）。
+>
+> **P17 完成後的 tmux 指令：**
+> ```bash
+> # 在 Mac Mini 上（已在 tmux session 內）
+> cd ~/Documents/MyProjects/PromptBIMTestApp1
+> git pull origin main
+> conda activate promptbim
+> claude --dangerously-skip-permissions -p "請讀取 PROMPT_P17.1.md 並執行所有 task。不要問任何問題。"
+> ```
+
+---
+
+*PROMPT_P17.md v1.1 | 2026-03-26 | 合規性檢查: CLAUDE.md v1.8.0 ✅ | SKILL.md ✅*
