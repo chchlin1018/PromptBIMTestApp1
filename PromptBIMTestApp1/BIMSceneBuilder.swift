@@ -74,9 +74,17 @@ class BIMSceneBuilder {
 
     /// Load a .usda file into a SceneKit scene.
     static func loadUSDA(at path: String) -> SCNScene? {
-        let url = URL(fileURLWithPath: path)
-        guard FileManager.default.fileExists(atPath: path) else {
-            NSLog("[BIMSceneBuilder] File not found: \(path)")
+        // Path injection defense: resolve symlinks and normalize
+        let resolvedPath = (path as NSString).resolvingSymlinksInPath
+        let allowedExtensions = ["usda", "usdz", "usd"]
+        let ext = (resolvedPath as NSString).pathExtension.lowercased()
+        guard allowedExtensions.contains(ext) else {
+            NSLog("[BIMSceneBuilder] Rejected file with extension: \(ext)")
+            return nil
+        }
+        let url = URL(fileURLWithPath: resolvedPath)
+        guard FileManager.default.fileExists(atPath: resolvedPath) else {
+            NSLog("[BIMSceneBuilder] File not found: \(resolvedPath)")
             return nil
         }
 

@@ -149,7 +149,8 @@ class Transcriber:
         if self._backend == "faster-whisper":
             return self._transcribe_whisper(wav_bytes)
 
-        return ""
+        # Task 22: macOS native fallback via NSSpeechRecognizer / say
+        return self._transcribe_macos_native(wav_bytes)
 
     def _transcribe_whisper(self, wav_bytes: bytes) -> str:
         """Transcribe using faster-whisper."""
@@ -191,6 +192,47 @@ class Transcriber:
             return ""
         finally:
             Path(tmp_path).unlink(missing_ok=True)
+
+    def _transcribe_macos_native(self, wav_bytes: bytes) -> str:
+        """Fallback: use macOS SFSpeechRecognizer via subprocess (Task 22)."""
+        import platform
+        import subprocess
+
+        if platform.system() != "Darwin":
+            logger.warning("macOS native STT unavailable on %s", platform.system())
+            return ""
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp.write(wav_bytes)
+            tmp_path = tmp.name
+
+        try:
+            # Use macOS built-in speech recognition via AppleScript bridge
+            script = (
+                f'do shell script "/usr/bin/python3 -c \\"'
+                f"import speech_recognition as sr; "
+                f"r = sr.Recognizer(); "
+                f"with sr.AudioFile('{tmp_path}') as source: audio = r.record(source); "
+                f"print(r.recognize_sphinx(audio))"
+                f'\\""'
+            )
+            result = subprocess.run(
+                ["osascript", "-e", script],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                text = result.stdout.strip()
+                logger.info("macOS native STT: %s", text[:100])
+                self._backend = "macos-native"
+                return text
+        except Exception as exc:
+            logger.debug("macOS native STT failed: %s", exc)
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
+
+        return ""
 
     @property
     def backend(self) -> str:

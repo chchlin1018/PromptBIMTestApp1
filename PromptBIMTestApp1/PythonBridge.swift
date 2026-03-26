@@ -12,6 +12,7 @@ class PythonBridge: ObservableObject {
     private let pythonPath: String
     private var guiProcess: Process?
     private let projectRoot: URL
+    private let processQueue = DispatchQueue(label: "com.promptbim.pythonbridge.process")
 
     init() {
         self.projectRoot = PythonBridge.findProjectRoot()
@@ -188,9 +189,11 @@ class PythonBridge: ObservableObject {
 
     /// Launch the PySide6 GUI as a subprocess.
     func launchPySide6GUI() {
-        guard guiProcess == nil || !(guiProcess?.isRunning ?? false) else {
-            statusMessage = "PySide6 GUI is already running"
-            return
+        processQueue.sync {
+            guard guiProcess == nil || !(guiProcess?.isRunning ?? false) else {
+                DispatchQueue.main.async { self.statusMessage = "PySide6 GUI is already running" }
+                return
+            }
         }
 
         DispatchQueue.global(qos: .userInitiated).async { [self] in
@@ -222,9 +225,9 @@ class PythonBridge: ObservableObject {
             process.terminationHandler = { [weak self] proc in
                 // SW-02 fix: Always re-enable sudden termination when process ends
                 ProcessInfo.processInfo.enableSuddenTermination()
+                self?.processQueue.sync { self?.guiProcess = nil }
                 DispatchQueue.main.async {
                     self?.guiLaunched = false
-                    self?.guiProcess = nil
                     if proc.terminationStatus != 0 {
                         // Read stderr for error info
                         let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
@@ -239,8 +242,8 @@ class PythonBridge: ObservableObject {
             do {
                 ProcessInfo.processInfo.disableSuddenTermination()
                 try process.run()
+                self.processQueue.sync { self.guiProcess = process }
                 DispatchQueue.main.async {
-                    self.guiProcess = process
                     self.guiLaunched = true
                     self.statusMessage = "PySide6 GUI launched"
                 }
@@ -256,12 +259,16 @@ class PythonBridge: ObservableObject {
 
     /// Terminate the PySide6 GUI process.
     func terminateGUI() {
-        if let process = guiProcess, process.isRunning {
-            process.terminate()
-            guiProcess = nil
-            guiLaunched = false
-            statusMessage = "PySide6 GUI terminated"
-            ProcessInfo.processInfo.enableSuddenTermination()
+        processQueue.sync {
+            if let process = guiProcess, process.isRunning {
+                process.terminate()
+                guiProcess = nil
+                DispatchQueue.main.async {
+                    self.guiLaunched = false
+                    self.statusMessage = "PySide6 GUI terminated"
+                }
+                ProcessInfo.processInfo.enableSuddenTermination()
+            }
         }
     }
 

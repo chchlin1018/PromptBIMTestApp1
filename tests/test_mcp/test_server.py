@@ -172,9 +172,61 @@ class TestShoelaceArea:
         assert poly_area([(0, 0), (1, 0)]) == 0.0
 
 
+class TestClearCache:
+    def test_clear_cache_resets_state(self):
+        from promptbim.mcp.server import clear_cache
+
+        import_land(boundary=[[0, 0], [10, 0], [10, 10], [0, 10]])
+        set_zoning()
+        assert _state["land"] is not None
+        assert _state["zoning"] is not None
+
+        result = json.loads(clear_cache())
+        assert result["status"] == "ok"
+        assert _state["land"] is None
+        assert _state["zoning"] is None
+        assert _state["plan"] is None
+
+    def test_clear_cache_idempotent(self):
+        from promptbim.mcp.server import clear_cache
+
+        result = json.loads(clear_cache())
+        assert result["status"] == "ok"
+
+
+class TestSessionInfo:
+    def test_empty_session(self):
+        from promptbim.mcp.server import get_session_info
+
+        result = json.loads(get_session_info())
+        assert result["has_land"] is False
+        assert result["has_plan"] is False
+
+    def test_session_after_import(self):
+        from promptbim.mcp.server import get_session_info
+
+        import_land(boundary=[[0, 0], [10, 0], [10, 10], [0, 10]])
+        result = json.loads(get_session_info())
+        assert result["has_land"] is True
+        assert result["has_plan"] is False
+
+
+class TestModifyBuilding:
+    def test_no_plan_error(self):
+        from promptbim.mcp.server import modify_building
+
+        result = json.loads(modify_building("add a floor"))
+        assert "error" in result
+
+
 class TestMCPServerRegistration:
     def test_mcp_instance_exists(self):
         from promptbim.mcp.server import mcp
 
         assert mcp is not None
         assert mcp.name == "PromptBIM"
+
+    def test_timeout_constant(self):
+        from promptbim.mcp.server import MCP_TIMEOUT_SECONDS
+
+        assert MCP_TIMEOUT_SECONDS > 0

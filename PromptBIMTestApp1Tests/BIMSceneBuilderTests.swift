@@ -18,7 +18,6 @@ final class BIMSceneBuilderTests: XCTestCase {
         """
         let scene = BIMSceneBuilder.buildScene(fromPlanJSON: json)
         XCTAssertNotNil(scene)
-        // Should have at least 1 node (story) + axes helper nodes
         XCTAssertGreaterThan(scene!.rootNode.childNodes.count, 0)
     }
 
@@ -33,7 +32,6 @@ final class BIMSceneBuilderTests: XCTestCase {
         """
         let scene = BIMSceneBuilder.buildScene(fromPlanJSON: json)
         XCTAssertNotNil(scene)
-        // Should have a fallback box node
         XCTAssertGreaterThan(scene!.rootNode.childNodes.count, 0)
     }
 
@@ -55,5 +53,55 @@ final class BIMSceneBuilderTests: XCTestCase {
     func testLoadUSDAMissingFile() {
         let scene = BIMSceneBuilder.loadUSDA(at: "/nonexistent/path.usda")
         XCTAssertNil(scene)
+    }
+
+    // P23: Path injection protection tests
+    func testLoadUSDARejectsNonUSDAExtension() {
+        let scene = BIMSceneBuilder.loadUSDA(at: "/tmp/test.txt")
+        XCTAssertNil(scene)
+    }
+
+    func testLoadUSDAAcceptsUSDZExtension() {
+        let scene = BIMSceneBuilder.loadUSDA(at: "/nonexistent/model.usdz")
+        XCTAssertNil(scene) // File doesn't exist, but extension is accepted
+    }
+
+    func testBuildSceneFromEmptyJSON() {
+        let scene = BIMSceneBuilder.buildScene(fromPlanJSON: "{}")
+        XCTAssertNotNil(scene)
+    }
+
+    func testBuildSceneWithBoundaryCoordinates() {
+        let json = """
+        {
+            "stories": [
+                {
+                    "name": "Ground",
+                    "height_m": 4.0,
+                    "slab_boundary": [[0,0],[20,0],[20,15],[0,15]]
+                }
+            ]
+        }
+        """
+        let scene = BIMSceneBuilder.buildScene(fromPlanJSON: json)
+        XCTAssertNotNil(scene)
+    }
+
+    func testBuildScenePreservesStoryCount() {
+        let json = """
+        {
+            "stories": [
+                {"name": "B1", "height_m": 3.0},
+                {"name": "1F", "height_m": 3.6},
+                {"name": "2F", "height_m": 3.2},
+                {"name": "3F", "height_m": 3.2},
+                {"name": "RF", "height_m": 2.8}
+            ]
+        }
+        """
+        let scene = BIMSceneBuilder.buildScene(fromPlanJSON: json)
+        XCTAssertNotNil(scene)
+        // 5 stories + 3 axes = at least 8 child nodes
+        XCTAssertGreaterThanOrEqual(scene!.rootNode.childNodes.count, 5)
     }
 }

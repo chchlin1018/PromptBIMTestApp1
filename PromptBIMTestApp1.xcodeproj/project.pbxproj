@@ -14,10 +14,12 @@
 		A1000005 /* SceneKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* SceneKitView.swift */; };
 		A1000006 /* NativeBIMBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* NativeBIMBridge.swift */; };
 		A1000008 /* PBResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* PBResult.swift */; };
+		A1000009 /* BIMSceneBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000B /* BIMSceneBuilder.swift */; };
 		B1000001 /* PBResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* PBResultTests.swift */; };
 		B1000002 /* BIMSceneBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000002 /* BIMSceneBuilderTests.swift */; };
 		B1000003 /* NativeBIMBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000003 /* NativeBIMBridgeTests.swift */; };
 		B1000004 /* PythonBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000004 /* PythonBridgeTests.swift */; };
+		B1000005 /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000005 /* ContentViewTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,11 +32,13 @@
 		A2000007 /* SceneKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneKitView.swift; sourceTree = "<group>"; };
 		A2000008 /* NativeBIMBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBIMBridge.swift; sourceTree = "<group>"; };
 		A200000A /* PBResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PBResult.swift; sourceTree = "<group>"; };
+		A200000B /* BIMSceneBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BIMSceneBuilder.swift; sourceTree = "<group>"; };
 		A2000010 /* PromptBIMTestApp1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PromptBIMTestApp1.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2000001 /* PBResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PBResultTests.swift; sourceTree = "<group>"; };
 		B2000002 /* BIMSceneBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BIMSceneBuilderTests.swift; sourceTree = "<group>"; };
 		B2000003 /* NativeBIMBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBIMBridgeTests.swift; sourceTree = "<group>"; };
 		B2000004 /* PythonBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonBridgeTests.swift; sourceTree = "<group>"; };
+		B2000005 /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 		B2000010 /* PromptBIMTestApp1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PromptBIMTestApp1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -92,6 +96,7 @@
 				A2000007 /* SceneKitView.swift */,
 				A2000008 /* NativeBIMBridge.swift */,
 				A200000A /* PBResult.swift */,
+				A200000B /* BIMSceneBuilder.swift */,
 				A2000004 /* Assets.xcassets */,
 				A2000005 /* Info.plist */,
 				A2000006 /* PromptBIMTestApp1.entitlements */,
@@ -115,6 +120,7 @@
 				B2000002 /* BIMSceneBuilderTests.swift */,
 				B2000003 /* NativeBIMBridgeTests.swift */,
 				B2000004 /* PythonBridgeTests.swift */,
+				B2000005 /* ContentViewTests.swift */,
 			);
 			path = PromptBIMTestApp1Tests;
 			sourceTree = "<group>";
@@ -239,6 +245,7 @@
 				A1000005 /* SceneKitView.swift in Sources */,
 				A1000006 /* NativeBIMBridge.swift in Sources */,
 				A1000008 /* PBResult.swift in Sources */,
+				A1000009 /* BIMSceneBuilder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +257,7 @@
 				B1000002 /* BIMSceneBuilderTests.swift in Sources */,
 				B1000003 /* NativeBIMBridgeTests.swift in Sources */,
 				B1000004 /* PythonBridgeTests.swift in Sources */,
+				B1000005 /* ContentViewTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -381,7 +389,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PromptBIMTestApp1/Info.plist;
@@ -389,7 +397,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.9.0;
+				MARKETING_VERSION = 2.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -406,7 +414,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PromptBIMTestApp1/Info.plist;
@@ -414,7 +422,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2.9.0;
+				MARKETING_VERSION = 2.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -427,9 +435,9 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 24;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 2.9.0;
+				MARKETING_VERSION = 2.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -443,9 +451,9 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 24;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 2.9.0;
+				MARKETING_VERSION = 2.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realitymatrix.PromptBIMTestApp1Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

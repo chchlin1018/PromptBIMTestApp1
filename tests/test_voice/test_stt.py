@@ -131,3 +131,43 @@ class TestVoiceInput:
 
         time.sleep(0.1)
         assert received == [""]
+
+
+# ---------------------------------------------------------------------------
+# Task 26: Additional voice tests (+4)
+# ---------------------------------------------------------------------------
+
+
+class TestPcmToWavExtended:
+    def test_large_frame(self):
+        """Test WAV creation with a large audio buffer (1 second at 16kHz)."""
+        pcm = struct.pack(f"<{SAMPLE_RATE}h", *([0] * SAMPLE_RATE))
+        wav = _pcm_to_wav([pcm])
+        buf = io.BytesIO(wav)
+        with wave.open(buf, "rb") as wf:
+            assert wf.getnframes() == SAMPLE_RATE
+            assert wf.getframerate() == SAMPLE_RATE
+
+    def test_custom_sample_rate(self):
+        """Test WAV creation with non-default sample rate."""
+        pcm = struct.pack("<100h", *([0] * 100))
+        wav = _pcm_to_wav([pcm], sample_rate=44100)
+        buf = io.BytesIO(wav)
+        with wave.open(buf, "rb") as wf:
+            assert wf.getframerate() == 44100
+
+
+class TestTranscriberMacOSFallback:
+    def test_macos_native_with_empty_wav(self):
+        """macOS native fallback with empty WAV returns empty string."""
+        t = Transcriber()
+        t._backend = "none"
+        t._model = None
+        result = t.transcribe(b"")
+        assert result == ""
+
+    def test_transcriber_model_size_stored(self):
+        """Verify model size is stored correctly."""
+        t = Transcriber(model_size="small")
+        assert t._model_size == "small"
+        assert t._model is None

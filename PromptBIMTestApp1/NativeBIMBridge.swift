@@ -123,7 +123,7 @@ class NativeBIMBridge {
 
     func version() -> String? {
         guard let fn = _pb_version, let cstr = fn() else { return nil }
-        return String(cString: cstr)
+        return String(validatingCString: cstr) ?? String(cString: cstr)
     }
 
     /// Generate an IFC file from a building plan JSON.
@@ -194,7 +194,7 @@ class NativeBIMBridge {
         defer { free(parcel) }
 
         guard let jsonPtr = toJSON(parcel) else { return nil }
-        let result = String(cString: jsonPtr)
+        let result = String(validatingCString: jsonPtr) ?? String(cString: jsonPtr)
         freeStr(jsonPtr)
         return result
     }
@@ -206,7 +206,7 @@ class NativeBIMBridge {
         else { return nil }
 
         guard let resultPtr = fn(planJSON, landJSON, zoningJSON) else { return nil }
-        let result = String(cString: resultPtr)
+        let result = String(validatingCString: resultPtr) ?? String(cString: resultPtr)
         freeStr(resultPtr)
         return result
     }
@@ -218,7 +218,7 @@ class NativeBIMBridge {
         else { return nil }
 
         guard let resultPtr = fn(planJSON) else { return nil }
-        let result = String(cString: resultPtr)
+        let result = String(validatingCString: resultPtr) ?? String(cString: resultPtr)
         freeStr(resultPtr)
         return result
     }

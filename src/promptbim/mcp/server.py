@@ -22,6 +22,7 @@ Usage (Claude Desktop config):
 
 from __future__ import annotations
 
+import asyncio
 import json
 import tempfile
 import time
@@ -33,6 +34,9 @@ from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
 
 logger = get_logger("mcp.server")
+
+# Task 20: Default timeout for long-running operations
+MCP_TIMEOUT_SECONDS = 120
 
 mcp = FastMCP(
     "PromptBIM",
@@ -174,39 +178,44 @@ def generate_building(prompt: str) -> str:
         return json.dumps({"error": "No land imported. Call import_land() first."})
 
     t0 = time.monotonic()
-    from promptbim.schemas.land import LandParcel
-    from promptbim.schemas.zoning import ZoningRules
+    try:
+        from promptbim.schemas.land import LandParcel
+        from promptbim.schemas.zoning import ZoningRules
 
-    land = LandParcel(**_state["land"])
-    zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else ZoningRules()
+        land = LandParcel(**_state["land"])
+        zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else ZoningRules()
 
-    orch = _get_orchestrator()
-    result = orch.generate(prompt, land, zoning)
+        orch = _get_orchestrator()
+        result = orch.generate(prompt, land, zoning)
 
-    _state["plan"] = orch.plan.model_dump() if orch.plan else None
-    _state["result"] = result.model_dump(mode="json") if result else None
+        _state["plan"] = orch.plan.model_dump() if orch.plan else None
+        _state["result"] = result.model_dump(mode="json") if result else None
 
-    elapsed = time.monotonic() - t0
-    logger.info(
-        "generate_building completed in %.2fs: success=%s, name=%s",
-        elapsed,
-        result.success,
-        result.building_name,
-    )
+        elapsed = time.monotonic() - t0
+        logger.info(
+            "generate_building completed in %.2fs: success=%s, name=%s",
+            elapsed,
+            result.success,
+            result.building_name,
+        )
 
-    return json.dumps(
-        {
-            "status": "ok" if result.success else "error",
-            "building_name": result.building_name,
-            "stories": result.summary.get("stories", 0),
-            "bcr": result.summary.get("bcr", 0),
-            "far": result.summary.get("far", 0),
-            "ifc_path": str(result.ifc_path) if result.ifc_path else None,
-            "usd_path": str(result.usd_path) if result.usd_path else None,
-            "warnings": result.warnings[:5],
-            "errors": result.errors,
-        }
-    )
+        return json.dumps(
+            {
+                "status": "ok" if result.success else "error",
+                "building_name": result.building_name,
+                "stories": result.summary.get("stories", 0),
+                "bcr": result.summary.get("bcr", 0),
+                "far": result.summary.get("far", 0),
+                "ifc_path": str(result.ifc_path) if result.ifc_path else None,
+                "usd_path": str(result.usd_path) if result.usd_path else None,
+                "warnings": result.warnings[:5],
+                "errors": result.errors,
+            }
+        )
+    except Exception as e:
+        elapsed = time.monotonic() - t0
+        logger.error("generate_building failed after %.2fs: %s", elapsed, e)
+        return json.dumps({"error": f"Generation failed: {str(e)[:200]}"})
 
 
 @mcp.tool()
@@ -397,8 +406,97 @@ def get_current_land() -> str:
 
 
 # --------------------------------------------------------------------------
-# Helpers
+# Task 17: Async generate support
 # --------------------------------------------------------------------------
+
+
+@mcp.tool()
+async def agenerate_building(prompt: str) -> str:
+    """Generate a building asynchronously from a natural language description.
+
+    Same as generate_building but runs in a background thread with timeout protection.
+
+    Args:
+        prompt: Natural language building description.
+    """
+    logger.debug("agenerate_building called: prompt='%s'", prompt[:100])
+    if _state["land"] is None:
+        return json.dumps({"error": "No land imported. Call import_land() first."})
+
+    try:
+        result = await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(
+                None, lambda: _sync_generate(prompt)
+            ),
+            timeout=MCP_TIMEOUT_SECONDS,
+        )
+        return result
+    except asyncio.TimeoutError:
+        logger.error("agenerate_building timed out after %ds", MCP_TIMEOUT_SECONDS)
+        return json.dumps(
+            {"error": f"Generation timed out after {MCP_TIMEOUT_SECONDS}s. Try a simpler prompt."}
+        )
+    except Exception as e:
+        logger.error("agenerate_building failed: %s", e)
+        return json.dumps({"error": f"Generation failed: {str(e)[:200]}"})
+
+
+def _sync_generate(prompt: str) -> str:
+    """Synchronous building generation helper."""
+    from promptbim.schemas.land import LandParcel
+    from promptbim.schemas.zoning import ZoningRules
+
+    t0 = time.monotonic()
+    land = LandParcel(**_state["land"])
+    zoning = ZoningRules(**_state["zoning"]) if _state["zoning"] else ZoningRules()
+
+    orch = _get_orchestrator()
+    result = orch.generate(prompt, land, zoning)
+
+    _state["plan"] = orch.plan.model_dump() if orch.plan else None
+    _state["result"] = result.model_dump(mode="json") if result else None
+
+    elapsed = time.monotonic() - t0
+    logger.info("agenerate_building completed in %.2fs", elapsed)
+
+    return json.dumps(
+        {
+            "status": "ok" if result.success else "error",
+            "building_name": result.building_name,
+            "stories": result.summary.get("stories", 0),
+            "elapsed_seconds": round(elapsed, 2),
+        }
+    )
+
+
+# --------------------------------------------------------------------------
+# Task 18: Cache tool
+# --------------------------------------------------------------------------
+
+
+@mcp.tool()
+def clear_cache() -> str:
+    """Clear the current session state (land, zoning, building plan)."""
+    logger.debug("clear_cache called")
+    _state["land"] = None
+    _state["zoning"] = None
+    _state["plan"] = None
+    _state["result"] = None
+    return json.dumps({"status": "ok", "message": "Session state cleared."})
+
+
+@mcp.tool()
+def get_session_info() -> str:
+    """Get current session state summary."""
+    return json.dumps(
+        {
+            "has_land": _state["land"] is not None,
+            "has_zoning": _state["zoning"] is not None,
+            "has_plan": _state["plan"] is not None,
+            "has_result": _state["result"] is not None,
+            "output_dir": _state.get("output_dir"),
+        }
+    )
 
 
 # --------------------------------------------------------------------------

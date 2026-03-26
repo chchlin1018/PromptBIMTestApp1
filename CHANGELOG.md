@@ -6,6 +6,59 @@
 
 ---
 
+## [2.10.0] - 2026-03-26
+
+### Fixed (Sprint P23: Audit Fixes — 32 Issues from AuditReport_03261945)
+
+#### Critical (3)
+- **BIMSceneBuilder duplication**: Removed full duplicate class from SceneKitView.swift
+- **BIMSceneBuilder Compile Sources**: Added BIMSceneBuilder.swift to pbxproj Sources build phase
+- **API.md rewrite**: Updated from v2.0.0 to v2.10.0 with full API coverage
+
+#### High (8)
+- **PythonBridge thread safety**: Added DispatchQueue serial protection for guiProcess access
+- **NativeBIMBridge safe C strings**: String(cString:) -> String(validatingCString:) with fallback
+- **BIMSceneBuilder path injection**: Added symlink resolution + extension allowlist
+- **pbxproj version sync**: Updated MARKETING_VERSION 2.9.0 -> 2.10.0, build 22 -> 24
+- **C++ version unification**: promptbim.h + vcpkg.json + test_version.cpp -> 2.10.0
+- **ContentView force unwrap**: UTType init -> optional chaining with compactMap
+- **Web app input validation**: Added try/catch for float conversion + coordinate range check
+- **Root directory cleanup**: Removed 65MB Miniforge installer, moved BuildSetup to docs/
+
+### Added
+
+#### GUI Enhancements (6 features)
+- Dark/Light/System theme selector with AppStorage persistence
+- Collapsible sidebar with Land/Building/Properties sections
+- 2D cadastral view with Canvas (boundary, setback lines, area labels)
+- 3D view opacity slider + floor section cut control
+- Properties panel (compliance status, cost estimate, BCR/FAR)
+- Agent Pipeline progress indicator with step-by-step status
+
+#### MCP Server (4 enhancements)
+- Async generation (`agenerate_building`) with timeout protection
+- `clear_cache` + `get_session_info` tools
+- Error handling with try/except in generate_building
+- Updated Claude Desktop config
+
+#### Voice Input (3 enhancements)
+- macOS native STT fallback (SFSpeechRecognizer via subprocess)
+- Voice button UI in SwiftUI header bar
+- Voice -> AI generation pipeline integration
+
+#### Performance & Tests
+- Pipeline benchmark script (`scripts/benchmark_pipeline.py`)
+- Lazy import via `__getattr__` for all submodules
+- Swift XCTests: +15 tests (ContentViewTests, extended PythonBridge/BIMSceneBuilder)
+- Python pytest: +35 tests (rate limiter, cache, schema, config, geometry, version)
+- C++ GoogleTest: +13 tests (concurrency, edge cases, ABI stability, memory, plan lifecycle)
+- Context Prompt updated to v2.10.0
+
+### Changed
+- All version strings unified to 2.10.0 across pbxproj, Info.plist, pyproject.toml, CMakeLists.txt, __init__.py
+
+---
+
 ## [2.9.1] - 2026-03-26
 
 ### Fixed (Sprint P22.1: Code Quality + Test Gap + Demo Data)

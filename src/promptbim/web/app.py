@@ -58,9 +58,17 @@ with st.sidebar:
         if st.button("Import Land"):
             try:
                 coords = []
-                for line in coords_text.strip().split("\n"):
+                for line_num, line in enumerate(coords_text.strip().split("\n"), 1):
                     parts = line.strip().split(",")
-                    coords.append((float(parts[0]), float(parts[1])))
+                    if len(parts) != 2:
+                        raise ValueError(f"Line {line_num}: expected 'x,y' format, got '{line.strip()}'")
+                    try:
+                        x, y = float(parts[0]), float(parts[1])
+                    except ValueError:
+                        raise ValueError(f"Line {line_num}: invalid number in '{line.strip()}'")
+                    if not (-1e9 <= x <= 1e9 and -1e9 <= y <= 1e9):
+                        raise ValueError(f"Line {line_num}: coordinates out of range")
+                    coords.append((x, y))
 
                 from promptbim.schemas.land import LandParcel
 
