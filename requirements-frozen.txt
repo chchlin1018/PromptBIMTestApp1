@@ -60,7 +60,7 @@ pip_audit==2.10.0
 platformdirs==4.9.4
 pluggy==1.6.0
 pooch==1.9.0
-protobuf==6.33.6
+protobuf==7.34.1
 py-serializable==2.1.0
 pyarrow==23.0.1
 pycparser==3.0
