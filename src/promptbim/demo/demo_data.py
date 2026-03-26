@@ -297,6 +297,252 @@ def save_demo_resources() -> dict[str, Path]:
 
 
 # ---------------------------------------------------------------------------
+# Task P24-1: Generate Demo IFC
+# ---------------------------------------------------------------------------
+
+
+def generate_demo_ifc(output_dir: Path = DEMO_RESOURCES_DIR) -> Path:
+    """Generate an IFC file from the demo BuildingPlan using IFCGenerator."""
+    from promptbim.bim.ifc_generator import IFCGenerator
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plan = get_demo_plan()
+    gen = IFCGenerator()
+    ifc_path = output_dir / "demo_building.ifc"
+    gen.generate(plan, str(ifc_path))
+    return ifc_path
+
+
+# ---------------------------------------------------------------------------
+# Task P24-2: Generate Demo USDA
+# ---------------------------------------------------------------------------
+
+
+def generate_demo_usda(output_dir: Path = DEMO_RESOURCES_DIR) -> Path:
+    """Generate a USDA file from the demo BuildingPlan using USDGenerator."""
+    from promptbim.bim.usd_generator import USDGenerator
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plan = get_demo_plan()
+    gen = USDGenerator()
+    usda_path = output_dir / "demo_building.usda"
+    gen.generate(plan, str(usda_path))
+    return usda_path
+
+
+# ---------------------------------------------------------------------------
+# Task P24-3: Generate Demo SVG floor plans + site plan
+# ---------------------------------------------------------------------------
+
+
+def generate_demo_svg(output_dir: Path = DEMO_RESOURCES_DIR) -> list[Path]:
+    """Generate 2D floor plan SVGs and a site plan SVG for the demo project."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plan = get_demo_plan()
+    land = get_demo_land()
+    zoning = get_demo_zoning()
+    paths: list[Path] = []
+
+    # Per-floor SVGs
+    for story in plan.stories:
+        svg_path = output_dir / f"demo_floorplan_{story.name.lower()}.svg"
+        svg_content = _render_floorplan_svg(story)
+        svg_path.write_text(svg_content, encoding="utf-8")
+        paths.append(svg_path)
+
+    # Site plan SVG
+    site_path = output_dir / "demo_site_plan.svg"
+    site_svg = _render_site_plan_svg(land, plan, zoning)
+    site_path.write_text(site_svg, encoding="utf-8")
+    paths.append(site_path)
+
+    return paths
+
+
+def _render_floorplan_svg(story) -> str:
+    """Render a single story as an SVG floor plan."""
+    margin = 2
+    # Determine bounding box from slab boundary
+    if story.slab_boundary:
+        xs = [p[0] for p in story.slab_boundary]
+        ys = [p[1] for p in story.slab_boundary]
+    else:
+        xs, ys = [0, 20], [0, 25]
+    min_x, max_x = min(xs) - margin, max(xs) + margin
+    min_y, max_y = min(ys) - margin, max(ys) + margin
+    w, h = max_x - min_x, max_y - min_y
+    scale = 20  # px per metre
+
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{min_x * scale} {min_y * scale} {w * scale} {h * scale}" '
+        f'width="{w * scale}" height="{h * scale}">',
+        '<rect width="100%" height="100%" fill="#fafafa"/>',
+    ]
+
+    # Slab outline
+    if story.slab_boundary:
+        pts = " ".join(f"{x * scale},{y * scale}" for x, y in story.slab_boundary)
+        lines.append(f'<polygon points="{pts}" fill="#e0e0e0" stroke="#333" stroke-width="1"/>')
+
+    # Walls
+    for wall in story.walls:
+        sx, sy = wall.start
+        ex, ey = wall.end
+        sw = max(1, wall.thickness_m * scale)
+        color = "#444" if wall.wall_type == "exterior" else "#999"
+        lines.append(
+            f'<line x1="{sx * scale}" y1="{sy * scale}" '
+            f'x2="{ex * scale}" y2="{ey * scale}" '
+            f'stroke="{color}" stroke-width="{sw}"/>'
+        )
+
+    # Space labels
+    for space in story.spaces:
+        if space.boundary:
+            cx = sum(p[0] for p in space.boundary) / len(space.boundary)
+            cy = sum(p[1] for p in space.boundary) / len(space.boundary)
+            lines.append(
+                f'<text x="{cx * scale}" y="{cy * scale}" '
+                f'font-size="8" text-anchor="middle" fill="#555">'
+                f'{space.name} ({space.area_sqm:.0f}m²)</text>'
+            )
+
+    lines.append(f'<text x="{(min_x + 1) * scale}" y="{(min_y + 1.5) * scale}" '
+                 f'font-size="12" font-weight="bold" fill="#222">{story.name}</text>')
+    lines.append("</svg>")
+    return "\n".join(lines)
+
+
+def _render_site_plan_svg(land, plan, zoning) -> str:
+    """Render site plan SVG with land boundary, building footprint, and setback lines."""
+    margin = 3
+    xs = [p[0] for p in land.boundary]
+    ys = [p[1] for p in land.boundary]
+    min_x, max_x = min(xs) - margin, max(xs) + margin
+    min_y, max_y = min(ys) - margin, max(ys) + margin
+    w, h = max_x - min_x, max_y - min_y
+    scale = 20
+
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{min_x * scale} {min_y * scale} {w * scale} {h * scale}" '
+        f'width="{w * scale}" height="{h * scale}">',
+        '<rect width="100%" height="100%" fill="#f5f5f0"/>',
+    ]
+
+    # Land boundary
+    pts = " ".join(f"{x * scale},{y * scale}" for x, y in land.boundary)
+    lines.append(f'<polygon points="{pts}" fill="#d4edda" stroke="#28a745" stroke-width="2"/>')
+
+    # Setback lines (approximate inset)
+    front, back = zoning.setback_front_m, zoning.setback_back_m
+    left, right = zoning.setback_left_m, zoning.setback_right_m
+    setback_boundary = [
+        (land.boundary[0][0] + left, land.boundary[0][1] + front),
+        (land.boundary[1][0] - right, land.boundary[1][1] + front),
+        (land.boundary[2][0] - right, land.boundary[2][1] - back),
+        (land.boundary[3][0] + left, land.boundary[3][1] - back),
+    ]
+    pts_s = " ".join(f"{x * scale},{y * scale}" for x, y in setback_boundary)
+    lines.append(
+        f'<polygon points="{pts_s}" fill="none" stroke="#fd7e14" '
+        f'stroke-width="1" stroke-dasharray="6,3"/>'
+    )
+
+    # Building footprint
+    if plan.building_footprint:
+        pts_b = " ".join(f"{x * scale},{y * scale}" for x, y in plan.building_footprint)
+        lines.append(
+            f'<polygon points="{pts_b}" fill="rgba(0,123,255,0.2)" '
+            f'stroke="#007bff" stroke-width="1.5"/>'
+        )
+
+    # Labels
+    land_cx = sum(xs) / len(xs)
+    land_cy = sum(ys) / len(ys)
+    lines.append(
+        f'<text x="{land_cx * scale}" y="{(min_y + 1.5) * scale}" '
+        f'font-size="11" font-weight="bold" text-anchor="middle" fill="#222">'
+        f'Site Plan — {land.name}</text>'
+    )
+    lines.append(
+        f'<text x="{land_cx * scale}" y="{land_cy * scale}" '
+        f'font-size="9" text-anchor="middle" fill="#007bff">'
+        f'Building ({len(plan.stories)}F)</text>'
+    )
+
+    lines.append("</svg>")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Task P24-4: Fallback sample IFC (generated procedurally if main gen fails)
+# ---------------------------------------------------------------------------
+
+SAMPLE_IFC_PATH = DEMO_RESOURCES_DIR / "sample_house.ifc"
+
+
+def ensure_fallback_ifc(output_dir: Path = DEMO_RESOURCES_DIR) -> Path:
+    """Ensure a fallback IFC exists — generates a simple box house if needed."""
+    path = output_dir / "sample_house.ifc"
+    if path.exists():
+        return path
+    # Generate a minimal single-story box house as fallback
+    from promptbim.bim.ifc_generator import IFCGenerator
+    from promptbim.schemas.plan import BuildingPlan, RoofPlan, StoryPlan, WallDef
+
+    simple_fp = [(0, 0), (10, 0), (10, 8), (0, 8)]
+    walls = [
+        WallDef(start=simple_fp[i], end=simple_fp[(i + 1) % 4],
+                thickness_m=0.2, wall_type="exterior")
+        for i in range(4)
+    ]
+    story = StoryPlan(
+        name="1F", elevation_m=0.0, height_m=3.0,
+        walls=walls, slab_boundary=simple_fp, slab_thickness_m=0.2,
+    )
+    plan = BuildingPlan(
+        name="Sample House (Fallback)",
+        building_footprint=simple_fp,
+        stories=[story],
+        roof=RoofPlan(roof_type="flat"),
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    gen = IFCGenerator()
+    gen.generate(plan, str(path))
+    return path
+
+
+# ---------------------------------------------------------------------------
+# Task P24-5: Generate all demo resources
+# ---------------------------------------------------------------------------
+
+
+def generate_all_demo_resources() -> dict[str, Path]:
+    """Generate all demo resources: JSON + IFC + USDA + SVG."""
+    paths = save_demo_resources()
+    try:
+        paths["ifc"] = generate_demo_ifc()
+    except Exception:
+        # Fallback to simple sample house
+        try:
+            paths["ifc"] = ensure_fallback_ifc()
+        except Exception:
+            paths["ifc"] = None
+    try:
+        paths["usda"] = generate_demo_usda()
+    except Exception:
+        paths["usda"] = None
+    try:
+        svg_paths = generate_demo_svg()
+        paths["svg"] = svg_paths
+    except Exception:
+        paths["svg"] = None
+    return paths
+
+
+# ---------------------------------------------------------------------------
 # Geometry helpers
 # ---------------------------------------------------------------------------
 

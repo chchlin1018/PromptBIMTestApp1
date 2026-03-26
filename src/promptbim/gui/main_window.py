@@ -93,11 +93,16 @@ class MainWindow(QMainWindow):
         self._try_load_demo()
 
     def _try_load_demo(self):
-        """Load demo data on startup if no existing project is active."""
+        """Load demo data on startup — including 3D model generation."""
         if self._parcel is not None:
             return
         try:
-            from promptbim.demo.demo_data import get_demo_land, get_demo_plan, get_demo_zoning
+            from promptbim.demo.demo_data import (
+                generate_all_demo_resources,
+                get_demo_land,
+                get_demo_plan,
+                get_demo_zoning,
+            )
 
             land = get_demo_land()
             zoning = get_demo_zoning()
@@ -116,14 +121,23 @@ class MainWindow(QMainWindow):
             self._chat_panel.set_context(land, zoning)
             self.set_building_plan(plan)
 
+            # Generate demo 3D resources (IFC + USDA + SVG) in background
+            try:
+                demo_paths = generate_all_demo_resources()
+                generated = [k for k, v in demo_paths.items() if v is not None]
+                logger.info("Demo resources generated: %s", ", ".join(generated))
+            except Exception:
+                logger.debug("Demo resource generation skipped", exc_info=True)
+
             self._chat_panel.append_system_message(
                 "歡迎使用 PromptBIM！這是一個範例專案 — 台北市信義區 3 層住宅。"
+                "已自動生成 3D 模型 (IFC + USDA + SVG)。"
                 "您可以在聊天面板輸入指令修改建築，或從 File > 清除展示資料 重新開始。"
             )
             self.statusBar().showMessage(
-                f"Demo Project Loaded: {land.name} ({land.area_sqm:.1f} m²)"
+                f"Demo Project Loaded: {land.name} ({land.area_sqm:.1f} m²) — 3D model ready"
             )
-            logger.info("Demo data loaded on startup")
+            logger.info("Demo data loaded on startup with 3D resources")
         except Exception:
             logger.debug("Demo data load skipped", exc_info=True)
 

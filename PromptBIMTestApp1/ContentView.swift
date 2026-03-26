@@ -457,7 +457,7 @@ struct ContentView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
-    // MARK: - 3D Preview View (Task 14)
+    // MARK: - 3D Preview View (Task 14 + P24-Task 7)
 
     private var preview3DView: some View {
         VStack(spacing: 0) {
@@ -502,7 +502,21 @@ struct ContentView: View {
 
             SceneKitView(scene: $scene)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { loadDemoSceneIfNeeded() }
         }
+    }
+
+    /// P24-Task 7: Auto-load demo USDA on 3D tab appear
+    private func loadDemoSceneIfNeeded() {
+        guard scene == nil else { return }
+        // Try loading demo USDA from resources/demo/
+        let demoUSDA = BIMSceneBuilder.findDemoUSDA()
+        if let path = demoUSDA, let loaded = BIMSceneBuilder.loadUSDA(at: path) {
+            scene = loaded
+            return
+        }
+        // Fallback: generate sample scene from embedded plan JSON
+        scene = BIMSceneBuilder.buildDemoScene()
     }
 
     // MARK: - Pipeline Progress (Task 16)
