@@ -1,4 +1,4 @@
-# PromptBIMTestApp1 — SKILL.md v3.6
+# PromptBIMTestApp1 — SKILL.md v3.7
 
 > Claude Code SSOT — 開發前必讀
 > 最後更新: 2026-03-26 (v3.5 lessons learned + memory + git safety)
@@ -9,7 +9,7 @@
 
 ## 0. [MANDATORY] Sprint 通知規則（v1.17.0 起生效）
 
-> ⚠️ **此規則從 CLAUDE.md v1.20.0 同步，嚴格執行，不可跳過。**
+> ⚠️ **此規則從 CLAUDE.md v1.21.0 同步，嚴格執行，不可跳過。**
 
 ### 通知收件人
 - **★ 主要: `+886972535899`**（手機號碼，最優先）
@@ -56,7 +56,7 @@ notify() {
 ☐ 包含失敗 + 中斷通知模板
 ☐ Sprint 結束必須產生下一個 PROMPT
 
-> 完整範本見 CLAUDE.md v1.20.0
+> 完整範本見 CLAUDE.md v1.21.0
 
 ### 記憶體監控規則（v1.18.0+ MANDATORY）
 - **★ 每個 PROMPT 最前面必須定義 get_mem + check_mem 函數**
@@ -711,7 +711,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.6 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
+*SKILL.md v3.7 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
