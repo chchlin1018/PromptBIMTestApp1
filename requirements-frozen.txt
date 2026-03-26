@@ -14,7 +14,7 @@ click==8.3.1
 click-plugins==1.1.1.2
 cligj==0.7.2
 coverage==7.13.5
-cryptography==46.0.5
+cryptography==46.0.6
 cyclonedx-python-lib==11.7.0
 cyclopts==4.10.1
 defusedxml==0.7.1
