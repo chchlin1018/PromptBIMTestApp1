@@ -1,4 +1,4 @@
-# PromptBIMTestApp1 — SKILL.md v3.1
+# PromptBIMTestApp1 — SKILL.md v3.2
 
 > Claude Code SSOT — 開發前必讀
 > 最後更新: 2026-03-26
@@ -35,7 +35,7 @@
 │  🗺️ GIS / 土地輸入                                       │
 │  ├─ Shapefile (.shp): geopandas + fiona (BSD)            │
 │  ├─ GeoJSON (.geojson): geopandas (BSD)                  │
-│  ├─ KML (.kml): fastkml (LGPL)                           │
+│  ├─ KML (.kml): fastkml (LGPL) + lxml (BSD)              │
 │  ├─ PDF 地籍圖: PyMuPDF/fitz (AGPL) → 圖片 + OCR        │
 │  ├─ DXF (.dxf): ezdxf (MIT)                              │
 │  ├─ 手動繪製: matplotlib interactive polygon              │
@@ -44,13 +44,26 @@
 │  🧠 AI — Claude API (Anthropic SDK, MIT)                 │
 │  ├─ Agent 1: Enhancer（需求增強）                         │
 │  ├─ Agent 2: Planner（建築規劃 + 退縮/容積計算）          │
-│  └─ Agent 4: Checker（規則檢查 + 修正建議）              │
+│  ├─ Agent 4: Checker（規則檢查 + 修正建議）              │
+│  ├─ async/await: BaseAgent.arun() + AsyncAnthropic       │
+│  ├─ Rate Limiter: token bucket (50 RPM)                  │
+│  └─ Retry: tenacity (3x exponential backoff, 5xx only)   │
 │                                                          │
 │  🏗️ BIM 生成（純 Python，不用 LLM）                      │
 │  ├─ IFC: IfcOpenShell 0.8+ (LGPL)                       │
 │  ├─ USD: usd-core / pxr (Apache-2.0)                    │
 │  ├─ 幾何: shapely (BSD) + numpy + trimesh (MIT)          │
 │  └─ 材質: 內建 PBR 預設                                  │
+│                                                          │
+│  🔌 Plugin 架構（v2.4.0+）                               │
+│  ├─ PluginRegistry + @register_plugin decorator          │
+│  └─ 三種類型: agent / parser / code_rule                 │
+│                                                          │
+│  ⚡ Plan 快取（v2.4.0+）                                 │
+│  ├─ SHA-256 cache key (prompt + land + zoning)           │
+│  ├─ 本地 JSON store (~/.promptbim/cache/)                │
+│  ├─ LRU 淘汰 (max 100 entries) + TTL 7 天               │
+│  └─ CLI: cache list / clear / stats                      │
 │                                                          │
 │  👁️ 3D 渲染（嵌入桌面 App）                              │
 │  ├─ PyVista (MIT) — VTK Python 高階封裝                  │
@@ -82,12 +95,14 @@
 | ezdxf | MIT | DXF 讀取 |
 | PyMuPDF (fitz) | AGPL-3.0 | PDF 地籍圖解析 |
 | fastkml | LGPL-3.0 | KML 讀取 |
+| lxml | BSD-3 | XML 解析 (fastkml) |
 | numpy | BSD-3 | 數值運算 |
 | trimesh | MIT | Mesh 操作 |
 | matplotlib | PSF/BSD | 2D 繪圖 (地籍+平面圖) |
 | Pillow | HPND | 圖片處理 |
 | faster-whisper | MIT | 本地語音辨識 |
 | pydantic | MIT | 資料驗證 |
+| tenacity | Apache-2.0 | API retry with backoff |
 | rich | MIT | Terminal UI |
 
 > **PyMuPDF 注意:** AGPL-3.0 要求開源分發。如需避免 AGPL，可改用 `pdfplumber`（MIT）作為 PDF 解析替代方案。
@@ -173,111 +188,127 @@ Step 5: 匯出
 PromptBIMTestApp1/
 ├── README.md
 ├── SKILL.md
+├── CLAUDE.md                       # Claude Code 行為規範 (v1.13.0)
 ├── LICENSE                         # MIT
 ├── pyproject.toml
 ├── .env.example
 ├── .gitignore
+├── .github/
+│   ├── workflows/ci.yml            # GitHub Actions CI
+│   └── dependabot.yml
 │
 ├── src/
 │   └── promptbim/
-│       ├── __init__.py
+│       ├── __init__.py             # __version__, __all__, py.typed
 │       ├── __main__.py             # CLI + GUI 啟動
 │       ├── config.py               # Pydantic BaseSettings
+│       ├── constants.py            # 具名常數 (P16+)
 │       │
 │       ├── gui/                    # === Desktop GUI (PySide6) ===
 │       │   ├── __init__.py
-│       │   ├── main_window.py      # 主視窗 (QMainWindow)
-│       │   ├── land_panel.py       # 左側: 土地資訊面板
-│       │   ├── property_panel.py   # 左側: 建築屬性面板
-│       │   ├── map_view.py         # 中央 Tab: 2D 地籍/配置圖 (matplotlib)
-│       │   ├── model_view.py       # 中央 Tab: 3D 建築模型 (PyVista)
-│       │   ├── chat_panel.py       # 底部: AI Chat + 語音
-│       │   ├── project_tree.py     # 左側: 專案結構樹
+│       │   ├── main_window.py
+│       │   ├── land_panel.py
+│       │   ├── property_panel.py
+│       │   ├── map_view.py
+│       │   ├── model_view.py
+│       │   ├── chat_panel.py       # 含快取指示 (Cache hit/miss)
+│       │   ├── project_tree.py
 │       │   └── dialogs/
-│       │       ├── import_land.py  # 匯入土地對話框
-│       │       ├── export.py       # 匯出對話框
-│       │       └── settings.py     # 設定對話框
 │       │
 │       ├── land/                   # === 土地/GIS 處理 ===
 │       │   ├── __init__.py
-│       │   ├── parsers/
-│       │   │   ├── __init__.py
-│       │   │   ├── shapefile.py    # .shp 讀取 (geopandas/fiona)
-│       │   │   ├── geojson.py      # .geojson 讀取
-│       │   │   ├── kml.py          # .kml 讀取 (fastkml)
-│       │   │   ├── dxf.py          # .dxf 讀取 (ezdxf)
-│       │   │   ├── pdf_cadastral.py # PDF 地籍圖 → 輪廓萃取
-│       │   │   └── manual.py       # 手動座標/繪製
-│       │   ├── land_model.py       # 土地資料模型
-│       │   ├── setback.py          # 退縮線計算 (shapely buffer)
-│       │   ├── zoning.py           # 使用分區規則
-│       │   └── projection.py       # 座標系轉換 (pyproj)
+│       │   ├── parsers/            # Shapefile, GeoJSON, KML, DXF, PDF, Manual
+│       │   ├── land_model.py
+│       │   ├── setback.py          # uniform_setback() + per_side_setback() (P17)
+│       │   ├── zoning.py
+│       │   └── projection.py
 │       │
 │       ├── agents/                 # === AI Multi-Agent ===
 │       │   ├── __init__.py
-│       │   ├── base.py             # BaseAgent (Claude API)
-│       │   ├── enhancer.py         # Agent 1: 需求增強
-│       │   ├── planner.py          # Agent 2: 在土地上規劃建築
-│       │   ├── builder.py          # Agent 3: 生成 IFC+USD (不用 LLM)
-│       │   ├── checker.py          # Agent 4: 規則檢查
-│       │   └── orchestrator.py     # Pipeline 編排
+│       │   ├── base.py             # BaseAgent: run() + arun() (async, P17)
+│       │   │                       #   tenacity retry (3x, exp backoff, 5xx)
+│       │   │                       #   timeout=30s, AsyncAnthropic lazy init
+│       │   ├── enhancer.py         # Agent 1: 需求增強 (sync + async)
+│       │   ├── planner.py          # Agent 2: 建築規劃 (sync + async)
+│       │   ├── builder.py          # Agent 3: IFC+USD 生成 (純 Python, 同步 only)
+│       │   ├── checker.py          # Agent 4: 規則檢查 (sync + async)
+│       │   ├── orchestrator.py     # generate() + agenerate() + 快取整合
+│       │   └── rate_limiter.py     # Token bucket (50 RPM, P17)
 │       │
 │       ├── bim/                    # === BIM 生成 ===
 │       │   ├── __init__.py
-│       │   ├── ifc_generator.py    # IfcOpenShell 封裝
-│       │   ├── usd_generator.py    # pxr OpenUSD 封裝
-│       │   ├── geometry.py         # 共用幾何 (牆體/樓板/屋頂 mesh)
-│       │   ├── materials.py        # 材質定義
-│       │   ├── rules.py            # BIM 規則引擎
+│       │   ├── ifc_generator.py
+│       │   ├── usd_generator.py
+│       │   ├── geometry.py
+│       │   ├── materials.py
+│       │   ├── rules.py            # 法規引擎 (plugin 化, P17)
 │       │   └── templates/
-│       │       ├── __init__.py
-│       │       ├── office.py
-│       │       ├── residential.py
-│       │       └── industrial.py
+│       │
+│       ├── plugins/                # === Plugin 架構 (P17+) ===
+│       │   ├── __init__.py
+│       │   └── base.py             # PluginRegistry + @register_plugin
+│       │                           # 三種類型: agent / parser / code_rule
+│       │
+│       ├── cache/                  # === Plan 快取 (P17+) ===
+│       │   ├── __init__.py
+│       │   ├── cache_key.py        # SHA-256(prompt + land + zoning)
+│       │   └── store.py            # JSON store, LRU, TTL, ~/.promptbim/cache/
 │       │
 │       ├── viz/                    # === 視覺化 ===
 │       │   ├── __init__.py
-│       │   ├── site_plan.py        # 2D 配置圖 (土地+建築 footprint)
-│       │   ├── floorplan.py        # 2D 平面圖 SVG
-│       │   ├── model_3d.py         # 3D 模型組裝 (PyVista mesh)
-│       │   └── renderer.py         # F3D CLI 批次渲染 (選用)
+│       │   ├── site_plan.py
+│       │   ├── floorplan.py
+│       │   ├── model_3d.py
+│       │   └── renderer.py
 │       │
 │       ├── voice/                  # === 語音 ===
 │       │   ├── __init__.py
-│       │   └── stt.py              # faster-whisper 本地辨識
+│       │   └── stt.py
 │       │
 │       ├── mcp/                    # === MCP Server ===
 │       │   ├── __init__.py
-│       │   └── server.py
+│       │   └── server.py           # FastMCP + await orchestrator.agenerate()
 │       │
 │       └── schemas/                # === Pydantic Models ===
-│           ├── __init__.py
-│           ├── land.py             # LandParcel (polygon, area, setbacks)
-│           ├── zoning.py           # ZoningRules (FAR, BCR, height_limit)
-│           ├── requirement.py      # BuildingRequirement
-│           ├── plan.py             # BuildingPlan
-│           └── result.py           # GenerationResult
+│           ├── __init__.py         # schema_version 檢查 (P17)
+│           ├── land.py
+│           ├── zoning.py
+│           ├── requirement.py
+│           ├── plan.py
+│           └── result.py
 │
 ├── tests/
 │   ├── test_land/
+│   │   └── test_fuzzing.py         # 惡意輸入測試 (P17)
 │   ├── test_agents/
+│   │   └── test_network_failure.py  # 網路故障模擬 (P17)
 │   ├── test_bim/
 │   ├── test_gui/
+│   ├── test_integration/
+│   │   └── test_permissions.py      # 檔案權限錯誤 (P17)
 │   └── fixtures/
-│       ├── sample_parcel.geojson
-│       ├── sample_cadastral.pdf
-│       └── sample_plan.json
+│
+├── docs/
+│   ├── API.md
+│   ├── DesignDocForV2.md
+│   ├── V2_Migration_Tasks.md        # V2 遷移任務拆解 (P17)
+│   ├── PromptBIM_Context_Prompt.md
+│   ├── reports/
+│   │   ├── Sprint17_AuditReport.md
+│   │   └── Sprint17.1_AuditReport.md
+│   └── addendum/
+│
+├── PromptBIMTestApp1/               # === Xcode SwiftUI Wrapper ===
+│   ├── PromptBIMTestApp1App.swift
+│   ├── ContentView.swift            # 動態版本顯示: bridge.version (P17)
+│   ├── PythonBridge.swift           # @Published version + conda 多路徑
+│   └── Info.plist
+│
+├── PromptBIMTestApp1.xcodeproj/
 │
 ├── examples/
-│   ├── 01_import_land.py
-│   ├── 02_simple_box_on_land.py
-│   ├── 03_full_pipeline.py
-│   └── test_prompts.txt
 │
-├── resources/                      # App 資源
-│   ├── icons/
-│   └── styles/
-│       └── app.qss                 # Qt 樣式表
+├── resources/
 │
 └── output/                         # .gitignore
 ```
@@ -335,6 +366,7 @@ class ZoningRules(BaseModel):
 class BuildingPlan(BaseModel):
     """建築規劃（在土地上的配置）"""
     name: str
+    schema_version: str = "2.4.0"       # Schema 版本 (P17+)
     # 土地資訊（從 LandParcel 帶入）
     land_boundary: list[tuple[float, float]]
     buildable_area: list[tuple[float, float]]  # 退縮後可建範圍
@@ -349,35 +381,6 @@ class BuildingPlan(BaseModel):
 
     # 屋頂
     roof: RoofPlan
-
-class StoryPlan(BaseModel):
-    name: str                    # "1F", "2F", "B1"
-    elevation_m: float           # 樓層標高
-    height_m: float              # 層高
-    walls: list[WallDef]
-    spaces: list[SpaceDef]
-    openings: list[OpeningDef]
-    slab_boundary: list[tuple[float, float]]
-
-class WallDef(BaseModel):
-    start: tuple[float, float]
-    end: tuple[float, float]
-    thickness_m: float = 0.2
-    wall_type: str = "exterior"  # exterior/interior/partition
-
-class SpaceDef(BaseModel):
-    name: str                    # "客廳", "Office A"
-    boundary: list[tuple[float, float]]
-    space_type: str              # living/bedroom/office/meeting/corridor/bathroom
-    area_sqm: float
-
-class OpeningDef(BaseModel):
-    wall_index: int
-    offset_m: float              # 沿牆偏移
-    width_m: float
-    height_m: float
-    sill_height_m: float = 0.0   # 窗台高 (門=0, 窗=0.9)
-    opening_type: str = "door"   # door/window
 ```
 
 ---
@@ -422,8 +425,8 @@ All coordinates must be precise to 0.01m.
 ```toml
 [project]
 name = "promptbim"
-version = "0.1.0"
-description = "Prompt to BIM — AI-powered building generation on real land parcels"
+version = "2.4.1"
+description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Michael Lin", email = "michael@realitymatrix.com"}]
@@ -433,14 +436,11 @@ dependencies = [
     "PySide6>=6.6",
     "pyvista>=0.43",
     "pyvistaqt>=0.11",
-
     # AI
     "anthropic>=0.40.0",
-
     # BIM
     "ifcopenshell>=0.8.0",
     "usd-core>=24.0",
-
     # GIS / Land
     "geopandas>=0.14",
     "shapely>=2.0",
@@ -448,103 +448,66 @@ dependencies = [
     "pyproj>=3.6",
     "ezdxf>=1.1",
     "fastkml>=1.0",
-
+    "lxml>=5.0",
     # Geometry & Viz
+    "mapbox-earcut>=2.0",
     "numpy>=1.26",
     "trimesh>=4.0",
     "matplotlib>=3.8",
     "Pillow>=10.0",
-
     # Infra
+    "tenacity>=8.0",
     "pydantic>=2.0",
+    "pydantic-settings>=2.0",
     "python-dotenv>=1.0",
-    "rich>=13.0",
+    "imageio>=2.30",
 ]
 
 [project.optional-dependencies]
-pdf = ["pdfplumber>=0.10"]           # PDF 地籍圖 (MIT, 替代 PyMuPDF AGPL)
-voice = ["faster-whisper>=1.0"]      # 本地語音辨識 (MIT)
-mcp = ["mcp>=1.0"]                   # Claude Desktop MCP
-dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3"]
-
-[project.scripts]
-promptbim = "promptbim.__main__:app"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+pdf = ["pdfplumber>=0.10", "PyMuPDF>=1.23"]
+voice = ["faster-whisper>=1.0", "sounddevice>=0.4"]
+mcp = ["mcp>=1.0"]
+web = ["streamlit>=1.30"]
+dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0", "pip-audit>=2.7", "pip-tools>=7.0"]
 ```
 
 ---
 
 ## 8. 開發路線圖
 
-### P0: 骨架 + 環境 (~1 天)
-- [ ] GitHub repo + 完整目錄結構
-- [ ] pyproject.toml + 所有依賴安裝驗證
-- [ ] PySide6 空白主視窗可啟動
-- [ ] `promptbim gui` 啟動 / `promptbim --version`
-- **驗收:** macOS 上跑出空白 Qt 視窗
+### P0-P6: 基礎功能（已完成，見歷史）
 
-### P1: 土地匯入 + 2D 視圖 (~3 天)
-- [ ] `land/parsers/` — GeoJSON, Shapefile, DXF, 手動座標
-- [ ] `schemas/land.py` + `schemas/zoning.py`
-- [ ] `land/setback.py` — 退縮線計算
-- [ ] `gui/map_view.py` — matplotlib 嵌入 Qt 顯示土地
-- [ ] `gui/land_panel.py` — 土地面積/形狀/分區資訊
-- [ ] `gui/dialogs/import_land.py` — 拖放或選檔匯入
-- **驗收:** 拖放 .geojson 進視窗 → 顯示土地輪廓 + 面積 + 退縮線
+### P11-P14: Xcode 整合 + CLI + CI/CD（已完成）
 
-### P2: IFC + USD 生成核心 (~3 天)
-- [ ] `bim/geometry.py` — 牆/板/屋頂 mesh 生成
-- [ ] `bim/ifc_generator.py` — IfcOpenShell 高階封裝
-- [ ] `bim/usd_generator.py` — pxr USD 封裝
-- [ ] `schemas/plan.py` — BuildingPlan 完整 schema
-- [ ] `examples/02_simple_box_on_land.py`
-- **驗收:** 硬編碼 BuildingPlan → .ifc + .usda 雙輸出，兩者都可開啟
+### P16: 品質修整（已完成）
+- 具名常數提取到 `constants.py`
+- tenacity retry (3x exponential backoff, 5xx only)
+- Agent timeout 30s
+- pip-audit 修正（移除假 CVE）
+- 版本同步機制建立
 
-### P3: 3D 互動預覽 (~2 天)
-- [ ] `viz/model_3d.py` — BuildingPlan → PyVista mesh 組裝
-- [ ] `gui/model_view.py` — pyvistaqt 嵌入 Qt
-- [ ] 樓層剖面切換
-- [ ] `viz/site_plan.py` — 2D 配置圖 (土地+建築疊合)
-- **驗收:** 生成後 3D Tab 自動顯示可旋轉的建築模型
+### P17: 全面修整 + 架構強化（已完成，v2.4.0 → v2.4.1）
+- **Part A:** CI/CD 修復（requirements-frozen.txt 清理）
+- **Part B:** AuditReport 修復（per_side_setback, rate limiter, schema version, file size limits, registry index, conda paths）
+- **Part C:** V2 架構（lazy import, plugin 架構, V2 migration tasks 文件）
+- **Part D:** 測試缺口（network failure, fuzzing, permissions — +26 tests）
+- **Part E:** Swift 修復（ContentView 動態版本顯示, 報告歸檔）
+- **Part F:** Async/Await（BaseAgent.arun, Orchestrator.agenerate, 並行 Agent）
+- **Part G:** Plan 快取（SHA-256 key, JSON store, LRU, TTL, CLI commands）
+- **Part H:** 全量文件同步 + 驗收
+- **P17.1:** 審計修復 + 文檔一致性 patch（v2.4.1）
 
-### P4: AI Agent Pipeline (~3 天)
-- [ ] `agents/base.py` — Claude API wrapper
-- [ ] `agents/enhancer.py` — 需求增強 (含土地 context)
-- [ ] `agents/planner.py` — 在土地上規劃建築 (關鍵 prompt)
-- [ ] `agents/builder.py` — BuildingPlan → IFC+USD (純 Python)
-- [ ] `agents/checker.py` — 容積率/建蔽率/退縮 驗證
-- [ ] `agents/orchestrator.py` — 串接 + 迭代修正
-- [ ] `gui/chat_panel.py` — Chat UI 整合
-- **驗收:** 在 Chat 輸入描述 → 自動在土地上生成建築 → 2D+3D 同步更新
-
-### P5: 語音 + 匯出 + 打磨 (~2 天)
-- [ ] `voice/stt.py` — faster-whisper 本地辨識
-- [ ] 語音按鈕整合
-- [ ] 匯出對話框 (IFC + USD + SVG + JSON 一鍵打包)
-- [ ] `viz/floorplan.py` — 各層平面圖 SVG
-- [ ] 配置圖加建築陰影 + 方位指北針
-- **驗收:** 語音描述 → 完整生成 → 一鍵匯出 5 件套
-
-### P6: 進階 (未來)
-- [ ] PDF 地籍圖 OCR 解析
-- [ ] KML 匯入 + 衛星底圖疊加
-- [ ] MCP Server (Claude Desktop 整合)
-- [ ] USDZ 打包 (Apple Quick Look)
-- [ ] 多建築 template
-- [ ] Windows 測試 + 打包 (.exe)
-- [ ] 地形高程整合
+### P18: V2 Migration Phase 0-1（下一個）
+- C++ 核心骨架 + CMake + vcpkg
+- Compliance Engine + Cost Engine C++ 移植
+- pybind11 binding + Python fallback
 
 ---
 
 ## 9. 環境設定 (Claude Code 直接執行)
 
 ```bash
-# 建立 repo
 cd ~/Documents/MyProjects
-gh repo create chchlin1018/PromptBIMTestApp1 --private --clone
 cd PromptBIMTestApp1
 
 # Python 環境 (conda 推薦，因 ifcopenshell)
@@ -553,12 +516,7 @@ conda activate promptbim
 
 # 核心依賴
 conda install -c conda-forge ifcopenshell -y
-pip install PySide6 pyvista pyvistaqt
-pip install anthropic pydantic python-dotenv rich
-pip install usd-core
-pip install geopandas shapely fiona pyproj ezdxf fastkml
-pip install numpy trimesh matplotlib Pillow
-pip install pdfplumber  # MIT alternative to PyMuPDF
+pip install -e ".[dev]"
 
 # 驗證
 python -c "import ifcopenshell; print(f'IfcOpenShell {ifcopenshell.version}')"
@@ -567,6 +525,7 @@ python -c "from PySide6.QtWidgets import QApplication; print('PySide6 OK')"
 python -c "import pyvista; print(f'PyVista {pyvista.__version__}')"
 python -c "import geopandas; print(f'GeoPandas {geopandas.__version__}')"
 python -c "import anthropic; print('Anthropic SDK OK')"
+python -m promptbim --version
 ```
 
 ---
@@ -576,18 +535,20 @@ python -c "import anthropic; print('Anthropic SDK OK')"
 1. **GUI:** PySide6 + Qt Designer 風格，所有 widget 繼承 QWidget
 2. **3D:** PyVista mesh (pv.PolyData) 作為中間格式，同時餵給 Qt 視圖和匯出
 3. **Agent:** System prompt 作為 `SYSTEM_PROMPT` 常數存在各 agent .py
-4. **Builder:** 純 Python，不用 LLM，確定性輸出
-5. **土地座標:** 內部統一使用公尺制本地座標系，匯入時用 pyproj 轉換
-6. **IFC:** 只用 `ifcopenshell.api.run()` 高階 API
-7. **USD:** 只用 `pxr.Usd`, `pxr.UsdGeom`, `pxr.UsdShade`
-8. **Git:** `[P0] Init`, `[P1] Land import`, `[P2] BIM core`, etc.
-9. **測試:** pytest + pytest-qt
+4. **Agent async:** 所有 AI Agent 支援 sync `run()` + async `arun()`，BuilderAgent 僅 sync
+5. **Builder:** 純 Python，不用 LLM，確定性輸出
+6. **土地座標:** 內部統一使用公尺制本地座標系，匯入時用 pyproj 轉換
+7. **IFC:** 只用 `ifcopenshell.api.run()` 高階 API
+8. **USD:** 只用 `pxr.Usd`, `pxr.UsdGeom`, `pxr.UsdShade`
+9. **Git:** `[P0] Init`, `[P1] Land import`, `[P17] Hardening`, etc.
+10. **測試:** pytest + pytest-qt，coverage >= 70%
+11. **快取:** generate/agenerate 預設走快取，`use_cache=False` 強制重新生成
+12. **Plugin:** 新增 parser/rule 優先用 @register_plugin 註冊
+13. **常數:** 魔術數字必須放 `constants.py`，命名大寫
 
 ---
 
----
-
-## 11. P11-P14 新增功能
+## 11. P11-P17 新增功能
 
 ### P11: Xcode <-> PySide6 GUI 整合
 - `PythonBridge.swift` — findCondaPython(), loadDotEnv(), launchPySide6GUI(), terminateGUI()
@@ -615,23 +576,39 @@ python -c "import anthropic; print('Anthropic SDK OK')"
 - `docs/API.md` API 文件
 - Coverage > 70% 目標
 
+### P16: 品質修整 (v2.1.0)
+- `constants.py` — 6 個具名常數（story height, wall thickness, slab, tokens, GUI delay）
+- `agents/base.py` — tenacity retry (3x, exponential backoff, 5xx only) + timeout=30s
+- pip-audit 修正（移除 `|| true`，改用正確 CVE ignore）
+- 版本同步機制（pyproject.toml = __init__.py = Info.plist = CHANGELOG）
+- 725 tests
+
+### P17: 全面修整 + 架構強化 (v2.4.0)
+- **Async/Await:** BaseAgent.arun() + Orchestrator.agenerate() + asyncio.gather 並行
+- **Plan 快取:** SHA-256 key + JSON store + LRU (max 100) + TTL 7天 + CLI commands
+- **Plugin 架構:** PluginRegistry + @register_plugin + 三種類型 (agent/parser/code_rule)
+- **Rate Limiter:** token bucket (50 RPM, config.py 可調)
+- **Schema Versioning:** schema_version 欄位 + 載入相容性檢查
+- **Lazy Import:** `--version` 路徑不觸發 agent/bim import
+- **Per-Side Setback:** 逐邊退縮支援（矩形+L形）
+- **Input Size Limits:** MAX_LAND_FILE_SIZE_MB = 50
+- **ComponentRegistry Index:** `_by_category` 倒排索引
+- **PythonBridge 多路徑:** Intel Mac + `which python3` fallback + PROMPTBIM_PYTHON env
+- **ContentView 動態版本:** `bridge.version` 替代硬編碼
+- **V2 Migration Tasks:** docs/V2_Migration_Tasks.md
+- 792→799 tests
+
 ### CLI 使用範例
 
 ```bash
 python -m promptbim --version
 python -m promptbim gui [--debug]
 python -m promptbim generate "3-story villa" -o ./output [--land site.geojson] [--city Taipei]
+python -m promptbim generate --no-cache "villa" -o ./output
+python -m promptbim cache list
+python -m promptbim cache clear
+python -m promptbim cache stats
 python -m promptbim check [--ai] [--fix] [--json]
-```
-
-### PDF OCR 流程
-
-```
-PDF 輸入 → pdfplumber 文字萃取 → PyMuPDF 圖片萃取 → Claude Vision AI 邊界辨識 → LandParcel
-         ↓                        ↓
-    面積/地號/地址            座標點辨識
-         ↓
-    面積方形近似 fallback
 ```
 
 ### CI/CD 流程
@@ -648,7 +625,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.1 | 2026-03-26 | 100% 開源 + 桌面 App + GIS 土地輸入 + IFC/USD 雙輸出 + CI/CD*
+*SKILL.md v3.2 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
