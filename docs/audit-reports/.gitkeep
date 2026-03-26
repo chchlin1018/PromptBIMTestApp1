@@ -1,0 +1,3 @@
+# Audit Reports Directory
+# Sprint audit reports: Sprint{X}_AuditReport.md
+# Full architecture audits: AuditReport_{desc}_{version}.md
