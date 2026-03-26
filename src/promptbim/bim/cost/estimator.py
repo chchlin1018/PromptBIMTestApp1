@@ -182,9 +182,17 @@ class CostEstimator:
         for qi in qto_items:
             price_key = _QTO_PRICE_MAP.get(qi.category)
             if not price_key:
+                logger.warning(
+                    "COST-01: No price mapping for QTO category '%s' (qty=%.1f %s) — item skipped",
+                    qi.category, qi.quantity, qi.unit,
+                )
                 continue
             entry = UNIT_PRICES_TWD.get(price_key)
             if not entry:
+                logger.warning(
+                    "COST-01: No unit price for key '%s' (category='%s') — item skipped",
+                    price_key, qi.category,
+                )
                 continue
             unit_price = entry["price"]
             total = qi.quantity * unit_price

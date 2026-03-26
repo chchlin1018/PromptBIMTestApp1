@@ -47,7 +47,13 @@ class Orchestrator:
         self,
         output_dir: str | Path | None = None,
         max_iterations: int = 2,
-        on_status: "callable | None" = None,
+        on_status: "typing.Callable[[PipelineStatus], None] | None" = None,
+        *,
+        enhancer: "EnhancerAgent | None" = None,
+        planner: "PlannerAgent | None" = None,
+        builder: "BuilderAgent | None" = None,
+        checker: "CheckerAgent | None" = None,
+        modifier: "ModifierAgent | None" = None,
     ) -> None:
         from promptbim.agents.builder import BuilderAgent
         from promptbim.agents.checker import CheckerAgent
@@ -55,11 +61,11 @@ class Orchestrator:
         from promptbim.agents.modifier import ModifierAgent
         from promptbim.agents.planner import PlannerAgent
 
-        self._enhancer = EnhancerAgent()
-        self._planner = PlannerAgent()
-        self._builder = BuilderAgent(output_dir=output_dir)
-        self._checker = CheckerAgent()
-        self._modifier = ModifierAgent()
+        self._enhancer = enhancer or EnhancerAgent()
+        self._planner = planner or PlannerAgent()
+        self._builder = builder or BuilderAgent(output_dir=output_dir)
+        self._checker = checker or CheckerAgent()
+        self._modifier = modifier or ModifierAgent()
         self._max_iterations = max_iterations
         self._on_status = on_status
 
@@ -148,7 +154,10 @@ class Orchestrator:
                     len(self.check_result.violations),
                 )
                 fix_text = "; ".join(self.check_result.suggestions)
-                self.requirement.constraints.append(f"Fix: {fix_text}")
+                constraint = f"Fix: {fix_text}"
+                # Deduplicate constraints to prevent pile-up across iterations
+                if constraint not in self.requirement.constraints:
+                    self.requirement.constraints.append(constraint)
             else:
                 logger.warning("Max iterations reached, proceeding with current plan")
 
@@ -279,12 +288,16 @@ class Orchestrator:
                 break
             if iteration < self._max_iterations:
                 fix_text = "; ".join(self.check_result.suggestions)
-                self.requirement.constraints.append(f"Fix: {fix_text}")
+                constraint = f"Fix: {fix_text}"
+                if constraint not in self.requirement.constraints:
+                    self.requirement.constraints.append(constraint)
 
-        # Build (sync — pure Python, no API)
+        # Build (offloaded to thread to avoid blocking the event loop)
+        import asyncio
+
         self._emit("builder", "Generating IFC + USD files...", 0.8)
         try:
-            self.build_result = self._builder.build(self.plan)
+            self.build_result = await asyncio.to_thread(self._builder.build, self.plan)
         except Exception as e:
             logger.error("Builder failed: %s", e)
             return GenerationResult(success=False, building_name=self.plan.name if self.plan else "", errors=[str(e)])

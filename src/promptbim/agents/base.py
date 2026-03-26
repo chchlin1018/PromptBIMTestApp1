@@ -64,6 +64,13 @@ class BaseAgent:
         self._max_tokens = max_tokens
         self._client = None  # lazy init
 
+        # Validate API key early to surface config errors at init time
+        api_key = self._settings.anthropic_api_key
+        if api_key and not api_key.startswith("sk-ant-"):
+            logger.warning("API key does not match Anthropic format (sk-ant-...)")
+        elif not api_key:
+            logger.debug("No API key configured — API calls will fail until key is set")
+
     @property
     def client(self):
         if self._client is None:

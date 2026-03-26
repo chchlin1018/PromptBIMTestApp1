@@ -140,3 +140,37 @@ MEP_SYSTEM_TEMPLATES: dict[str, MEPSystemTemplate] = {
 def get_template(building_type: str) -> MEPSystemTemplate:
     """Return the MEP template for a building type, defaulting to office."""
     return MEP_SYSTEM_TEMPLATES.get(building_type, MEP_SYSTEM_TEMPLATES["office"])
+
+
+# ---- MEP System Registry (MEP-02 fix) ----
+# Central registry for pluggable MEP system types.
+# To add a new system, call register_system() instead of editing multiple files.
+
+_MEP_SYSTEM_REGISTRY: dict[str, dict] = {
+    "hvac": {"label": "HVAC", "color": (0.2, 0.8, 0.2), "z_offset": -0.10},
+    "plumbing": {"label": "Plumbing (Water)", "color": (0.2, 0.4, 0.8), "z_offset": -0.50},
+    "electrical": {"label": "Electrical", "color": (0.8, 0.2, 0.2), "z_offset": -0.40},
+    "fire_protection": {"label": "Fire Protection", "color": (0.8, 0.8, 0.0), "z_offset": -0.30},
+}
+
+
+def register_system(
+    system_id: str,
+    label: str,
+    color: tuple[float, float, float],
+    z_offset: float,
+) -> None:
+    """Register a new MEP system type (e.g., district_heating, pneumatic_waste)."""
+    _MEP_SYSTEM_REGISTRY[system_id] = {
+        "label": label,
+        "color": color,
+        "z_offset": z_offset,
+    }
+    SYSTEM_COLORS[system_id] = color
+    SYSTEM_LABELS[system_id] = label
+    CEILING_LAYER_Z_OFFSET[system_id] = z_offset
+
+
+def get_registered_systems() -> dict[str, dict]:
+    """Return all registered MEP system types."""
+    return dict(_MEP_SYSTEM_REGISTRY)

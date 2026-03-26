@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import time
 from pathlib import Path
@@ -54,7 +55,7 @@ class CacheStore:
         return data.get("_cache_payload")
 
     def put(self, key: str, payload: dict) -> None:
-        """Store a payload in the cache."""
+        """Store a payload in the cache (file-locked to prevent race conditions)."""
         from promptbim import __version__
 
         self._evict_if_needed()
@@ -66,7 +67,14 @@ class CacheStore:
             "_cache_payload": payload,
         }
         path = self._key_path(key)
-        path.write_text(json.dumps(data, ensure_ascii=False, default=str), encoding="utf-8")
+        content = json.dumps(data, ensure_ascii=False, default=str)
+        # Use exclusive file lock to prevent concurrent write corruption
+        with open(path, "w", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.write(content)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
         logger.debug("Cached: %s", key[:12])
 
     def invalidate(self, key: str) -> bool:

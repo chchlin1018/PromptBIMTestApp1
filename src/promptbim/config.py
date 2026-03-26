@@ -49,10 +49,10 @@ def validate_api_key(key: str) -> bool:
     """Validate Anthropic API key format.
 
     Valid formats: sk-ant-api03-... or sk-ant-...
-    Returns True if key is empty (not set) or matches expected format.
+    Returns False if key is empty (not set) — caller should check explicitly.
     """
     if not key:
-        return True
+        return False
     return key.startswith("sk-ant-") and len(key) >= 20
 
 
@@ -111,11 +111,13 @@ def get_settings() -> Settings:
     else:
         settings = Settings(_env_file=None)
 
-    # Validate API key format
+    # Validate API key format (only warn if key is set but malformed)
     if settings.anthropic_api_key and not validate_api_key(settings.anthropic_api_key):
         logger.warning(
             "API key does not match expected Anthropic format (sk-ant-...). "
             "Please check your ANTHROPIC_API_KEY in .env"
         )
+    elif not settings.anthropic_api_key:
+        logger.debug("No API key configured — set ANTHROPIC_API_KEY in .env")
 
     return settings

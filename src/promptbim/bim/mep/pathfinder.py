@@ -68,7 +68,15 @@ class MEPPathfinder:
         (0, 0, -1),
     ]
 
-    def __init__(self, grid_size: float = 0.3) -> None:
+    def __init__(self, grid_size: float = 0.3, building_span_m: float = 0.0) -> None:
+        # Adaptive grid size based on building span (MEP-01 fix)
+        if building_span_m > 0:
+            if building_span_m > 100:
+                grid_size = 0.5
+            elif building_span_m > 50:
+                grid_size = 0.4
+            # else keep default 0.3m
+            logger.debug("Adaptive grid: span=%.1fm → grid=%.2fm", building_span_m, grid_size)
         self.grid = grid_size
         self.obstacles: set[tuple[int, int, int]] = set()
 
