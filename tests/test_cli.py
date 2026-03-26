@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
 PYTHON = sys.executable
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -32,6 +31,7 @@ class TestVersionOutput:
     def test_version_contains_number(self):
         result = _run_cli("--version")
         import re
+
         assert re.search(r"\d+\.\d+\.\d+", result.stdout)
 
 
@@ -53,7 +53,9 @@ class TestGenerateCommand:
         if not geojson.exists():
             pytest.skip("sample_parcel.geojson fixture not found")
         outdir = str(tmp_path / "geo_out")
-        result = _run_cli("generate", "simple office", "--land", str(geojson), "-o", outdir, timeout=120)
+        result = _run_cli(
+            "generate", "simple office", "--land", str(geojson), "-o", outdir, timeout=120
+        )
         assert result.returncode == 0
         assert (Path(outdir) / "result.json").exists()
 
@@ -82,7 +84,9 @@ class TestGenerateCommand:
 
     def test_generate_bad_land_file(self, tmp_path):
         """Should fail gracefully with non-existent land file."""
-        result = _run_cli("generate", "house", "--land", "/nonexistent/file.geojson", "-o", str(tmp_path))
+        result = _run_cli(
+            "generate", "house", "--land", "/nonexistent/file.geojson", "-o", str(tmp_path)
+        )
         assert result.returncode != 0
 
     @pytest.mark.api
@@ -107,8 +111,8 @@ class TestGenerateUnit:
 
     def test_load_land_file_nonexistent(self):
         """_load_land_file should call sys.exit for missing files."""
-        from unittest.mock import patch
         from promptbim.__main__ import _load_land_file
+
         with pytest.raises(SystemExit):
             _load_land_file("/nonexistent/file.geojson")
 
@@ -116,6 +120,7 @@ class TestGenerateUnit:
         """_cli_status should print progress."""
         from promptbim.__main__ import _cli_status
         from promptbim.agents.orchestrator import PipelineStatus
+
         _cli_status(PipelineStatus(stage="builder", message="Building...", progress=0.5))
         captured = capsys.readouterr()
         assert "builder" in captured.out
@@ -123,8 +128,6 @@ class TestGenerateUnit:
 
     def test_generate_parser_accepts_options(self):
         """Verify argparse accepts all generate options."""
-        import argparse
-        from promptbim.__main__ import app
         # Just verify --help works (no API call)
         result = _run_cli("generate", "--help")
         assert "--land" in result.stdout

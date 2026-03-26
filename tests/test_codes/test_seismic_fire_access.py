@@ -1,13 +1,7 @@
 """Tests for seismic, fire, and accessibility rules."""
 
-import pytest
-
 from promptbim.codes.base import Severity
-from promptbim.codes.tw_seismic_code import (
-    SeismicDesignRule,
-    get_min_column_cm,
-    get_seismic_params,
-)
+from promptbim.codes.tw_accessibility_code import AccessibilityRule
 from promptbim.codes.tw_fire_code import (
     FireCompartmentRule,
     FireConstructionRule,
@@ -15,15 +9,19 @@ from promptbim.codes.tw_fire_code import (
     SafetyStairRule,
     TwoStairsRule,
 )
-from promptbim.codes.tw_accessibility_code import AccessibilityRule
+from promptbim.codes.tw_seismic_code import (
+    SeismicDesignRule,
+    get_min_column_cm,
+    get_seismic_params,
+)
 from promptbim.codes.tw_zoning_data import lookup_zoning
 from promptbim.schemas.land import LandParcel
-from promptbim.schemas.plan import BuildingPlan, RoofPlan, SpaceDef, StoryPlan, WallDef
+from promptbim.schemas.plan import BuildingPlan, RoofPlan, SpaceDef, StoryPlan
 from promptbim.schemas.zoning import ZoningRules
 
 
 def _land(area: float = 500.0) -> LandParcel:
-    side = area ** 0.5
+    side = area**0.5
     return LandParcel(
         boundary=[(0, 0), (side, 0), (side, side), (0, side)],
         area_sqm=area,
@@ -45,18 +43,22 @@ def _plan(
     fp = [(0, 0), (footprint_side, 0), (footprint_side, footprint_side), (0, footprint_side)]
     stories = []
     for i in range(num_stories):
-        stories.append(StoryPlan(
-            name=f"{i+1}F",
-            elevation_m=i * story_height,
-            height_m=story_height,
-            spaces=[SpaceDef(
-                name=f"Room {i+1}F",
-                boundary=fp,
-                space_type=space_type,
-                area_sqm=footprint_side ** 2,
-            )],
-            slab_boundary=fp,
-        ))
+        stories.append(
+            StoryPlan(
+                name=f"{i + 1}F",
+                elevation_m=i * story_height,
+                height_m=story_height,
+                spaces=[
+                    SpaceDef(
+                        name=f"Room {i + 1}F",
+                        boundary=fp,
+                        space_type=space_type,
+                        area_sqm=footprint_side**2,
+                    )
+                ],
+                slab_boundary=fp,
+            )
+        )
     return BuildingPlan(
         name="Test Building",
         building_footprint=fp,
@@ -66,6 +68,7 @@ def _plan(
 
 
 # -- Seismic Tests -----------------------------------------------------------
+
 
 class TestSeismicDesignRule:
     def test_returns_info(self):
@@ -98,6 +101,7 @@ class TestSeismicHelpers:
 
 
 # -- Fire Tests --------------------------------------------------------------
+
 
 class TestFireConstructionRule:
     def test_small_building(self):
@@ -156,6 +160,7 @@ class TestSafetyStairRule:
 
 # -- Accessibility Tests -----------------------------------------------------
 
+
 class TestAccessibilityRule:
     def test_commercial(self):
         results = AccessibilityRule().check(
@@ -164,13 +169,12 @@ class TestAccessibilityRule:
         assert len(results) >= 3  # ramp, elevator, toilet, parking, path
 
     def test_residential(self):
-        results = AccessibilityRule().check(
-            _plan(), _land(), _zoning(zone_type="residential")
-        )
+        results = AccessibilityRule().check(_plan(), _land(), _zoning(zone_type="residential"))
         assert results[0].severity == Severity.INFO
 
 
 # -- Zoning Data Tests -------------------------------------------------------
+
 
 class TestZoningData:
     def test_lookup_taipei(self):

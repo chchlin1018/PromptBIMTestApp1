@@ -23,8 +23,12 @@ OPENING_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="力霸鋁門窗", brand="力霸", country="TW",
-                price=PriceRange(min_price=4500, max_price=8000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="力霸鋁門窗",
+                brand="力霸",
+                country="TW",
+                price=PriceRange(
+                    min_price=4500, max_price=8000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["門", "單開門", "door", "single door", "swing door"],
@@ -72,8 +76,12 @@ OPENING_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="三和防火門", brand="三和", country="TW",
-                price=PriceRange(min_price=12000, max_price=25000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="三和防火門",
+                brand="三和",
+                country="TW",
+                price=PriceRange(
+                    min_price=12000, max_price=25000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["防火門", "fire door", "fire-rated", "防火時效"],
@@ -137,8 +145,12 @@ OPENING_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="力霸鋁門窗", brand="力霸", country="TW",
-                price=PriceRange(min_price=6000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="力霸鋁門窗",
+                brand="力霸",
+                country="TW",
+                price=PriceRange(
+                    min_price=6000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["推射窗", "casement window", "外推窗"],

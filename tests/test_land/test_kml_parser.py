@@ -1,12 +1,10 @@
 """Tests for KML/KMZ land parcel parser."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from promptbim.land.parsers.kml import parse_kml
-
 
 SAMPLE_KML = """\
 <?xml version="1.0" encoding="UTF-8"?>

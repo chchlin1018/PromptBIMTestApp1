@@ -1,9 +1,6 @@
 """Tests for viz/floorplan.py — per-floor SVG generation."""
 
 import tempfile
-from pathlib import Path
-
-import pytest
 
 from promptbim.schemas.plan import (
     BuildingPlan,
@@ -18,14 +15,14 @@ from promptbim.viz.floorplan import (
     _polygon_centroid,
     _story_svg,
     _to_svg_coords,
-    generate_floorplans,
     generate_floorplan_svg_strings,
+    generate_floorplans,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _sample_plan() -> BuildingPlan:
     footprint = [(0, 0), (10, 0), (10, 8), (0, 8)]
@@ -110,6 +107,7 @@ def _sample_plan() -> BuildingPlan:
 # Helper tests
 # ---------------------------------------------------------------------------
 
+
 class TestBounds:
     def test_simple_rect(self):
         pts = [(0, 0), (10, 0), (10, 5), (0, 5)]
@@ -141,6 +139,7 @@ class TestToSvgCoords:
 # ---------------------------------------------------------------------------
 # SVG generation
 # ---------------------------------------------------------------------------
+
 
 class TestStorySvg:
     def test_nonempty_story_produces_svg(self):

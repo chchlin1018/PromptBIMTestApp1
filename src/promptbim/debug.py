@@ -21,19 +21,19 @@ DEBUG_MODE = os.getenv("PROMPTBIM_DEBUG", "0") == "1"
 
 # ANSI color codes for module-based coloring
 _COLORS = {
-    "land": "\033[32m",       # green
-    "bim": "\033[34m",        # blue
-    "agents": "\033[35m",     # magenta
-    "codes": "\033[33m",      # yellow
-    "gui": "\033[36m",        # cyan
-    "viz": "\033[36m",        # cyan
-    "mep": "\033[34;1m",      # bright blue
-    "cost": "\033[33;1m",     # bright yellow
-    "monitoring": "\033[31m", # red
+    "land": "\033[32m",  # green
+    "bim": "\033[34m",  # blue
+    "agents": "\033[35m",  # magenta
+    "codes": "\033[33m",  # yellow
+    "gui": "\033[36m",  # cyan
+    "viz": "\033[36m",  # cyan
+    "mep": "\033[34;1m",  # bright blue
+    "cost": "\033[33;1m",  # bright yellow
+    "monitoring": "\033[31m",  # red
     "simulation": "\033[31;1m",  # bright red
-    "voice": "\033[35;1m",    # bright magenta
-    "mcp": "\033[32;1m",      # bright green
-    "web": "\033[32;1m",      # bright green
+    "voice": "\033[35;1m",  # bright magenta
+    "mcp": "\033[32;1m",  # bright green
+    "web": "\033[32;1m",  # bright green
 }
 _RESET = "\033[0m"
 
@@ -104,13 +104,16 @@ def setup_file_logging(log_dir: str | Path = "logs"):
     log_path.mkdir(parents=True, exist_ok=True)
 
     from datetime import datetime
+
     filename = log_path / f"promptbim_{datetime.now():%Y%m%d_%H%M%S}.log"
 
     file_handler = logging.FileHandler(filename, encoding="utf-8")
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    ))
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
     file_handler.setLevel(logging.DEBUG)
 
     root = logging.getLogger("promptbim")

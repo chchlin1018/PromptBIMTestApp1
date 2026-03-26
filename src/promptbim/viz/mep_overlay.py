@@ -10,9 +10,9 @@ Each MEP system is rendered in a distinct colour:
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("viz.mep_overlay")
 
-import numpy as np
 import pyvista as pv
 
 from promptbim.bim.mep.planner import MEPPlan
@@ -20,7 +20,7 @@ from promptbim.bim.mep.systems import SYSTEM_COLORS
 
 
 def _color_hex(rgb: tuple[float, float, float]) -> str:
-    return f"#{int(rgb[0]*255):02x}{int(rgb[1]*255):02x}{int(rgb[2]*255):02x}"
+    return f"#{int(rgb[0] * 255):02x}{int(rgb[1] * 255):02x}{int(rgb[2] * 255):02x}"
 
 
 def build_mep_meshes(
@@ -77,7 +77,7 @@ def _segment_to_polydata(
     dx = end[0] - start[0]
     dy = end[1] - start[1]
     dz = end[2] - start[2]
-    length = (dx ** 2 + dy ** 2 + dz ** 2) ** 0.5
+    length = (dx**2 + dy**2 + dz**2) ** 0.5
     if length < 1e-6:
         return None
 

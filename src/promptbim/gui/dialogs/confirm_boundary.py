@@ -8,11 +8,12 @@ or confirm/reject the result.
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.confirm_boundary")
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -24,12 +25,10 @@ from PySide6.QtWidgets import (
 )
 
 from promptbim.land.boundary_confirm import (
-    BoundaryCandidate,
     BoundaryConfirmation,
     adjust_vertex,
     validate_boundary,
 )
-from promptbim.schemas.land import LandParcel
 
 try:
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -83,9 +82,7 @@ class ConfirmBoundaryDialog(QDialog):
             cand_layout.addWidget(QLabel("Candidate:"))
             self._candidate_combo = QComboBox()
             for i, c in enumerate(self._confirmation.candidates):
-                self._candidate_combo.addItem(
-                    f"#{i + 1} (conf: {c.confidence:.0%})"
-                )
+                self._candidate_combo.addItem(f"#{i + 1} (conf: {c.confidence:.0%})")
             self._candidate_combo.setCurrentIndex(self._confirmation.selected_index)
             self._candidate_combo.currentIndexChanged.connect(self._on_candidate_changed)
             cand_layout.addWidget(self._candidate_combo)
@@ -217,7 +214,12 @@ class ConfirmBoundaryDialog(QDialog):
             return
         candidate = self._confirmation.selected
         if candidate:
-            logger.debug("User adjusting vertex %d to (%.2f, %.2f)", self._dragging_vertex, event.xdata, event.ydata)
+            logger.debug(
+                "User adjusting vertex %d to (%.2f, %.2f)",
+                self._dragging_vertex,
+                event.xdata,
+                event.ydata,
+            )
             new_parcel = adjust_vertex(
                 candidate.parcel, self._dragging_vertex, event.xdata, event.ydata
             )

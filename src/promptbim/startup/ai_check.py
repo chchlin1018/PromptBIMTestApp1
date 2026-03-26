@@ -29,8 +29,10 @@ def check_api_key(settings=None) -> CheckResult:
 
     if not key:
         return CheckResult(
-            name="API Key", category="AI services",
-            status="fail", message="ANTHROPIC_API_KEY not set",
+            name="API Key",
+            category="AI services",
+            status="fail",
+            message="ANTHROPIC_API_KEY not set",
             fix_hint="Set ANTHROPIC_API_KEY in .env file (get key from console.anthropic.com)",
             elapsed_ms=elapsed,
         )
@@ -42,16 +44,20 @@ def check_api_key(settings=None) -> CheckResult:
     # Validate format
     if not re.match(r"^sk-ant-", key):
         return CheckResult(
-            name="API Key", category="AI services",
-            status="warn", message=f"API Key set but unusual format ({masked})",
+            name="API Key",
+            category="AI services",
+            status="warn",
+            message=f"API Key set but unusual format ({masked})",
             detail="Expected format: sk-ant-*",
             fix_hint="Verify key at console.anthropic.com",
             elapsed_ms=elapsed,
         )
 
     return CheckResult(
-        name="API Key", category="AI services",
-        status="pass", message=f"API Key set ({masked})",
+        name="API Key",
+        category="AI services",
+        status="pass",
+        message=f"API Key set ({masked})",
         elapsed_ms=elapsed,
     )
 
@@ -80,12 +86,15 @@ def ping_claude(settings=None, timeout: float | None = None) -> CheckResult:
 
         logger.debug(
             "Claude API ping: %s, %.0fms, usage: in=%d out=%d",
-            response.stop_reason, elapsed,
-            response.usage.input_tokens, response.usage.output_tokens,
+            response.stop_reason,
+            elapsed,
+            response.usage.input_tokens,
+            response.usage.output_tokens,
         )
 
         return CheckResult(
-            name="Claude API ping", category="AI services",
+            name="Claude API ping",
+            category="AI services",
             status="pass",
             message=f"200 OK, {elapsed:.0f}ms",
             detail=f"model={response.model}, stop={response.stop_reason}",
@@ -95,8 +104,10 @@ def ping_claude(settings=None, timeout: float | None = None) -> CheckResult:
     except ImportError:
         elapsed = (time.monotonic() - start) * 1000
         return CheckResult(
-            name="Claude API ping", category="AI services",
-            status="fail", message="anthropic SDK not installed",
+            name="Claude API ping",
+            category="AI services",
+            status="fail",
+            message="anthropic SDK not installed",
             fix_hint="pip install anthropic",
             elapsed_ms=elapsed,
         )
@@ -111,9 +122,12 @@ def ping_claude(settings=None, timeout: float | None = None) -> CheckResult:
             hint = "Check ANTHROPIC_API_KEY in .env"
         elif "rate" in error_type.lower() or "rate" in str(e).lower():
             return CheckResult(
-                name="Claude API ping", category="AI services",
-                status="warn", message=f"Rate limited ({error_type})",
-                detail=str(e), fix_hint="API rate limit — wait and retry",
+                name="Claude API ping",
+                category="AI services",
+                status="warn",
+                message=f"Rate limited ({error_type})",
+                detail=str(e),
+                fix_hint="API rate limit — wait and retry",
                 elapsed_ms=elapsed,
             )
         elif "timeout" in error_type.lower() or "timeout" in str(e).lower():
@@ -122,9 +136,12 @@ def ping_claude(settings=None, timeout: float | None = None) -> CheckResult:
         logger.debug("Claude API ping failed: %s: %s", error_type, e)
 
         return CheckResult(
-            name="Claude API ping", category="AI services",
-            status="fail", message=f"Connection failed ({error_type})",
-            detail=str(e), fix_hint=hint,
+            name="Claude API ping",
+            category="AI services",
+            status="fail",
+            message=f"Connection failed ({error_type})",
+            detail=str(e),
+            fix_hint=hint,
             elapsed_ms=elapsed,
         )
 
@@ -137,8 +154,10 @@ def check_model_available(settings=None) -> CheckResult:
 
     # Model availability is implicitly confirmed if ping succeeded with that model
     return CheckResult(
-        name="Model available", category="AI services",
-        status="pass", message=f"{model} available",
+        name="Model available",
+        category="AI services",
+        status="pass",
+        message=f"{model} available",
         elapsed_ms=elapsed,
     )
 
@@ -152,41 +171,56 @@ def check_vision_available(settings=None, timeout: float | None = None) -> Check
     start = time.monotonic()
 
     try:
-        import anthropic
         import base64
+
+        import anthropic
 
         # Create a minimal 1x1 white PNG for testing
         minimal_png = base64.b64encode(
-            b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01'
-            b'\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00'
-            b'\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00'
-            b'\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+            b"\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00"
+            b"\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00"
+            b"\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
         ).decode()
 
         client = anthropic.Anthropic(timeout=timeout)
         response = client.messages.create(
             model=model,
             max_tokens=10,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": minimal_png}},
-                    {"type": "text", "text": "ok"},
-                ],
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": minimal_png,
+                            },
+                        },
+                        {"type": "text", "text": "ok"},
+                    ],
+                }
+            ],
         )
         elapsed = (time.monotonic() - start) * 1000
 
         return CheckResult(
-            name="Vision API", category="AI services",
-            status="pass", message=f"Vision OK, {elapsed:.0f}ms",
+            name="Vision API",
+            category="AI services",
+            status="pass",
+            message=f"Vision OK, {elapsed:.0f}ms",
             elapsed_ms=elapsed,
         )
 
     except Exception as e:
         elapsed = (time.monotonic() - start) * 1000
         return CheckResult(
-            name="Vision API", category="AI services",
-            status="warn", message=f"Vision check failed: {type(e).__name__}",
-            detail=str(e), elapsed_ms=elapsed,
+            name="Vision API",
+            category="AI services",
+            status="warn",
+            message=f"Vision check failed: {type(e).__name__}",
+            detail=str(e),
+            elapsed_ms=elapsed,
         )

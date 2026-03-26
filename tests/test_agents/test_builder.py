@@ -1,15 +1,14 @@
 """Tests for agents/builder.py — BuilderAgent (no LLM)."""
 
 import pytest
-from pathlib import Path
 
 from promptbim.agents.builder import BuilderAgent, BuildResult, _safe_filename
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
+    SpaceDef,
     StoryPlan,
     WallDef,
-    SpaceDef,
 )
 
 

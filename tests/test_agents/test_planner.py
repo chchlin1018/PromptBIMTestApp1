@@ -1,10 +1,11 @@
 """Tests for agents/planner.py — PlannerAgent and fallback box."""
 
-import pytest
 from unittest.mock import patch
 
-from promptbim.agents.planner import PlannerAgent, _fallback_box
+import pytest
+
 from promptbim.agents.base import AgentResponse
+from promptbim.agents.planner import PlannerAgent, _fallback_box
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
@@ -49,7 +50,9 @@ def buildable_area():
 
 
 class TestFallbackBox:
-    def test_generates_valid_plan(self, sample_land, sample_zoning, buildable_area, sample_requirement):
+    def test_generates_valid_plan(
+        self, sample_land, sample_zoning, buildable_area, sample_requirement
+    ):
         plan = _fallback_box(sample_land, sample_zoning, buildable_area, sample_requirement)
 
         assert isinstance(plan, BuildingPlan)
@@ -69,13 +72,17 @@ class TestFallbackBox:
         max_stories = int(sample_zoning.height_limit_m / 3.0)
         assert len(plan.stories) <= max_stories
 
-    def test_first_floor_has_door(self, sample_land, sample_zoning, buildable_area, sample_requirement):
+    def test_first_floor_has_door(
+        self, sample_land, sample_zoning, buildable_area, sample_requirement
+    ):
         plan = _fallback_box(sample_land, sample_zoning, buildable_area, sample_requirement)
 
         first_floor = plan.stories[0]
         assert any(o.opening_type == "door" for o in first_floor.openings)
 
-    def test_walls_form_rectangle(self, sample_land, sample_zoning, buildable_area, sample_requirement):
+    def test_walls_form_rectangle(
+        self, sample_land, sample_zoning, buildable_area, sample_requirement
+    ):
         plan = _fallback_box(sample_land, sample_zoning, buildable_area, sample_requirement)
 
         for story in plan.stories:
@@ -85,7 +92,9 @@ class TestFallbackBox:
 
 class TestPlannerAgent:
     @patch.object(PlannerAgent, "run")
-    def test_fallback_on_error(self, mock_run, sample_land, sample_zoning, buildable_area, sample_requirement):
+    def test_fallback_on_error(
+        self, mock_run, sample_land, sample_zoning, buildable_area, sample_requirement
+    ):
         mock_run.return_value = AgentResponse(error="API error")
 
         agent = PlannerAgent()

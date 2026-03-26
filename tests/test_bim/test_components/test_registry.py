@@ -2,7 +2,7 @@
 
 import pytest
 
-from promptbim.bim.components.base import ComponentCategory, ComponentDef, PriceRange, SupplierInfo
+from promptbim.bim.components.base import ComponentCategory, PriceRange, SupplierInfo
 from promptbim.bim.components.load_all import load_all_components
 from promptbim.bim.components.registry import ComponentRegistry
 
@@ -45,9 +45,7 @@ class TestComponentRegistry:
         assert len(results) >= 3
 
     def test_search_with_category_filter(self):
-        results = ComponentRegistry.search(
-            ["門"], category=ComponentCategory.OPENING
-        )
+        results = ComponentRegistry.search(["門"], category=ComponentCategory.OPENING)
         assert len(results) >= 3
         for r in results:
             assert r.category == ComponentCategory.OPENING
@@ -75,7 +73,7 @@ class TestComponentDef:
 
     def test_component_has_required_fields(self):
         for comp in ComponentRegistry.all_components():
-            assert comp.id, f"Component missing id"
+            assert comp.id, "Component missing id"
             assert comp.name_zh, f"{comp.id} missing name_zh"
             assert comp.name_en, f"{comp.id} missing name_en"
             assert comp.ifc_class, f"{comp.id} missing ifc_class"

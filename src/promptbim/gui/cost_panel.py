@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QHeaderView,
     QLabel,
     QTableWidget,
@@ -108,5 +107,7 @@ class CostPanel(QWidget):
                 per_sqm_item = QTableWidgetItem(f"NT${per_sqm:,.0f}")
             else:
                 per_sqm_item = QTableWidgetItem("N/A")
-            per_sqm_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            per_sqm_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
             self._table.setItem(row, 3, per_sqm_item)

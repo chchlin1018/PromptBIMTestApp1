@@ -7,8 +7,6 @@ features, and constraints.
 
 from __future__ import annotations
 
-import json
-
 from promptbim.agents.base import AgentResponse, BaseAgent
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
@@ -82,7 +80,12 @@ class EnhancerAgent(BaseAgent):
         logger.debug("Enhancing prompt: '%s'", raw_prompt[:100])
         response = self.run(user_msg)
         req = self._to_requirement(raw_prompt, response, land_area, zoning)
-        logger.debug("Enhanced: type=%s, stories=%d, features=%s", req.building_type, req.num_stories, req.features)
+        logger.debug(
+            "Enhanced: type=%s, stories=%d, features=%s",
+            req.building_type,
+            req.num_stories,
+            req.features,
+        )
         return req
 
     def _to_requirement(

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from promptbim.bim.mep.planner import MEPPlan
 from promptbim.debug import get_logger
-from promptbim.bim.mep.planner import MEPPlan, MEPRoute
 
 logger = get_logger("mep.clash_detect")
 
@@ -80,18 +80,22 @@ def detect_clashes(
                 overlap = _overlap_center(min_a, max_a, min_b, max_b)
                 pair_key = "_".join(sorted([sys_a, sys_b]))
 
-                clashes.append(ClashReport(
-                    system_a=sys_a,
-                    system_b=sys_b,
-                    segment_a_start=sa_start,
-                    segment_a_end=sa_end,
-                    segment_b_start=sb_start,
-                    segment_b_end=sb_end,
-                    overlap_point=overlap,
-                ))
+                clashes.append(
+                    ClashReport(
+                        system_a=sys_a,
+                        system_b=sys_b,
+                        segment_a_start=sa_start,
+                        segment_a_end=sa_end,
+                        segment_b_start=sb_start,
+                        segment_b_end=sb_end,
+                        overlap_point=overlap,
+                    )
+                )
                 pair_counts[pair_key] = pair_counts.get(pair_key, 0) + 1
 
-    logger.debug("Clash detection: %d segments checked, %d clashes found", len(seg_list), len(clashes))
+    logger.debug(
+        "Clash detection: %d segments checked, %d clashes found", len(seg_list), len(clashes)
+    )
     for pair, cnt in pair_counts.items():
         logger.debug("  %s: %d clashes", pair, cnt)
 
@@ -103,6 +107,7 @@ def detect_clashes(
 
 
 # ---- geometry helpers ----
+
 
 def _segment_bbox(
     start: tuple[float, float, float],
@@ -131,9 +136,12 @@ def _bbox_overlap(
 ) -> bool:
     """Check if two AABBs overlap."""
     return (
-        min_a[0] <= max_b[0] and max_a[0] >= min_b[0]
-        and min_a[1] <= max_b[1] and max_a[1] >= min_b[1]
-        and min_a[2] <= max_b[2] and max_a[2] >= min_b[2]
+        min_a[0] <= max_b[0]
+        and max_a[0] >= min_b[0]
+        and min_a[1] <= max_b[1]
+        and max_a[1] >= min_b[1]
+        and min_a[2] <= max_b[2]
+        and max_a[2] >= min_b[2]
     )
 
 

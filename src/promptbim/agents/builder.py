@@ -64,9 +64,9 @@ class BuilderAgent:
         if result.ok:
             sizes = []
             if ifc_path:
-                sizes.append(f"IFC={ifc_path.stat().st_size/1024:.0f}KB")
+                sizes.append(f"IFC={ifc_path.stat().st_size / 1024:.0f}KB")
             if usd_path:
-                sizes.append(f"USD={usd_path.stat().st_size/1024:.0f}KB")
+                sizes.append(f"USD={usd_path.stat().st_size / 1024:.0f}KB")
             logger.debug("Build complete: %s", ", ".join(sizes))
         else:
             logger.debug("Build failed: %s", errors)
@@ -94,6 +94,7 @@ class BuildResult:
 def _safe_filename(name: str) -> str:
     """Convert a building name to a safe filename."""
     import re
+
     safe = re.sub(r"[^\w\s-]", "", name)
     safe = re.sub(r"\s+", "_", safe).strip("_")
     return safe[:80] or "building"

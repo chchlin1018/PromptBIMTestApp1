@@ -1,8 +1,6 @@
 """Tests for bim/mep/planner.py — MEP Planner."""
 
-import pytest
-
-from promptbim.bim.mep.planner import MEPPlanner, _polygon_centroid, _distribute_points
+from promptbim.bim.mep.planner import MEPPlanner, _distribute_points, _polygon_centroid
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,

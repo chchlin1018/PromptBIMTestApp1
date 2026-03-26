@@ -1,7 +1,5 @@
 """Tests for bim/cost/qto.py — Quantity Take-Off."""
 
-import pytest
-
 from promptbim.bim.cost.qto import QTOItem, QuantityTakeOff
 from promptbim.schemas.plan import (
     BuildingPlan,

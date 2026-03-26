@@ -1,10 +1,10 @@
 """Tests for agents/orchestrator.py — Pipeline + _poly_area."""
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from promptbim.agents.orchestrator import Orchestrator, _poly_area
-from promptbim.agents.base import AgentResponse
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.zoning import ZoningRules
 
@@ -56,10 +56,9 @@ class TestOrchestrator:
     ):
         """Test pipeline runs end-to-end using fallback (no API)."""
         from promptbim.agents.checker import CheckResult
-        from promptbim.agents.enhancer import EnhancerAgent
-        from promptbim.agents.planner import PlannerAgent, _fallback_box
-        from promptbim.schemas.requirement import BuildingRequirement
+        from promptbim.agents.planner import _fallback_box
         from promptbim.land.setback import compute_setback
+        from promptbim.schemas.requirement import BuildingRequirement
 
         # Mock Enhancer to return a basic requirement
         req = BuildingRequirement(

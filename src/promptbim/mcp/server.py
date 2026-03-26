@@ -42,11 +42,11 @@ mcp = FastMCP(
 # Shared state (per-server-session)
 # --------------------------------------------------------------------------
 _state: dict = {
-    "land": None,          # LandParcel dict
-    "zoning": None,        # ZoningRules dict
-    "plan": None,          # BuildingPlan dict
-    "result": None,        # GenerationResult dict
-    "output_dir": None,    # Path string
+    "land": None,  # LandParcel dict
+    "zoning": None,  # ZoningRules dict
+    "plan": None,  # BuildingPlan dict
+    "result": None,  # GenerationResult dict
+    "output_dir": None,  # Path string
 }
 
 
@@ -78,7 +78,9 @@ def import_land(
     """
     from promptbim.schemas.land import LandParcel
 
-    logger.debug("import_land called: name=%s, vertices=%d, area_sqm=%s", name, len(boundary), area_sqm)
+    logger.debug(
+        "import_land called: name=%s, vertices=%d, area_sqm=%s", name, len(boundary), area_sqm
+    )
     t0 = time.monotonic()
 
     coords = [(pt[0], pt[1]) for pt in boundary]
@@ -93,13 +95,17 @@ def import_land(
         source_type="mcp",
     )
     _state["land"] = parcel.model_dump()
-    logger.debug("import_land completed in %.3fs: area=%.1f m²", time.monotonic() - t0, parcel.area_sqm)
-    return json.dumps({
-        "status": "ok",
-        "name": parcel.name,
-        "area_sqm": parcel.area_sqm,
-        "vertices": len(coords),
-    })
+    logger.debug(
+        "import_land completed in %.3fs: area=%.1f m²", time.monotonic() - t0, parcel.area_sqm
+    )
+    return json.dumps(
+        {
+            "status": "ok",
+            "name": parcel.name,
+            "area_sqm": parcel.area_sqm,
+            "vertices": len(coords),
+        }
+    )
 
 
 @mcp.tool()
@@ -127,7 +133,13 @@ def set_zoning(
     """
     from promptbim.schemas.zoning import ZoningRules
 
-    logger.debug("set_zoning called: type=%s, FAR=%.2f, BCR=%.2f, height=%.1fm", zone_type, far_limit, bcr_limit, height_limit_m)
+    logger.debug(
+        "set_zoning called: type=%s, FAR=%.2f, BCR=%.2f, height=%.1fm",
+        zone_type,
+        far_limit,
+        bcr_limit,
+        height_limit_m,
+    )
     t0 = time.monotonic()
 
     zoning = ZoningRules(
@@ -174,19 +186,26 @@ def generate_building(prompt: str) -> str:
     _state["result"] = result.model_dump(mode="json") if result else None
 
     elapsed = time.monotonic() - t0
-    logger.info("generate_building completed in %.2fs: success=%s, name=%s", elapsed, result.success, result.building_name)
+    logger.info(
+        "generate_building completed in %.2fs: success=%s, name=%s",
+        elapsed,
+        result.success,
+        result.building_name,
+    )
 
-    return json.dumps({
-        "status": "ok" if result.success else "error",
-        "building_name": result.building_name,
-        "stories": result.summary.get("stories", 0),
-        "bcr": result.summary.get("bcr", 0),
-        "far": result.summary.get("far", 0),
-        "ifc_path": str(result.ifc_path) if result.ifc_path else None,
-        "usd_path": str(result.usd_path) if result.usd_path else None,
-        "warnings": result.warnings[:5],
-        "errors": result.errors,
-    })
+    return json.dumps(
+        {
+            "status": "ok" if result.success else "error",
+            "building_name": result.building_name,
+            "stories": result.summary.get("stories", 0),
+            "bcr": result.summary.get("bcr", 0),
+            "far": result.summary.get("far", 0),
+            "ifc_path": str(result.ifc_path) if result.ifc_path else None,
+            "usd_path": str(result.usd_path) if result.usd_path else None,
+            "warnings": result.warnings[:5],
+            "errors": result.errors,
+        }
+    )
 
 
 @mcp.tool()
@@ -209,6 +228,7 @@ def modify_building(command: str) -> str:
     orch = _get_orchestrator()
     # Restore plan state
     from promptbim.schemas.plan import BuildingPlan
+
     orch.plan = BuildingPlan(**_state["plan"])
 
     new_plan, record = orch.modify(command, zoning)
@@ -217,13 +237,19 @@ def modify_building(command: str) -> str:
         _state["plan"] = new_plan.model_dump()
 
     elapsed = time.monotonic() - t0
-    logger.info("modify_building completed in %.2fs: success=%s", elapsed, record.success if record else False)
+    logger.info(
+        "modify_building completed in %.2fs: success=%s",
+        elapsed,
+        record.success if record else False,
+    )
 
-    return json.dumps({
-        "status": "ok" if record and record.success else "failed",
-        "modification_type": record.modification_type if record else None,
-        "impacts": [str(i) for i in (record.impacts if record else [])],
-    })
+    return json.dumps(
+        {
+            "status": "ok" if record and record.success else "failed",
+            "modification_type": record.modification_type if record else None,
+            "impacts": [str(i) for i in (record.impacts if record else [])],
+        }
+    )
 
 
 @mcp.tool()
@@ -248,18 +274,25 @@ def check_compliance() -> str:
     checker = CheckerAgent()
     result = checker.check(plan, land, zoning)
 
-    logger.info("check_compliance completed in %.2fs: passed=%s, violations=%d", time.monotonic() - t0, result.passed, len(result.violations))
+    logger.info(
+        "check_compliance completed in %.2fs: passed=%s, violations=%d",
+        time.monotonic() - t0,
+        result.passed,
+        len(result.violations),
+    )
 
-    return json.dumps({
-        "passed": result.passed,
-        "violations_count": len(result.violations),
-        "violations": [
-            {"rule": v.rule, "severity": v.severity, "message": v.message}
-            for v in result.violations[:10]
-        ],
-        "suggestions": result.suggestions[:5],
-        "report_text": result.report_text[:2000] if result.report_text else "",
-    })
+    return json.dumps(
+        {
+            "passed": result.passed,
+            "violations_count": len(result.violations),
+            "violations": [
+                {"rule": v.rule, "severity": v.severity, "message": v.message}
+                for v in result.violations[:10]
+            ],
+            "suggestions": result.suggestions[:5],
+            "report_text": result.report_text[:2000] if result.report_text else "",
+        }
+    )
 
 
 @mcp.tool()
@@ -278,13 +311,19 @@ def estimate_cost() -> str:
     estimate = estimator.estimate(plan)
 
     result = estimate.to_dict()
-    logger.info("estimate_cost completed in %.2fs: total_twd=%s", time.monotonic() - t0, result.get("total_twd", 0))
-    return json.dumps({
-        "total_twd": result.get("total_twd", 0),
-        "total_usd_approx": result.get("total_twd", 0) / 32,
-        "cost_per_sqm_twd": result.get("cost_per_sqm_twd", 0),
-        "categories": result.get("category_breakdown", {}),
-    })
+    logger.info(
+        "estimate_cost completed in %.2fs: total_twd=%s",
+        time.monotonic() - t0,
+        result.get("total_twd", 0),
+    )
+    return json.dumps(
+        {
+            "total_twd": result.get("total_twd", 0),
+            "total_usd_approx": result.get("total_twd", 0) / 32,
+            "cost_per_sqm_twd": result.get("cost_per_sqm_twd", 0),
+            "categories": result.get("category_breakdown", {}),
+        }
+    )
 
 
 @mcp.tool()
@@ -302,15 +341,19 @@ def auto_monitor() -> str:
     placer = AutoPlacement()
     monitor_plan = placer.place(plan)
 
-    logger.info("auto_monitor completed in %.2fs: total_monitors=%d", time.monotonic() - t0, monitor_plan.total_count)
+    logger.info(
+        "auto_monitor completed in %.2fs: total_monitors=%d",
+        time.monotonic() - t0,
+        monitor_plan.total_count,
+    )
 
-    return json.dumps({
-        "total_monitors": monitor_plan.total_count,
-        "total_cost_twd": monitor_plan.total_cost_twd,
-        "by_category": {
-            cat: len(items) for cat, items in monitor_plan.by_category().items()
-        },
-    })
+    return json.dumps(
+        {
+            "total_monitors": monitor_plan.total_count,
+            "total_cost_twd": monitor_plan.total_cost_twd,
+            "by_category": {cat: len(items) for cat, items in monitor_plan.by_category().items()},
+        }
+    )
 
 
 # --------------------------------------------------------------------------
@@ -322,22 +365,26 @@ def auto_monitor() -> str:
 def get_current_building() -> str:
     """Get the current building state (plan + result summary)."""
     if _state["plan"] is None:
-        return json.dumps({"status": "no_building", "message": "No building has been generated yet."})
+        return json.dumps(
+            {"status": "no_building", "message": "No building has been generated yet."}
+        )
 
     plan = _state["plan"]
     result = _state["result"]
 
-    return json.dumps({
-        "status": "ok",
-        "building_name": plan.get("name", ""),
-        "stories": len(plan.get("stories", [])),
-        "bcr": plan.get("building_bcr", 0),
-        "far": plan.get("building_far", 0),
-        "has_ifc": bool(result and result.get("ifc_path")),
-        "has_usd": bool(result and result.get("usd_path")),
-        "land": _state["land"],
-        "zoning": _state["zoning"],
-    })
+    return json.dumps(
+        {
+            "status": "ok",
+            "building_name": plan.get("name", ""),
+            "stories": len(plan.get("stories", [])),
+            "bcr": plan.get("building_bcr", 0),
+            "far": plan.get("building_far", 0),
+            "has_ifc": bool(result and result.get("ifc_path")),
+            "has_usd": bool(result and result.get("usd_path")),
+            "land": _state["land"],
+            "zoning": _state["zoning"],
+        }
+    )
 
 
 @mcp.resource("building://land")
@@ -368,6 +415,7 @@ def _shoelace_area(coords: list[tuple[float, float]]) -> float:
 # --------------------------------------------------------------------------
 # Entry point
 # --------------------------------------------------------------------------
+
 
 def main():
     """Run the MCP server via stdio transport."""

@@ -9,15 +9,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread, Signal, Qt
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
+    QProgressBar,
     QPushButton,
     QTextEdit,
     QVBoxLayout,
     QWidget,
-    QProgressBar,
 )
 
 if TYPE_CHECKING:
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from promptbim.schemas.zoning import ZoningRules
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.chat_panel")
 
 
@@ -51,7 +52,6 @@ class _PipelineWorker(QThread):
         self._orch = orchestrator
 
     def run(self) -> None:
-        from promptbim.agents.orchestrator import PipelineStatus
 
         result = self._orch.generate(self._prompt, self._land, self._zoning)
 
@@ -99,7 +99,7 @@ class ChatPanel(QWidget):
         self._worker: _PipelineWorker | None = None
         self._modify_worker: _ModifyWorker | None = None
 
-        from promptbim.agents.orchestrator import Orchestrator, PipelineStatus
+        from promptbim.agents.orchestrator import Orchestrator
 
         self._orchestrator = Orchestrator(
             on_status=lambda s: self._on_status(s.message, s.progress)
@@ -158,9 +158,7 @@ class ChatPanel(QWidget):
         self._current_plan: BuildingPlan | None = None
         self._current_result: GenerationResult | None = None
 
-    def set_context(
-        self, land: "LandParcel", zoning: "ZoningRules | None" = None
-    ) -> None:
+    def set_context(self, land: "LandParcel", zoning: "ZoningRules | None" = None) -> None:
         """Set the land parcel and zoning rules for generation."""
         self._land = land
         self._zoning = zoning
@@ -177,6 +175,7 @@ class ChatPanel(QWidget):
         if self._land is None:
             # Create a default land parcel for prompt-only generation
             from promptbim.schemas.land import LandParcel
+
             logger.debug("No land loaded — creating default parcel for prompt-only generation")
             self._land = LandParcel(
                 name="Auto-generated",
@@ -185,9 +184,8 @@ class ChatPanel(QWidget):
             )
             self._append_system("No land loaded — using default 30m\u00d730m (900 m\u00b2) parcel.")
 
-        busy = (
-            (self._worker is not None and self._worker.isRunning())
-            or (self._modify_worker is not None and self._modify_worker.isRunning())
+        busy = (self._worker is not None and self._worker.isRunning()) or (
+            self._modify_worker is not None and self._modify_worker.isRunning()
         )
         if busy:
             self._append_system("Already in progress...")
@@ -236,7 +234,11 @@ class ChatPanel(QWidget):
         self._modify_worker.start()
 
     def _on_modify_finished(self, plan, record) -> None:
-        logger.debug("Modify complete: plan=%s, success=%s", plan is not None, record.success if record else False)
+        logger.debug(
+            "Modify complete: plan=%s, success=%s",
+            plan is not None,
+            record.success if record else False,
+        )
         self._gen_btn.setEnabled(True)
         self._progress.setVisible(False)
         self._modify_worker = None

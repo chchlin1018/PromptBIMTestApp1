@@ -3,7 +3,7 @@
 import pytest
 
 from promptbim.schemas.land import LandParcel
-from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef, RoofPlan
+from promptbim.schemas.plan import BuildingPlan, RoofPlan, StoryPlan, WallDef
 from promptbim.viz.site_plan import SitePlanView
 
 

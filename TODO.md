@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v1.5.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.0.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -37,8 +37,9 @@
 | P11 | Xcode ↔ PySide6 GUI 整合 + E2E | 1 | ✅ | P0~P10.3 |
 | P12 | 品質修復 + 效能優化 + Demo 準備 | 1 | ✅ | P0~P11 |
 | P13 | CLI 完整化 + 依賴修復 + PDF OCR | 1 | ✅ | P4, P9, P12 |
+| P14 | CI/CD + 安全強化 + 文件最終化 | 1 | ✅ | P0~P13 |
 
-**預估總開發時間: ~44 天**
+**預估總開發時間: ~45 天**
 
 ---
 
@@ -396,6 +397,32 @@
 - ✅ T10: 705 passed, BUILD SUCCEEDED, docs updated, git tag v1.5.0
 
 **驗收標準:** generate CLI 可用; 版本一致 1.5.0; PDF OCR 解析器; 共用 fixtures; 705+ tests passed
+
+---
+
+## P14: CI/CD + 安全強化 + 文件最終化 (~1 天)
+
+### Part A: GitHub Actions CI/CD
+- ✅ T1: `.github/workflows/ci.yml` — lint + test + coverage + xcodebuild + security audit
+- ✅ T2: Ruff lint + format — pyproject.toml 完整設定, 274 issues auto-fixed, 215 files formatted
+- ✅ T3: Coverage report — pyproject.toml coverage config, CI --cov-fail-under=70
+
+### Part B: 安全強化
+- ✅ T4: pip-audit + `requirements-frozen.txt` + `.github/dependabot.yml`
+- ✅ T5: API Key 安全 — config.py validate_api_key(), .env 權限檢查, PythonBridge 權限警告, CLI 安全提示
+
+### Part C: 文件最終化
+- ✅ T6: README.md v2.0 — 完整功能列表, CLI 使用, 架構圖, 開發指南
+- ✅ T7: SKILL.md v3.1 — P11-P14 功能, CLI 範例, PDF OCR 流程, CI/CD 流程
+- ✅ T8: `docs/API.md` — Orchestrator, Agents, Parsers, BIM generators, MCP Server
+
+### Part D: 最終 Polish
+- ✅ T9: `py.typed` + `__all__` exports
+- ✅ T10: 全量文件同步 — CHANGELOG/TODO/README/Context Prompt/pyproject.toml/__init__.py → v2.0.0
+- ✅ T11: Xcode pbxproj 完整性檢查
+- ✅ T12: pytest + xcodebuild + git tag v2.0.0 + iMessage
+
+**驗收標準:** CI workflow; ruff clean; pip-audit; coverage >70%; README v2.0; SKILL.md updated; API docs; git tag v2.0.0
 
 ---
 

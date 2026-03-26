@@ -48,9 +48,7 @@ class BaseAgent:
 
             api_key = self._settings.anthropic_api_key
             if not api_key:
-                raise RuntimeError(
-                    "ANTHROPIC_API_KEY not set. Add it to .env or environment."
-                )
+                raise RuntimeError("ANTHROPIC_API_KEY not set. Add it to .env or environment.")
             self._client = anthropic.Anthropic(api_key=api_key)
         return self._client
 
@@ -73,7 +71,9 @@ class BaseAgent:
             }
             logger.debug(
                 "API response: %.2fs, input_tokens=%d, output_tokens=%d",
-                elapsed, usage["input_tokens"], usage["output_tokens"],
+                elapsed,
+                usage["input_tokens"],
+                usage["output_tokens"],
             )
             resp = self._parse_response(text, usage)
             logger.debug("JSON parse: %s", "OK" if resp.json_data else "no JSON")

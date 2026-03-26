@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from shapely.geometry import shape, Polygon
+from shapely.geometry import Polygon, shape
 
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
@@ -23,7 +23,9 @@ def parse_shapefile(file_path: str | Path) -> list[LandParcel]:
     with fiona.open(file_path) as src:
         crs = src.crs.get("init", "EPSG:4326") if src.crs else "EPSG:4326"
         field_names = [f for f in src.schema.get("properties", {}).keys()]
-        logger.debug("Fields: %s, geometry_type=%s, CRS=%s", field_names, src.schema.get("geometry"), crs)
+        logger.debug(
+            "Fields: %s, geometry_type=%s, CRS=%s", field_names, src.schema.get("geometry"), crs
+        )
 
         for i, feature in enumerate(src):
             geom = shape(feature["geometry"])

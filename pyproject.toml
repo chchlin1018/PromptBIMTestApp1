@@ -1,6 +1,6 @@
 [project]
 name = "promptbim"
-version = "1.5.0"
+version = "2.0.0"
 description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -42,7 +42,7 @@ pdf = ["pdfplumber>=0.10", "PyMuPDF>=1.23"]
 voice = ["faster-whisper>=1.0", "sounddevice>=0.4"]
 mcp = ["mcp>=1.0"]
 web = ["streamlit>=1.30"]
-dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0"]
+dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0", "pip-audit>=2.7"]
 
 [project.scripts]
 promptbim = "promptbim.__main__:app"
@@ -54,6 +54,74 @@ build-backend = "hatchling.build"
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "E402",   # module import not at top (used for conditional imports)
+    "B008",   # do not perform function calls in argument defaults
+    "SIM108", # use ternary operator
+    "N806",   # variable in function should be lowercase
+    "N802",   # function name should be lowercase
+    "N803",   # argument name should be lowercase
+    "N815",   # mixedCase variable in class scope
+    "N816",   # mixedCase variable in global scope
+    "UP007",  # use X | Y for union types (requires 3.10+)
+    "UP036",  # outdated version block
+    "UP037",  # quoted annotation (keep for readability)
+    "UP042",  # replace StrEnum (keep for compatibility)
+    "TC001",  # move into type-checking block (too invasive for POC)
+    "TC003",  # typing-only standard library import
+    "TC005",  # empty type-checking block
+    "F821",   # undefined name (false positives with conditional imports)
+    "F841",   # unused variable (some used for debug logging)
+    "B007",   # unused loop control variable
+    "B904",   # raise without from inside except
+    "B905",   # zip without explicit strict
+    "SIM102", # collapsible if
+    "SIM103", # needless bool
+    "SIM105", # suppressible exception
+    "SIM113", # enumerate for loop
+    "SIM118", # in dict keys
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["promptbim"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.coverage.run]
+source = ["src/promptbim"]
+omit = [
+    "src/promptbim/gui/*",
+    "src/promptbim/web/*",
+    "src/promptbim/voice/*",
+    "src/promptbim/mcp/*",
+    "src/promptbim/viz/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ ==",
+    "if TYPE_CHECKING:",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

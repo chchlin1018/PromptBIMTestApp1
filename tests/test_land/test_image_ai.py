@@ -3,14 +3,10 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from promptbim.land.parsers.image_ai import (
-    AIRecognitionResult,
     build_parcel_from_ai_data,
     parse_image_ai,
 )
-from promptbim.schemas.land import LandParcel
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "land_images"
 
@@ -92,10 +88,11 @@ class TestParseImageAI:
     @patch("promptbim.agents.land_reader.LandReaderAgent")
     def test_successful_recognition(self, MockAgent, mock_prepare, tmp_path):
         """Full flow with mocked API."""
-        from promptbim.agents.base import AgentResponse
-
         # Create a real image file
         from PIL import Image
+
+        from promptbim.agents.base import AgentResponse
+
         img = Image.new("RGB", (100, 100), color=(200, 200, 200))
         img_path = tmp_path / "test_land.jpg"
         img.save(img_path)
@@ -119,8 +116,9 @@ class TestParseImageAI:
     @patch("promptbim.land.parsers.image_ai.prepare_for_vision_api")
     @patch("promptbim.agents.land_reader.LandReaderAgent")
     def test_api_failure(self, MockAgent, mock_prepare, tmp_path):
-        from promptbim.agents.base import AgentResponse
         from PIL import Image
+
+        from promptbim.agents.base import AgentResponse
 
         img = Image.new("RGB", (100, 100))
         img_path = tmp_path / "test.jpg"
@@ -138,8 +136,9 @@ class TestParseImageAI:
     @patch("promptbim.land.parsers.image_ai.prepare_for_vision_api")
     @patch("promptbim.agents.land_reader.LandReaderAgent")
     def test_no_boundary_in_response(self, MockAgent, mock_prepare, tmp_path):
-        from promptbim.agents.base import AgentResponse
         from PIL import Image
+
+        from promptbim.agents.base import AgentResponse
 
         img = Image.new("RGB", (100, 100))
         img_path = tmp_path / "test.jpg"
@@ -160,8 +159,9 @@ class TestLandReaderAgent:
     """Test the LandReaderAgent (mocked API)."""
 
     def test_analyse_image_mock(self):
-        from promptbim.agents.land_reader import LandReaderAgent
         import json
+
+        from promptbim.agents.land_reader import LandReaderAgent
 
         agent = LandReaderAgent()
 

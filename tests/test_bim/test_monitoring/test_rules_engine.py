@@ -1,13 +1,10 @@
 """Tests for bim/monitoring/rules_engine.py — placement density rules."""
 
-import pytest
-
+from promptbim.bim.monitoring.monitor_types import MONITOR_TYPES
 from promptbim.bim.monitoring.rules_engine import (
     PLACEMENT_RULES,
-    PlacementRule,
     RulesEngine,
 )
-from promptbim.bim.monitoring.monitor_types import MONITOR_TYPES
 
 
 class TestPlacementRules:

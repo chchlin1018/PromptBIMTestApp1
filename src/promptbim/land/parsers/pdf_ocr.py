@@ -19,8 +19,17 @@ logger = get_logger("land.pdf_ocr")
 
 # Keywords that indicate a cadastral document (Chinese + English)
 CADASTRAL_KEYWORDS = [
-    "地號", "面積", "坐標", "座標", "地籍", "土地",
-    "cadastral", "parcel", "lot", "boundary", "area",
+    "地號",
+    "面積",
+    "坐標",
+    "座標",
+    "地籍",
+    "土地",
+    "cadastral",
+    "parcel",
+    "lot",
+    "boundary",
+    "area",
 ]
 
 
@@ -100,10 +109,7 @@ class PDFLandParser:
                     tables = page.extract_tables() or []
                     for table in tables:
                         # Clean None cells
-                        cleaned = [
-                            [str(cell) if cell else "" for cell in row]
-                            for row in table
-                        ]
+                        cleaned = [[str(cell) if cell else "" for cell in row] for row in table]
                         all_tables.append(cleaned)
                     logger.debug("Page %d: %d tables", page.page_number, len(tables))
         except Exception as e:
@@ -267,6 +273,7 @@ class PDFLandParser:
             area = metadata.get("area_sqm")
             if area and area > 0:
                 import math
+
                 side = math.sqrt(area)
                 coords = [(0, 0), (side, 0), (side, side), (0, side)]
                 logger.info("No boundary found; approximating as %.1fm square", side)
@@ -287,9 +294,8 @@ class PDFLandParser:
             area_sqm=area,
             source_file=str(pdf_path),
             source_type="pdf",
-            ai_annotations={
-                k: v for k, v in metadata.items() if k not in ("boundary", "area_sqm")
-            } or None,
+            ai_annotations={k: v for k, v in metadata.items() if k not in ("boundary", "area_sqm")}
+            or None,
         )
         return [parcel]
 

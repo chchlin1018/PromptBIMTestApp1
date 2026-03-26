@@ -3,16 +3,14 @@
 import pytest
 
 from promptbim.bim.templates import (
-    BUILDING_TEMPLATES,
-    generate_from_template,
-    generate_school_plan,
-    generate_hospital_plan,
     generate_factory_plan,
-    list_templates,
+    generate_from_template,
+    generate_hospital_plan,
+    generate_school_plan,
     get_template_info,
+    list_templates,
 )
 from promptbim.schemas.plan import BuildingPlan
-
 
 # Standard test land parcel (40m x 30m rectangle)
 LAND_BOUNDARY = [(0, 0), (40, 0), (40, 30), (0, 30)]

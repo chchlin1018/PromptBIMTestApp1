@@ -1,37 +1,38 @@
 """Tests for bim/monitoring/usd_monitor.py — USD monitoring output."""
 
-import pytest
-from pxr import Usd, UsdGeom, Sdf
+from pxr import Usd, UsdGeom
 
-from promptbim.bim.monitoring.auto_placement import MonitorPlan, MonitorPlacement
+from promptbim.bim.monitoring.auto_placement import MonitorPlacement, MonitorPlan
 from promptbim.bim.monitoring.usd_monitor import USDMonitorGenerator
 
 
 def _make_test_monitor_plan() -> MonitorPlan:
-    return MonitorPlan(placements=[
-        MonitorPlacement(
-            monitor_type_id="temp_sensor",
-            name="TempSensor_1F_Office_0",
-            floor="1F",
-            space_name="Office",
-            position=(5.0, 5.0, 2.7),
-            ifc_class="IfcSensor",
-            predefined_type="TEMPERATURESENSOR",
-            category="environmental",
-            unit_cost_twd=3500,
-        ),
-        MonitorPlacement(
-            monitor_type_id="cctv_camera",
-            name="CCTV_1F_Lobby_0",
-            floor="1F",
-            space_name="Lobby",
-            position=(2.0, 3.0, 2.7),
-            ifc_class="IfcSensor",
-            predefined_type="VIDEOCAMERA",
-            category="security",
-            unit_cost_twd=12000,
-        ),
-    ])
+    return MonitorPlan(
+        placements=[
+            MonitorPlacement(
+                monitor_type_id="temp_sensor",
+                name="TempSensor_1F_Office_0",
+                floor="1F",
+                space_name="Office",
+                position=(5.0, 5.0, 2.7),
+                ifc_class="IfcSensor",
+                predefined_type="TEMPERATURESENSOR",
+                category="environmental",
+                unit_cost_twd=3500,
+            ),
+            MonitorPlacement(
+                monitor_type_id="cctv_camera",
+                name="CCTV_1F_Lobby_0",
+                floor="1F",
+                space_name="Lobby",
+                position=(2.0, 3.0, 2.7),
+                ifc_class="IfcSensor",
+                predefined_type="VIDEOCAMERA",
+                category="security",
+                unit_cost_twd=12000,
+            ),
+        ]
+    )
 
 
 class TestUSDMonitorGenerator:

@@ -1,6 +1,5 @@
 """Tests for bim/simulation/animator.py."""
 
-import pytest
 import pyvista as pv
 
 from promptbim.bim.simulation.animator import ConstructionAnimator
@@ -58,8 +57,12 @@ class TestConstructionAnimator:
         animator = ConstructionAnimator(meshes, schedule, mesh_colors=colors)
         frame = animator.get_frame_meshes(schedule.total_days)
         # Check that custom colours are used for completed meshes
-        color_map = {label: color for mesh, color, opacity in frame
-                     for label, m in meshes.items() if m is mesh}
+        color_map = {
+            label: color
+            for mesh, color, opacity in frame
+            for label, m in meshes.items()
+            if m is mesh
+        }
         # The animator should use the provided colours
 
     def test_render_frame_offscreen(self):

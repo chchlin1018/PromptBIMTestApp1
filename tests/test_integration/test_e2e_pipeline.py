@@ -11,10 +11,9 @@ from pathlib import Path
 
 import pytest
 
+from promptbim.bim.templates import generate_from_template, list_templates
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
-from promptbim.bim.templates import generate_from_template, list_templates
-
 
 # --- Test land parcel (50m x 40m) ---
 TEST_LAND = LandParcel(
@@ -35,9 +34,7 @@ class TestE2EPipeline:
     @pytest.mark.parametrize("template_key", list_templates())
     def test_template_to_ifc(self, template_key: str, tmp_path: Path):
         """Generate from template -> produce IFC file."""
-        plan = generate_from_template(
-            template_key, TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template(template_key, TEST_LAND.boundary, TEST_BUILDABLE)
         assert isinstance(plan, BuildingPlan)
         assert len(plan.stories) > 0
 
@@ -61,9 +58,7 @@ class TestE2EPipeline:
     @pytest.mark.parametrize("template_key", list_templates())
     def test_template_to_usd(self, template_key: str, tmp_path: Path):
         """Generate from template -> produce USD file."""
-        plan = generate_from_template(
-            template_key, TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template(template_key, TEST_LAND.boundary, TEST_BUILDABLE)
 
         from promptbim.bim.usd_generator import USDGenerator
 
@@ -81,9 +76,7 @@ class TestE2EPipeline:
 
     def test_template_to_usdz(self, tmp_path: Path):
         """Generate from template -> USD -> USDZ."""
-        plan = generate_from_template(
-            "school", TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template("school", TEST_LAND.boundary, TEST_BUILDABLE)
 
         from promptbim.bim.usd_generator import USDGenerator
         from promptbim.bim.usdz_packer import pack_usdz
@@ -98,9 +91,7 @@ class TestE2EPipeline:
 
     def test_template_to_builder_agent(self, tmp_path: Path):
         """Test via BuilderAgent (the full Agent 3 path)."""
-        plan = generate_from_template(
-            "hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=3
-        )
+        plan = generate_from_template("hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=3)
 
         from promptbim.agents.builder import BuilderAgent
 
@@ -117,9 +108,7 @@ class TestE2EPipeline:
         """Template -> Compliance check with Taiwan building code."""
         from promptbim.schemas.zoning import ZoningRules
 
-        plan = generate_from_template(
-            "school", TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template("school", TEST_LAND.boundary, TEST_BUILDABLE)
 
         from promptbim.codes.registry import run_all_checks
 
@@ -132,9 +121,7 @@ class TestE2EPipeline:
 
     def test_template_to_cost_estimate(self):
         """Template -> Cost estimation."""
-        plan = generate_from_template(
-            "factory", TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template("factory", TEST_LAND.boundary, TEST_BUILDABLE)
 
         from promptbim.bim.cost.estimator import CostEstimator
 
@@ -145,9 +132,7 @@ class TestE2EPipeline:
 
     def test_template_to_mep(self, tmp_path: Path):
         """Template -> MEP auto-routing."""
-        plan = generate_from_template(
-            "hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=2
-        )
+        plan = generate_from_template("hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=2)
 
         from promptbim.bim.mep.planner import MEPPlanner
 
@@ -159,19 +144,18 @@ class TestE2EPipeline:
 
     def test_template_to_simulation(self, tmp_path: Path):
         """Template -> Construction schedule."""
-        plan = generate_from_template(
-            "school", TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template("school", TEST_LAND.boundary, TEST_BUILDABLE)
 
         from promptbim.bim.ifc_generator import IFCGenerator
 
         ifc_path = tmp_path / "school.ifc"
         IFCGenerator().generate(plan, ifc_path)
 
-        from promptbim.bim.simulation.scheduler import generate_schedule
-
         # Extract component labels from IFC
         import ifcopenshell
+
+        from promptbim.bim.simulation.scheduler import generate_schedule
+
         model = ifcopenshell.open(str(ifc_path))
         labels = [e.is_a() for e in model.by_type("IfcProduct")]
 
@@ -181,9 +165,7 @@ class TestE2EPipeline:
 
     def test_template_to_monitoring(self):
         """Template -> Auto monitoring placement."""
-        plan = generate_from_template(
-            "hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=2
-        )
+        plan = generate_from_template("hospital", TEST_LAND.boundary, TEST_BUILDABLE, num_stories=2)
 
         from promptbim.bim.monitoring.auto_placement import AutoMonitorPlacer
 
@@ -194,9 +176,7 @@ class TestE2EPipeline:
 
     def test_template_json_roundtrip(self):
         """BuildingPlan JSON serialization roundtrip."""
-        plan = generate_from_template(
-            "school", TEST_LAND.boundary, TEST_BUILDABLE
-        )
+        plan = generate_from_template("school", TEST_LAND.boundary, TEST_BUILDABLE)
 
         # Serialize
         json_str = plan.model_dump_json()

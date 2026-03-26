@@ -1,9 +1,6 @@
 """Tests for boundary confirmation logic."""
 
-import pytest
-
 from promptbim.land.boundary_confirm import (
-    BoundaryCandidate,
     BoundaryConfirmation,
     adjust_vertex,
     validate_boundary,
@@ -116,9 +113,9 @@ class TestValidateBoundary:
 
     def test_valid_pentagon(self):
         import math
+
         boundary = [
-            (5 * math.cos(2 * math.pi * i / 5), 5 * math.sin(2 * math.pi * i / 5))
-            for i in range(5)
+            (5 * math.cos(2 * math.pi * i / 5), 5 * math.sin(2 * math.pi * i / 5)) for i in range(5)
         ]
         issues = validate_boundary(boundary)
         assert len(issues) == 0

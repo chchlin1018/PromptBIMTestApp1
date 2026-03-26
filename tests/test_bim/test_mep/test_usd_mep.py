@@ -1,6 +1,5 @@
 """Tests for bim/mep/usd_mep.py — MEP USD generation."""
 
-import pytest
 from pxr import Usd, UsdGeom
 
 from promptbim.bim.mep.pathfinder import RoutePath
@@ -15,18 +14,14 @@ def _make_simple_mep_plan() -> MEPPlan:
                 system="plumbing",
                 route_type="branch",
                 diameter_mm=65,
-                path=RoutePath.from_waypoints(
-                    [(1, 1, 2.5), (5, 1, 2.5)], grid_size=0.3
-                ),
+                path=RoutePath.from_waypoints([(1, 1, 2.5), (5, 1, 2.5)], grid_size=0.3),
                 floor="F1",
             ),
             MEPRoute(
                 system="hvac",
                 route_type="branch",
                 diameter_mm=400,
-                path=RoutePath.from_waypoints(
-                    [(1, 1, 2.9), (5, 1, 2.9)], grid_size=0.3
-                ),
+                path=RoutePath.from_waypoints([(1, 1, 2.9), (5, 1, 2.9)], grid_size=0.3),
                 floor="F1",
             ),
         ],

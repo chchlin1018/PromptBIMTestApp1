@@ -10,7 +10,7 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -51,10 +51,10 @@ def _make_plan(stories: int = 3, land_size: float = 30.0):
     """Create a minimal BuildingPlan for testing."""
     from promptbim.schemas.plan import (
         BuildingPlan,
+        RoofPlan,
+        SpaceDef,
         StoryPlan,
         WallDef,
-        SpaceDef,
-        RoofPlan,
     )
 
     footprint = [(2, 2), (20, 2), (20, 20), (2, 20)]
@@ -104,14 +104,16 @@ def _mock_enhancer_response():
     from promptbim.agents.base import AgentResponse
 
     return AgentResponse(
-        text=json.dumps({
-            "building_type": "residential",
-            "num_stories": 3,
-            "total_area_sqm": 600.0,
-            "features": ["swimming pool"],
-            "constraints": [],
-            "enhanced_description": "A modern 3-story residential villa.",
-        }),
+        text=json.dumps(
+            {
+                "building_type": "residential",
+                "num_stories": 3,
+                "total_area_sqm": 600.0,
+                "features": ["swimming pool"],
+                "constraints": [],
+                "enhanced_description": "A modern 3-story residential villa.",
+            }
+        ),
         json_data={
             "building_type": "residential",
             "num_stories": 3,
@@ -140,11 +142,13 @@ def _mock_modifier_response():
     from promptbim.agents.base import AgentResponse
 
     return AgentResponse(
-        text=json.dumps({
-            "modification_type": "stories",
-            "parameters": {"num_stories": 9},
-            "confidence": 0.95,
-        }),
+        text=json.dumps(
+            {
+                "modification_type": "stories",
+                "parameters": {"num_stories": 9},
+                "confidence": 0.95,
+            }
+        ),
         json_data={
             "modification_type": "stories",
             "parameters": {"num_stories": 9},
@@ -193,6 +197,7 @@ class TestE2ENoLand:
             patch.object(orch._checker, "check") as mock_check,
         ):
             from promptbim.agents.checker import CheckResult
+
             mock_check.return_value = CheckResult()  # no violations
 
             result = orch.generate("在200坪地上蓋3層別墅", land, zoning)
@@ -222,6 +227,7 @@ class TestE2EWithLand:
             pytest.skip("No sample GeoJSON fixture")
 
         from promptbim.land.parsers.geojson import parse_geojson
+
         parcels = parse_geojson(sample)
         assert len(parcels) > 0
         assert parcels[0].area_sqm > 0
@@ -244,6 +250,7 @@ class TestE2EWithLand:
             patch.object(orch._checker, "check") as mock_check,
         ):
             from promptbim.agents.checker import CheckResult
+
             mock_check.return_value = CheckResult()
 
             result = orch.generate("3-story villa with pool", land, zoning)
@@ -345,6 +352,7 @@ class TestE2EModifyUndo:
             patch.object(orch._checker, "check") as mock_check,
         ):
             from promptbim.agents.checker import CheckResult
+
             mock_check.return_value = CheckResult()
             result = orch.generate("3-story villa", land, zoning)
 
@@ -373,9 +381,7 @@ class TestE2EModifyUndo:
             plan_snapshot_json=json.loads(plan.model_dump_json()),
         )
 
-        with patch.object(
-            orch._modifier, "modify", return_value=(plan_9, mock_record)
-        ):
+        with patch.object(orch._modifier, "modify", return_value=(plan_9, mock_record)):
             new_plan, record = orch.modify("改為9層", zoning)
 
         assert new_plan is not None
@@ -383,9 +389,7 @@ class TestE2EModifyUndo:
         assert len(new_plan.stories) == 9
 
         # Undo
-        with patch.object(
-            orch._modifier, "undo", return_value=(plan, mock_record)
-        ):
+        with patch.object(orch._modifier, "undo", return_value=(plan, mock_record)):
             restored, undo_record = orch.undo()
 
         assert restored is not None
@@ -464,6 +468,7 @@ class TestE2EExport:
         # Verify readability
         try:
             import ifcopenshell
+
             model = ifcopenshell.open(str(ifc_path))
             assert model is not None
         except ImportError:
@@ -483,6 +488,7 @@ class TestE2EExport:
         # Verify readability
         try:
             from pxr import Usd
+
             stage = Usd.Stage.Open(str(usd_path))
             assert stage is not None
         except ImportError:
@@ -579,6 +585,7 @@ class TestGUIImports:
         """MainWindow class is importable."""
         try:
             from promptbim.gui.main_window import MainWindow
+
             assert MainWindow is not None
         except ImportError:
             pytest.skip("PySide6 not available")
@@ -586,11 +593,12 @@ class TestGUIImports:
     def test_import_land_dialog(self):
         """ImportLandDialog and its helpers are importable."""
         from promptbim.gui.dialogs.import_land import (
-            SUPPORTED_EXTENSIONS,
+            ALL_EXTENSIONS,
             IMAGE_EXTENSIONS,
             PDF_EXTENSIONS,
-            ALL_EXTENSIONS,
+            SUPPORTED_EXTENSIONS,
         )
+
         assert ".geojson" in SUPPORTED_EXTENSIONS
         assert ".jpg" in IMAGE_EXTENSIONS
         assert ".pdf" in PDF_EXTENSIONS

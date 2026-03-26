@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from promptbim.schemas.result import GenerationResult
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.export_dialog")
 
 
@@ -67,14 +68,16 @@ class _ExportWorker(QThread):
         try:
             self._output_dir.mkdir(parents=True, exist_ok=True)
             exported: list[str] = []
-            total_steps = sum([
-                self._export_ifc,
-                self._export_usd,
-                self._export_usdz,
-                self._export_svg,
-                self._export_json,
-                self._export_report,
-            ])
+            total_steps = sum(
+                [
+                    self._export_ifc,
+                    self._export_usd,
+                    self._export_usdz,
+                    self._export_svg,
+                    self._export_json,
+                    self._export_report,
+                ]
+            )
             step = 0
 
             # 1. IFC
@@ -252,8 +255,7 @@ class ExportDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Info
-        info = QLabel(f"Building: <b>{self._plan.name}</b> | "
-                      f"Stories: {len(self._plan.stories)}")
+        info = QLabel(f"Building: <b>{self._plan.name}</b> | Stories: {len(self._plan.stories)}")
         layout.addWidget(info)
 
         # Format checkboxes
@@ -273,7 +275,14 @@ class ExportDialog(QDialog):
         self._chk_report.setChecked(bool(self._result and self._result.compliance_report))
         self._chk_report.setEnabled(bool(self._result and self._result.compliance_report))
 
-        for chk in [self._chk_ifc, self._chk_usd, self._chk_usdz, self._chk_svg, self._chk_json, self._chk_report]:
+        for chk in [
+            self._chk_ifc,
+            self._chk_usd,
+            self._chk_usdz,
+            self._chk_svg,
+            self._chk_json,
+            self._chk_report,
+        ]:
             fmt_layout.addWidget(chk)
         layout.addWidget(fmt_group)
 

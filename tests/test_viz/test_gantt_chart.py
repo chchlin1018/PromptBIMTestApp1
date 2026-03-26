@@ -1,14 +1,17 @@
 """Tests for viz/gantt_chart.py — Gantt chart visualization."""
 
-import pytest
-
 from promptbim.bim.simulation.scheduler import generate_schedule
 
 
 def _sample_schedule():
     labels = [
-        "ground_slab", "1F_wall_0", "1F_wall_1",
-        "1F_slab", "2F_wall_0", "2F_slab", "roof",
+        "ground_slab",
+        "1F_wall_0",
+        "1F_wall_1",
+        "1F_slab",
+        "2F_wall_0",
+        "2F_slab",
+        "roof",
     ]
     return generate_schedule(labels, total_days=360, num_stories=2)
 
@@ -16,6 +19,7 @@ def _sample_schedule():
 class TestGanttChartImport:
     def test_import(self):
         from promptbim.viz.gantt_chart import GanttChart
+
         assert GanttChart is not None
 
     def test_schedule_for_chart(self):

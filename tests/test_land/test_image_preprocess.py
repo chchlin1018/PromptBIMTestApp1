@@ -1,14 +1,10 @@
 """Tests for image preprocessing module."""
 
-import io
-import tempfile
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from promptbim.land.parsers.image_preprocess import (
-    SUPPORTED_IMAGE_EXTENSIONS,
     image_to_base64,
     is_supported_image,
     load_image,
@@ -113,6 +109,7 @@ class TestImageToBase64:
         assert len(b64) > 0
         # Verify it's valid base64
         import base64
+
         decoded = base64.standard_b64decode(b64)
         assert len(decoded) > 0
 

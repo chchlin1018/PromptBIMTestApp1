@@ -1,9 +1,6 @@
 """Tests for NVIDIA Omniverse connector."""
 
-import tempfile
 from pathlib import Path
-
-import pytest
 
 from promptbim.bim.omniverse import OmniverseConfig, OmniverseConnector, OmniverseResult
 

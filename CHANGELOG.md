@@ -6,6 +6,49 @@
 
 ---
 
+## [2.0.0] - 2026-03-26
+
+### Added (Sprint P14: CI/CD + Security + Documentation v2.0)
+
+#### CI/CD
+- `.github/workflows/ci.yml` — GitHub Actions CI pipeline
+  - macOS 14 runner with conda + Python 3.11
+  - Ruff lint, pytest with coverage (>70%), xcodebuild
+  - Security audit job with pip-audit
+- `.github/dependabot.yml` — Automated dependency updates (pip + GitHub Actions)
+- `requirements-frozen.txt` — Frozen dependency versions for reproducible builds
+
+#### Security
+- `config.py` — `validate_api_key()` function checks `sk-ant-` prefix format
+- `config.py` — `.env` file permission check (warns if group/other readable)
+- `PythonBridge.swift` — `loadDotEnv()` POSIX permission check with warning
+- CLI epilog shows API key security best practices
+
+#### Documentation
+- `README.md` — Complete v2.0 rewrite: CLI usage, architecture diagram, full feature list, dev guide
+- `docs/API.md` — Full API documentation: Orchestrator, Agents, Parsers, BIM generators, MCP Server
+- `SKILL.md` — Updated to v3.1: P11-P14 features, CLI examples, PDF OCR flow, CI/CD flow
+
+#### Code Quality
+- `pyproject.toml` — Full ruff lint config (select + ignore rules), coverage config
+- Ruff auto-fix: 274 issues fixed (unused imports, import sorting, format)
+- `ruff format` applied to all 215 Python files
+- `src/promptbim/py.typed` — PEP 561 type stub marker
+- `src/promptbim/__init__.py` — Added `__all__` exports
+- `pip-audit` added to dev dependencies
+
+### Changed
+- `pyproject.toml` — Version bumped to 2.0.0
+- `__init__.py` — Fallback version updated to 2.0.0
+
+### Stats
+- Tests: 705+ passed
+- xcodebuild: BUILD SUCCEEDED
+- ruff check: All checks passed
+- git tag: v2.0.0
+
+---
+
 ## [1.5.0] - 2026-03-26
 
 ### Fixed (Sprint P13: CLI + Dependencies + PDF OCR)
@@ -636,3 +679,4 @@
 | 1.3.0 | P11 完成 | Xcode ↔ PySide6 整合 |
 | 1.4.0 | P12 完成 | 品質修復 + 效能優化 + Demo |
 | 1.5.0 | P13 完成 | CLI + 依賴修復 + PDF OCR |
+| 2.0.0 | P14 完成 | CI/CD + 安全 + 文件 v2.0 |

@@ -1,12 +1,9 @@
 """Tests for AI check module — mock API success/failure/timeout."""
 
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
-
-from promptbim.startup.ai_check import check_api_key, ping_claude, check_model_available
-from promptbim.startup.health_check import CheckResult
+from promptbim.startup.ai_check import check_api_key, check_model_available, ping_claude
 
 
 class TestCheckApiKey:
@@ -59,8 +56,9 @@ class TestPingClaude:
         with patch("promptbim.startup.ai_check.anthropic", create=True) as mock_mod:
             mock_mod.Anthropic.return_value = mock_client
             # Need to patch the import inside the function
-            import promptbim.startup.ai_check as ai_mod
-            original_import = __builtins__.__import__ if hasattr(__builtins__, '__import__') else __import__
+            original_import = (
+                __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+            )
 
             settings = MagicMock()
             settings.ai_ping_timeout_seconds = 10.0

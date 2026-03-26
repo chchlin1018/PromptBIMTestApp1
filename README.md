@@ -1,32 +1,33 @@
 # PromptBIMTestApp1
 
-## AI 驅動的 BIM 建築模型自動生成器
+## AI-Powered BIM Building Generator
 
-> **用自然語言 + 土地資料，一鍵自動完成建築設計、BIM 模型、MEP 管線、法規檢查、施工模擬、成本估算、監控點配置**
+> **Describe a building in natural language + provide land data = automatic architecture design, BIM models, MEP routing, code compliance, construction simulation, cost estimation, and monitoring**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-675%20passed-green.svg)]()
-[![POC](https://img.shields.io/badge/Stage-POC%20v1.4.0-orange.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-705%20passed-green.svg)]()
+[![POC](https://img.shields.io/badge/Stage-POC%20v2.0.0-orange.svg)]()
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)]()
 
 ---
 
-## 產品定位
+## What Is This?
 
-PromptBIMTestApp1 是一個**概念驗證 (POC)** 專案。
+PromptBIMTestApp1 is a **Proof of Concept (POC)** macOS desktop application that generates complete BIM (Building Information Modeling) models from natural language prompts.
 
-**使用者只需要做兩件事：**
-1. 輸入土地資料（面積/GeoJSON/或任意圖片）
-2. 輸入一句 AI Prompt
+**Users only need to do two things:**
+1. Provide land data (area / GeoJSON / image / PDF cadastral document)
+2. Type a natural language prompt describing the building
 
-**系統自動完成所有後續工作。**
+**The system handles everything else automatically.**
 
 ---
 
-## 快速開始
+## Quick Start
 
-### 安裝
+### 1. Install
 
 ```bash
 git clone https://github.com/chchlin1018/PromptBIMTestApp1.git
@@ -34,135 +35,243 @@ cd PromptBIMTestApp1
 conda create -n promptbim python=3.11 -y
 conda activate promptbim
 conda install -c conda-forge ifcopenshell -y
-pip install PySide6 pyvista pyvistaqt anthropic pydantic python-dotenv usd-core geopandas shapely fiona pyproj ezdxf numpy trimesh matplotlib Pillow
+pip install -e ".[dev]"
 ```
 
-### 設定 Claude AI API Key
+### 2. Configure API Key
 
 ```bash
 cp .env.example .env
+chmod 600 .env
 nano .env
-# 填入: ANTHROPIC_API_KEY=sk-ant-api03-你的Key
+# Set: ANTHROPIC_API_KEY=sk-ant-api03-YOUR_KEY_HERE
 ```
 
-取得 Key → [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+Get your key at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
 
-### 啟動 App
+### 3. Run
 
 ```bash
-conda activate promptbim
-python -m promptbim gui              # GUI 模式
-python -m promptbim gui --debug      # Debug 模式（詳細 log）
-python -m promptbim check            # 環境健康檢查
-python -m promptbim check --ai       # 只檢查 Claude AI 連線
+# CLI (fastest way to try)
+python -m promptbim generate "3-story villa with pool" -o ./output
+
+# Desktop GUI
+python -m promptbim gui
+
+# Health check
+python -m promptbim check
+
+# Xcode (recommended for macOS development)
+open PromptBIMTestApp1.xcodeproj  # Cmd+R to launch
 ```
 
-### Xcode 開啟 (推薦)
+### Optional: Web UI & MCP Server
 
 ```bash
-open PromptBIMTestApp1.xcodeproj     # Scheme: PromptBIMTestApp1, Destination: My Mac
-# Cmd+R → 自動啟動 PySide6 完整功能 GUI
-# SwiftUI 窗口顯示啟動狀態 + Python 環境檢查
-```
-
-### 其他啟動方式
-
-```bash
+pip install -e ".[web]"
 streamlit run src/promptbim/web/app.py    # Web UI
+
+pip install -e ".[mcp]"
 python -m promptbim.mcp.server            # MCP Server (Claude Desktop)
 ```
 
-詳細安裝步驟見 **[SETUP.md](SETUP.md)**
+See **[SETUP.md](SETUP.md)** for detailed installation instructions.
 
 ---
 
-## Prompt 範例
+## CLI Usage
 
-| Prompt | 系統自動處理 |
-|--------|------------|
-| `帶游泳池的3層別墅` | 含泳池的住宅平面、RC結構、泳池循環水系統 |
-| `12層住宅大樓` | 每層4戶標準戶型、2部電梯+緊急梯、完整消防 |
-| `100MW 數據中心` | 伺服器大廳冷熱通道、UPS+柴油發電機、氣體滅火 |
-| `「請修改 12 樓層改為 9 個樓層」` | 面積-25%, 成本-25%, 工期-120天, 全部關聯數據即時更新 |
+```bash
+# Generate building from prompt
+python -m promptbim generate "12-story residential tower" -o ./output
+python -m promptbim generate "school" --template school --land site.geojson
+python -m promptbim generate "hospital" --city Kaohsiung --format ifc
 
----
+# System health check
+python -m promptbim check              # All checks
+python -m promptbim check --ai         # AI connection only
+python -m promptbim check --fix        # Auto-fix issues
+python -m promptbim check --json       # JSON output
 
-## 核心功能
+# GUI
+python -m promptbim gui
+python -m promptbim gui --debug        # With debug logging
 
-| 功能 | 說明 |
-|------|------|
-| 🗺️ **土地匯入** | GeoJSON / Shapefile / DXF / KML / 手動 / **AI 圖像辨識** |
-| 🧠 **AI 建築生成** | Claude Multi-Agent：Enhancer → Planner → Builder → Checker |
-| 📐 **雙格式 BIM** | IFC（IfcOpenShell）+ OpenUSD（pxr）+ USDZ |
-| 🔄 **即時互動修改** | 自然語言修改指令 → 增量更新所有關聯數據 |
-| 📏 **台灣法規** | 建蔽率/容積率/高度/耐震/防火/無障礙 15+ 條 |
-| 🔧 **MEP 自動路由** | 給排水🟦 / 電力🟥 / 空調🟢 / 消防🟡 3D A* |
-| 🏗️ **施工模擬 (4D)** | 16 階段動畫 + 甘特圖 + GIF |
-| 💰 **成本估算 (5D)** | 自動 QTO + 台灣市場單價 |
-| 📡 **智慧監控點** | 48 種 M&C 點自動配置 + IDTF 對接 |
-| 📦 **USDZ** | Apple Vision Pro / Quick Look |
-| 🔌 **MCP Server** | Claude Desktop 整合 |
-| 🌐 **Web UI** | Streamlit 瀏覽器介面 |
+# Version
+python -m promptbim --version
+```
 
 ---
 
-## 開發進度
+## Example Prompts
 
-| Sprint | 狀態 | 測試 | 說明 |
-|--------|:----:|------:|------|
-| P0 骨架 | ✅ | 29 | Xcode + Python skeleton |
-| P1 土地匯入 | ✅ | 48 | GeoJSON/SHP/DXF parsers |
-| P2 IFC+USD | ✅ | 82 | 雙格式 BIM 生成 |
-| P2.5 零件庫 | ✅ | 108 | 76 種零件 + 供應商 |
-| P3 3D 預覽 | ✅ | 127 | PyVista + 樓層切換 |
-| P4 AI Agent | ✅ | 164 | 4 Agent Pipeline |
-| P4.5 法規 | ✅ | 211 | 15+ 條台灣法規 |
-| P4.8 修改 | ✅ | 235 | 即時修改引擎 |
-| P5 語音+匯出 | ✅ | 265 | STT + 一鍵匯出 |
-| P6 成本 5D | ✅ | 293 | QTO + 台灣單價 |
-| P7 MEP | ✅ | 338 | A* 路由 + 碰撞偵測 |
-| P8 施工 4D | ✅ | 388 | 16階段動畫 + GIF |
-| P8.5 監控點 | ✅ | 440 | 48 種 + IDTF |
-| P9 AI圖像+Backlog | ✅ | 516 | Vision + USDZ + MCP + Web |
-| P10.2 Debug Log | 🔄 | — | 全模組 Debug Logging |
-| P10.3 啟動檢查 | 🔄 | — | 環境 + Claude AI 驗證 |
+| Prompt | System Auto-Generates |
+|--------|----------------------|
+| `3-story villa with pool` | Residential plan, RC structure, pool plumbing |
+| `12-story residential tower` | 4 units/floor, 2 elevators + fire stairs, full MEP |
+| `100MW data center` | Hot/cold aisle, UPS + diesel gen, gas fire suppression |
+| `School for 500 students` | Classrooms, corridors, offices, library (template) |
+| `Change to 9 floors` | Instant update: area -25%, cost -25%, schedule -120d |
 
 ---
 
-## 技術栈（100% 開源）
+## Features (20 Sprints of Development)
 
-| 層次 | 技術 |
-|------|------|
+| Feature | Description |
+|---------|-------------|
+| **Land Import** | GeoJSON / Shapefile / DXF / KML / PDF OCR / Manual / AI Image Recognition |
+| **AI Building Generation** | Claude Multi-Agent: Enhancer -> Planner -> Builder -> Checker |
+| **Dual BIM Output** | IFC (IfcOpenShell) + OpenUSD (pxr) + USDZ |
+| **Interactive Modification** | Natural language edits -> incremental update of all linked data |
+| **Taiwan Building Code** | BCR/FAR/height/seismic/fire/accessibility (15+ rules) |
+| **MEP Auto-Routing** | Plumbing / Electrical / HVAC / Fire Protection (3D A*) |
+| **Construction Sim (4D)** | 16-phase animation + Gantt chart + GIF export |
+| **Cost Estimation (5D)** | Auto QTO + Taiwan market unit prices |
+| **Smart Monitoring** | 48 M&C sensor types, auto-placement + IDTF |
+| **USDZ Export** | Apple Vision Pro / Quick Look ready |
+| **MCP Server** | Claude Desktop integration (7 tools + 2 resources) |
+| **Web UI** | Streamlit browser interface |
+| **CLI** | `generate` / `check` / `gui` commands |
+| **Health Check** | 12-point system check + AI validation + auto-fix |
+| **Debug Logging** | Full-module debug logging with `--debug` flag |
+| **CI/CD** | GitHub Actions: lint + test + build + security audit |
+
+---
+
+## Architecture
+
+```
+Xcode SwiftUI App
+  |-- PythonBridge.swift (Process())
+       |-- python -m promptbim gui
+            |-- PySide6 MainWindow
+                 |-- ChatPanel -> Orchestrator
+                 |    |-- EnhancerAgent  -> Claude API
+                 |    |-- PlannerAgent   -> Claude API / Fallback
+                 |    |-- BuilderAgent   -> IFC + USD (pure Python, no LLM)
+                 |    +-- CheckerAgent   -> Taiwan Code Engine
+                 |-- ModelView     -> PyVista 3D
+                 |-- MapView       -> Matplotlib 2D
+                 |-- CostPanel     -> QTO + Estimator
+                 |-- MEPToggle     -> A* Pathfinder
+                 |-- SimulationTab -> 4D Scheduler
+                 +-- MonitorToggle -> Auto-placement
+```
+
+### Python Modules (14+ submodules)
+
+| Module | Description |
+|--------|-------------|
+| `agents/` | 7 AI Agents (enhancer/planner/builder/checker/modifier/orchestrator/land_reader) |
+| `bim/` | Geometry, IFC/USD generators, materials, components (76 types), cost, MEP, monitoring, simulation |
+| `codes/` | Taiwan building code engine (15+ rules across 4 categories) |
+| `gui/` | PySide6 desktop GUI with startup health check |
+| `land/` | Land parsers (GeoJSON/SHP/DXF/KML/PDF OCR/Manual/AI Image) |
+| `startup/` | Health check (12 items) + AI check + auto-fix |
+| `mcp/` | FastMCP Server for Claude Desktop |
+| `web/` | Streamlit web interface |
+| `voice/` | Speech-to-text (faster-whisper) |
+| `viz/` | 3D/2D visualization (PyVista, matplotlib) |
+
+---
+
+## Development Progress
+
+| Sprint | Status | Tests | Description |
+|--------|:------:|------:|-------------|
+| P0 | Done | 29 | Project skeleton + Xcode + environment |
+| P1 | Done | 48 | Land import + 2D view |
+| P2 | Done | 82 | IFC + USD generation core |
+| P2.5 | Done | 108 | Building component library (76 types) |
+| P3 | Done | 127 | 3D interactive preview |
+| P4 | Done | 164 | AI Agent Pipeline |
+| P4.5 | Done | 211 | Taiwan building code engine |
+| P4.8 | Done | 235 | Interactive modification engine |
+| P5 | Done | 265 | Voice + export |
+| P6 | Done | 293 | Cost estimation (5D) |
+| P7 | Done | 338 | MEP auto-routing |
+| P8 | Done | 388 | Construction simulation (4D) |
+| P8.5 | Done | 440 | Smart monitoring points |
+| P9 | Done | 516 | AI image recognition + USDZ + MCP + Web |
+| P10 | Done | 591 | Polish + remaining backlog |
+| P10.2 | Done | 603 | Debug logging system |
+| P10.3 | Done | 645 | Startup health check + AI validation |
+| P11 | Done | 668 | Xcode <-> PySide6 GUI integration + E2E |
+| P12 | Done | 675 | Quality fixes + performance optimization |
+| P13 | Done | 705 | CLI + dependency fixes + PDF OCR |
+| P14 | Done | 705+ | CI/CD + security + documentation v2.0 |
+
+---
+
+## Tech Stack (100% Open Source)
+
+| Layer | Technology |
+|-------|-----------|
 | Desktop GUI | PySide6 |
-| 3D | PyVista + pyvistaqt |
-| AI | Anthropic Claude API |
+| 3D Visualization | PyVista + pyvistaqt |
+| AI | Anthropic Claude API (Multi-Agent) |
 | BIM | IfcOpenShell + usd-core (pxr) |
 | GIS | geopandas + shapely + pyproj |
-| MEP | 自建 3D A* Pathfinder |
-| 法規 | 自建 Python Rule Engine |
+| MEP | Custom 3D A* Pathfinder |
+| Building Code | Custom Python Rule Engine |
 | Web | Streamlit |
 | MCP | FastMCP |
+| CI/CD | GitHub Actions |
+| Lint | Ruff |
 
 ---
 
-## 文件結構
+## Development
 
-| 文件 | 說明 |
-|------|------|
-| [SETUP.md](SETUP.md) | 安裝測試指南（含 API Key 設定、Xcode 開啟） |
-| [SKILL.md](SKILL.md) | Claude Code 知識庫 (SSOT) |
-| [TODO.md](TODO.md) | Sprint 進度追蹤 |
-| [CHANGELOG.md](CHANGELOG.md) | 版本變更記錄 |
-| [CLAUDE.md](CLAUDE.md) | Claude Code 行為規範 |
-| [docs/reviews/](docs/reviews/) | Code Review 報告 |
-| [docs/reports/](docs/reports/) | 完成報告 |
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest                                    # All tests
+pytest -m "not api and not slow" -q       # Fast tests only
+pytest --cov=src/promptbim --cov-report=term-missing  # With coverage
+
+# Lint
+ruff check src/ tests/
+ruff format src/ tests/
+
+# Security audit
+pip-audit -r requirements-frozen.txt
+
+# Xcode build
+xcodebuild -project PromptBIMTestApp1.xcodeproj \
+  -scheme PromptBIMTestApp1 -destination 'platform=macOS' build
+```
 
 ---
 
-## 授權
+## Documentation
 
-MIT License — 詳見 [LICENSE](LICENSE)
+| File | Description |
+|------|-------------|
+| [SETUP.md](SETUP.md) | Installation & testing guide |
+| [docs/API.md](docs/API.md) | API documentation |
+| [SKILL.md](SKILL.md) | Project knowledge base (SSOT) |
+| [TODO.md](TODO.md) | Sprint progress tracking |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [CLAUDE.md](CLAUDE.md) | Claude Code behavior rules |
+| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Demo video script |
+| [docs/reports/](docs/reports/) | Quality reports |
 
 ---
 
-*Reality Matrix Inc. / Michael Lin (林志鍾) — 2026*
+## License
+
+MIT License -- see [LICENSE](LICENSE)
+
+---
+
+## Credits
+
+- **Developer:** Michael Lin / Reality Matrix Inc.
+- **AI:** Anthropic Claude (Multi-Agent Pipeline)
+- **BIM:** IfcOpenShell + OpenUSD
+- **Built with:** Claude Code (AI-assisted development across 20 sprints)
+
+*Reality Matrix Inc. / Michael Lin -- 2026*

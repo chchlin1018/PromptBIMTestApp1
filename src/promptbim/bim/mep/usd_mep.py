@@ -8,10 +8,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import numpy as np
-from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, Vt
+from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
 
-from promptbim.bim.mep.planner import MEPPlan, MEPRoute
+from promptbim.bim.mep.planner import MEPPlan
 from promptbim.bim.mep.systems import SYSTEM_COLORS
 
 
@@ -87,7 +86,7 @@ class USDMEPGenerator:
         dx = end[0] - start[0]
         dy = end[1] - start[1]
         dz = end[2] - start[2]
-        length = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+        length = math.sqrt(dx**2 + dy**2 + dz**2)
         if length < 1e-6:
             return
 
@@ -140,9 +139,7 @@ class USDMEPGenerator:
         shader_path = f"{mat_path}/PBRShader"
         shader = UsdShade.Shader.Define(self._stage, shader_path)
         shader.CreateIdAttr("UsdPreviewSurface")
-        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
-            Gf.Vec3f(*color)
-        )
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*color))
         shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.6)
         shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.3)
 

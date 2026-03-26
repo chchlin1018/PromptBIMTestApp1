@@ -75,7 +75,9 @@ def adjust_vertex(
 
     old = boundary[vertex_index]
     boundary[vertex_index] = (new_x, new_y)
-    logger.debug("Adjusted vertex %d: (%.4f,%.4f) -> (%.4f,%.4f)", vertex_index, old[0], old[1], new_x, new_y)
+    logger.debug(
+        "Adjusted vertex %d: (%.4f,%.4f) -> (%.4f,%.4f)", vertex_index, old[0], old[1], new_x, new_y
+    )
 
     area = _shoelace_area(boundary)
     perimeter = _polygon_perimeter(boundary)
@@ -145,8 +147,9 @@ def _has_self_intersection(coords: list[tuple[float, float]]) -> bool:
         d3 = cross(p1, p2, p3)
         d4 = cross(p1, p2, p4)
 
-        if ((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0)) and \
-           ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0)):
+        if ((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0)) and (
+            (d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0)
+        ):
             return True
         return False
 

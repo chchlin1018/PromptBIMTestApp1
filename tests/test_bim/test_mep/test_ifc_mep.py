@@ -1,14 +1,10 @@
 """Tests for bim/mep/ifc_mep.py — MEP IFC generation."""
 
-import tempfile
-from pathlib import Path
-
-import pytest
 import ifcopenshell
 
 from promptbim.bim.mep.ifc_mep import IFCMEPGenerator
 from promptbim.bim.mep.pathfinder import RoutePath
-from promptbim.bim.mep.planner import MEPEquipment, MEPPlan, MEPRoute, MEPTerminal
+from promptbim.bim.mep.planner import MEPPlan, MEPRoute
 
 
 def _make_simple_mep_plan() -> MEPPlan:
@@ -27,18 +23,14 @@ def _make_simple_mep_plan() -> MEPPlan:
                 system="hvac",
                 route_type="branch",
                 diameter_mm=400,
-                path=RoutePath.from_waypoints(
-                    [(1, 1, 2.9), (5, 1, 2.9)], grid_size=0.3
-                ),
+                path=RoutePath.from_waypoints([(1, 1, 2.9), (5, 1, 2.9)], grid_size=0.3),
                 floor="1F",
             ),
             MEPRoute(
                 system="electrical",
                 route_type="branch",
                 diameter_mm=100,
-                path=RoutePath.from_waypoints(
-                    [(1, 1, 2.6), (3, 1, 2.6)], grid_size=0.3
-                ),
+                path=RoutePath.from_waypoints([(1, 1, 2.6), (3, 1, 2.6)], grid_size=0.3),
                 floor="1F",
             ),
             MEPRoute(

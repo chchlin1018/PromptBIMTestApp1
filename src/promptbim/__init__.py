@@ -5,6 +5,11 @@ try:
 
     __version__ = version("promptbim")
 except Exception:
-    __version__ = "1.5.0"
+    __version__ = "2.0.0"
 
 __author__ = "Michael Lin (Reality Matrix Inc.)"
+
+__all__ = [
+    "__version__",
+    "__author__",
+]

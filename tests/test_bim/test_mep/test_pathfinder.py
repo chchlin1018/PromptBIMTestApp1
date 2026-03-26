@@ -1,7 +1,5 @@
 """Tests for bim/mep/pathfinder.py — 3D orthogonal A* pathfinding."""
 
-import pytest
-
 from promptbim.bim.mep.pathfinder import MEPPathfinder, RoutePath, _simplify_path
 
 

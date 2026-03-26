@@ -11,9 +11,8 @@ from pathlib import Path
 
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
 
-from promptbim.bim.monitoring.auto_placement import MonitorPlan, MonitorPlacement
+from promptbim.bim.monitoring.auto_placement import MonitorPlacement, MonitorPlan
 from promptbim.bim.monitoring.monitor_types import MONITOR_TYPES
-
 
 _CATEGORY_COLORS: dict[str, tuple[float, float, float]] = {
     "environmental": (0.2, 0.6, 1.0),
@@ -85,6 +84,7 @@ class USDMonitorGenerator:
     def _sanitize(name: str) -> str:
         """Make a string safe for use as a USD prim name."""
         import re
+
         s = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         if s and s[0].isdigit():
             s = "F" + s
@@ -114,15 +114,9 @@ class USDMonitorGenerator:
         prim.CreateAttribute("monitor:type_id", Sdf.ValueTypeNames.String).Set(
             placement.monitor_type_id
         )
-        prim.CreateAttribute("monitor:category", Sdf.ValueTypeNames.String).Set(
-            placement.category
-        )
-        prim.CreateAttribute("monitor:floor", Sdf.ValueTypeNames.String).Set(
-            placement.floor
-        )
-        prim.CreateAttribute("monitor:space", Sdf.ValueTypeNames.String).Set(
-            placement.space_name
-        )
+        prim.CreateAttribute("monitor:category", Sdf.ValueTypeNames.String).Set(placement.category)
+        prim.CreateAttribute("monitor:floor", Sdf.ValueTypeNames.String).Set(placement.floor)
+        prim.CreateAttribute("monitor:space", Sdf.ValueTypeNames.String).Set(placement.space_name)
         prim.CreateAttribute("monitor:ifc_class", Sdf.ValueTypeNames.String).Set(
             placement.ifc_class
         )
@@ -158,9 +152,7 @@ class USDMonitorGenerator:
         shader_path = f"{mat_path}/PBRShader"
         shader = UsdShade.Shader.Define(self._stage, shader_path)
         shader.CreateIdAttr("UsdPreviewSurface")
-        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
-            Gf.Vec3f(*color)
-        )
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*color))
         shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
         shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.1)
         shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(0.85)

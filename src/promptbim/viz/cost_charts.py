@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("viz.cost_charts")
 
 from typing import TYPE_CHECKING
@@ -48,7 +49,11 @@ class CostPieChart(FigureCanvas):
         labels = [b.label for b in estimate.breakdown]
         sizes = [b.cost_twd for b in estimate.breakdown]
         colours = _COLOURS[: len(labels)]
-        logger.debug("PieChart update: %d categories, total=NT$%.1fM", len(labels), estimate.total_cost_twd / 1_000_000)
+        logger.debug(
+            "PieChart update: %d categories, total=NT$%.1fM",
+            len(labels),
+            estimate.total_cost_twd / 1_000_000,
+        )
 
         wedges, texts, autotexts = self._ax.pie(
             sizes,
@@ -92,7 +97,11 @@ class CostBarChart(FigureCanvas):
         labels = [b.label for b in reversed(estimate.breakdown)]
         values = [b.cost_twd / 1_000_000 for b in reversed(estimate.breakdown)]
         colours = list(reversed(_COLOURS[: len(labels)]))
-        logger.debug("BarChart update: %d categories, total=NT$%.1fM", len(labels), estimate.total_cost_twd / 1_000_000)
+        logger.debug(
+            "BarChart update: %d categories, total=NT$%.1fM",
+            len(labels),
+            estimate.total_cost_twd / 1_000_000,
+        )
 
         bars = self._ax.barh(labels, values, color=colours, height=0.6)
         self._ax.set_xlabel("Cost (NT$ Million)")

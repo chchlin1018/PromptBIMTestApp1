@@ -1,8 +1,5 @@
 """Tests for bim/ifc_generator.py — IFC file generation."""
 
-import tempfile
-from pathlib import Path
-
 import ifcopenshell
 import pytest
 
@@ -10,7 +7,6 @@ from promptbim.bim.ifc_generator import IFCGenerator
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
-    SpaceDef,
     StoryPlan,
     WallDef,
 )
@@ -125,7 +121,9 @@ def test_ifc_concave_slab(tmp_path):
     """L-shaped concave boundary should produce valid IFC slab."""
     footprint = [(0, 0), (16, 0), (16, 6), (10, 6), (10, 10), (0, 10)]
     story = StoryPlan(
-        name="1F", elevation_m=0.0, height_m=3.0,
+        name="1F",
+        elevation_m=0.0,
+        height_m=3.0,
         slab_boundary=footprint,
     )
     plan = BuildingPlan(name="L-Shape", building_footprint=footprint, stories=[story])

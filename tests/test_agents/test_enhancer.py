@@ -1,10 +1,11 @@
 """Tests for agents/enhancer.py — EnhancerAgent (mocked API)."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from promptbim.agents.enhancer import EnhancerAgent
+import pytest
+
 from promptbim.agents.base import AgentResponse
+from promptbim.agents.enhancer import EnhancerAgent
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.zoning import ZoningRules
 

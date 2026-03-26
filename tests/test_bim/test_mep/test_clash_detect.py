@@ -1,14 +1,11 @@
 """Tests for bim/mep/clash_detect.py — Basic collision detection."""
 
-import pytest
-
 from promptbim.bim.mep.clash_detect import (
-    ClashSummary,
-    detect_clashes,
     _bbox_overlap,
     _segment_bbox,
+    detect_clashes,
 )
-from promptbim.bim.mep.pathfinder import PathSegment, RoutePath
+from promptbim.bim.mep.pathfinder import RoutePath
 from promptbim.bim.mep.planner import MEPPlan, MEPRoute
 
 
@@ -25,27 +22,36 @@ def _make_route(system: str, start: tuple, end: tuple, diameter: float = 50) -> 
 
 class TestClashDetect:
     def test_no_clashes_when_far_apart(self):
-        plan = MEPPlan(routes=[
-            _make_route("plumbing", (0, 0, 0), (5, 0, 0)),
-            _make_route("electrical", (0, 10, 0), (5, 10, 0)),
-        ])
+        plan = MEPPlan(
+            routes=[
+                _make_route("plumbing", (0, 0, 0), (5, 0, 0)),
+                _make_route("electrical", (0, 10, 0), (5, 10, 0)),
+            ]
+        )
         result = detect_clashes(plan)
         assert result.total_clashes == 0
 
     def test_clashes_when_overlapping(self):
-        plan = MEPPlan(routes=[
-            _make_route("plumbing", (0, 0, 0), (5, 0, 0), diameter=100),
-            _make_route("electrical", (2, 0, 0), (7, 0, 0), diameter=100),
-        ])
+        plan = MEPPlan(
+            routes=[
+                _make_route("plumbing", (0, 0, 0), (5, 0, 0), diameter=100),
+                _make_route("electrical", (2, 0, 0), (7, 0, 0), diameter=100),
+            ]
+        )
         result = detect_clashes(plan, tolerance_m=0.1)
         assert result.total_clashes > 0
-        assert "electrical_plumbing" in result.by_system_pair or "plumbing_electrical" in result.by_system_pair
+        assert (
+            "electrical_plumbing" in result.by_system_pair
+            or "plumbing_electrical" in result.by_system_pair
+        )
 
     def test_same_system_not_counted(self):
-        plan = MEPPlan(routes=[
-            _make_route("plumbing", (0, 0, 0), (5, 0, 0), diameter=100),
-            _make_route("plumbing", (2, 0, 0), (7, 0, 0), diameter=100),
-        ])
+        plan = MEPPlan(
+            routes=[
+                _make_route("plumbing", (0, 0, 0), (5, 0, 0), diameter=100),
+                _make_route("plumbing", (2, 0, 0), (7, 0, 0), diameter=100),
+            ]
+        )
         result = detect_clashes(plan)
         assert result.total_clashes == 0
 

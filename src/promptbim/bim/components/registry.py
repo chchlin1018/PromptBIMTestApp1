@@ -27,7 +27,9 @@ class ComponentRegistry:
         return cls._components.get(component_id)
 
     @classmethod
-    def search(cls, keywords: list[str], category: ComponentCategory | None = None) -> list[ComponentDef]:
+    def search(
+        cls, keywords: list[str], category: ComponentCategory | None = None
+    ) -> list[ComponentDef]:
         """Search components by keywords (matches ai_keywords + names)."""
         results = []
         for comp in cls._components.values():
@@ -36,7 +38,13 @@ class ComponentRegistry:
             searchable = " ".join(comp.ai_keywords + [comp.name_zh, comp.name_en, comp.id]).lower()
             if any(kw.lower() in searchable for kw in keywords):
                 results.append(comp)
-        logger.debug("search(%s, category=%s) -> %d results: %s", keywords, category, len(results), [r.id for r in results])
+        logger.debug(
+            "search(%s, category=%s) -> %d results: %s",
+            keywords,
+            category,
+            len(results),
+            [r.id for r in results],
+        )
         return results
 
     @classmethod

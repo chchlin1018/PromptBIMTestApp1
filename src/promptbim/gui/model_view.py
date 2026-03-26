@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.model_view")
 
 import pyvista as pv
@@ -25,6 +26,7 @@ def _try_create_plotter(parent: QWidget):
     """Try to create pyvistaqt BackgroundPlotter; return None on failure."""
     try:
         from pyvistaqt import QtInteractor
+
         plotter = QtInteractor(parent)
         return plotter
     except Exception:
@@ -64,6 +66,7 @@ class ModelView(QWidget):
     def set_plan(self, plan: BuildingPlan):
         """Load a BuildingPlan and display the 3D model."""
         import time as _time
+
         t0 = _time.perf_counter()
         self._plan = plan
         self._all_meshes = build_model(plan)
@@ -71,7 +74,9 @@ class ModelView(QWidget):
         self._floor_names = list(self._floor_meshes.keys())
         logger.debug(
             "Mesh loaded: %d meshes, %d floors in %.3fs",
-            len(self._all_meshes), len(self._floor_names), _time.perf_counter() - t0,
+            len(self._all_meshes),
+            len(self._floor_names),
+            _time.perf_counter() - t0,
         )
 
         # Update combo
@@ -92,10 +97,13 @@ class ModelView(QWidget):
         if self._plotter is None:
             return
         import time as _time
+
         t0 = _time.perf_counter()
         self._plotter.clear()
         for pd, color, label in meshes:
-            self._plotter.add_mesh(pd, color=color, label=label, show_edges=True, edge_color="gray", opacity=0.95)
+            self._plotter.add_mesh(
+                pd, color=color, label=label, show_edges=True, edge_color="gray", opacity=0.95
+            )
         self._plotter.reset_camera()
         self._plotter.render()
         logger.debug("Render complete: %d meshes in %.3fs", len(meshes), _time.perf_counter() - t0)
@@ -130,7 +138,9 @@ class ModelView(QWidget):
             return
         self._plotter.clear()
         for pd, color, opacity in frame_meshes:
-            self._plotter.add_mesh(pd, color=color, opacity=opacity, show_edges=True, edge_color="gray")
+            self._plotter.add_mesh(
+                pd, color=color, opacity=opacity, show_edges=True, edge_color="gray"
+            )
         self._plotter.reset_camera()
         self._plotter.render()
 

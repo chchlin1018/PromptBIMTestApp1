@@ -3,10 +3,8 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import pytest
-
+from promptbim.gui.dialogs.export_dialog import _ExportWorker
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
@@ -15,12 +13,11 @@ from promptbim.schemas.plan import (
     WallDef,
 )
 from promptbim.schemas.result import GenerationResult
-from promptbim.gui.dialogs.export_dialog import _ExportWorker
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _sample_plan() -> BuildingPlan:
     footprint = [(0, 0), (10, 0), (10, 8), (0, 8)]
@@ -66,6 +63,7 @@ def _sample_result(plan: BuildingPlan) -> GenerationResult:
 # ---------------------------------------------------------------------------
 # _ExportWorker tests (non-GUI)
 # ---------------------------------------------------------------------------
+
 
 class TestExportWorkerSvg:
     def test_export_svg_only(self):

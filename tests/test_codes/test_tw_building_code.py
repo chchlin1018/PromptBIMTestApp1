@@ -1,7 +1,5 @@
 """Tests for Taiwan Building Code rules."""
 
-import pytest
-
 from promptbim.codes.base import Severity
 from promptbim.codes.tw_building_code import (
     BCRRule,
@@ -17,12 +15,12 @@ from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan, RoofPlan, SpaceDef, StoryPlan, WallDef
 from promptbim.schemas.zoning import ZoningRules
 
-
 # -- Fixtures ----------------------------------------------------------------
+
 
 def _land(area: float = 500.0) -> LandParcel:
     """Square land parcel of given area."""
-    side = area ** 0.5
+    side = area**0.5
     return LandParcel(
         boundary=[(0, 0), (side, 0), (side, side), (0, side)],
         area_sqm=area,
@@ -44,35 +42,40 @@ def _plan(
     fp = [(0, 0), (footprint_side, 0), (footprint_side, footprint_side), (0, footprint_side)]
     stories = []
     for i in range(num_stories):
-        stories.append(StoryPlan(
-            name=f"{i+1}F",
-            elevation_m=i * story_height,
-            height_m=story_height,
-            walls=[
-                WallDef(start=(0, 0), end=(footprint_side, 0)),
-                WallDef(start=(footprint_side, 0), end=(footprint_side, footprint_side)),
-                WallDef(start=(footprint_side, footprint_side), end=(0, footprint_side)),
-                WallDef(start=(0, footprint_side), end=(0, 0)),
-            ],
-            spaces=[SpaceDef(
-                name=f"Room {i+1}F",
-                boundary=fp,
-                space_type=space_type,
-                area_sqm=footprint_side ** 2,
-            )],
-            slab_boundary=fp,
-        ))
+        stories.append(
+            StoryPlan(
+                name=f"{i + 1}F",
+                elevation_m=i * story_height,
+                height_m=story_height,
+                walls=[
+                    WallDef(start=(0, 0), end=(footprint_side, 0)),
+                    WallDef(start=(footprint_side, 0), end=(footprint_side, footprint_side)),
+                    WallDef(start=(footprint_side, footprint_side), end=(0, footprint_side)),
+                    WallDef(start=(0, footprint_side), end=(0, 0)),
+                ],
+                spaces=[
+                    SpaceDef(
+                        name=f"Room {i + 1}F",
+                        boundary=fp,
+                        space_type=space_type,
+                        area_sqm=footprint_side**2,
+                    )
+                ],
+                slab_boundary=fp,
+            )
+        )
     return BuildingPlan(
         name="Test Building",
         building_footprint=fp,
-        building_bcr=footprint_side ** 2 / 500,
-        building_far=footprint_side ** 2 * num_stories / 500,
+        building_bcr=footprint_side**2 / 500,
+        building_far=footprint_side**2 * num_stories / 500,
         stories=stories,
         roof=RoofPlan(),
     )
 
 
 # -- BCR Tests ---------------------------------------------------------------
+
 
 class TestBCRRule:
     def test_pass(self):
@@ -93,6 +96,7 @@ class TestBCRRule:
 
 # -- FAR Tests ---------------------------------------------------------------
 
+
 class TestFARRule:
     def test_pass(self):
         plan = _plan(footprint_side=15.0, num_stories=3)  # 675/500 = 1.35
@@ -107,6 +111,7 @@ class TestFARRule:
 
 # -- Height Tests ------------------------------------------------------------
 
+
 class TestHeightLimitRule:
     def test_pass(self):
         plan = _plan(num_stories=3, story_height=3.0)  # 9m
@@ -120,6 +125,7 @@ class TestHeightLimitRule:
 
 
 # -- Stair Tests -------------------------------------------------------------
+
 
 class TestStairRule:
     def test_single_story(self):
@@ -136,6 +142,7 @@ class TestStairRule:
 
 # -- Corridor Tests ----------------------------------------------------------
 
+
 class TestCorridorRule:
     def test_no_corridors(self):
         plan = _plan()
@@ -144,6 +151,7 @@ class TestCorridorRule:
 
 
 # -- Ceiling Height Tests ---------------------------------------------------
+
 
 class TestCeilingHeightRule:
     def test_pass(self):
@@ -159,6 +167,7 @@ class TestCeilingHeightRule:
 
 # -- Elevator Tests ----------------------------------------------------------
 
+
 class TestElevatorRule:
     def test_low_rise(self):
         plan = _plan(num_stories=3)
@@ -172,6 +181,7 @@ class TestElevatorRule:
 
 
 # -- Parking Tests -----------------------------------------------------------
+
 
 class TestParkingRule:
     def test_small_building(self):

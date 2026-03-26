@@ -8,12 +8,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from promptbim.debug import get_logger
 from promptbim.bim.simulation.construction_phases import (
     STANDARD_PHASES,
     ConstructionPhase,
     classify_component,
 )
+from promptbim.debug import get_logger
 
 logger = get_logger("simulation.scheduler")
 
@@ -21,6 +21,7 @@ logger = get_logger("simulation.scheduler")
 @dataclass
 class ScheduledPhase:
     """A phase with assigned components and time span."""
+
     phase: ConstructionPhase
     components: list[str] = field(default_factory=list)
     start_day: int = 0
@@ -34,6 +35,7 @@ class ScheduledPhase:
 @dataclass
 class ConstructionSchedule:
     """Complete construction schedule with all phases."""
+
     total_days: int = 0
     phases: list[ScheduledPhase] = field(default_factory=list)
 
@@ -92,7 +94,14 @@ def generate_schedule(
         current_day += duration
 
     for sp in scheduled:
-        logger.debug("Phase %s: day %d-%d (%d days), %d components", sp.phase.phase_id, sp.start_day, sp.end_day, sp.duration_days, len(sp.components))
+        logger.debug(
+            "Phase %s: day %d-%d (%d days), %d components",
+            sp.phase.phase_id,
+            sp.start_day,
+            sp.end_day,
+            sp.duration_days,
+            len(sp.components),
+        )
     logger.debug("Schedule: %d phases, total %d days", len(scheduled), current_day)
 
     return ConstructionSchedule(

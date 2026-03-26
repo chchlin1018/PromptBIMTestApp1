@@ -28,6 +28,7 @@ class TestComputeSetback:
         assert len(buildable) >= 3
         # Buildable area should be smaller than original
         from shapely.geometry import Polygon
+
         original = Polygon(rectangular_parcel.boundary)
         result = Polygon(buildable)
         assert result.area < original.area
@@ -41,6 +42,7 @@ class TestComputeSetback:
         )
         buildable = compute_setback(rectangular_parcel, zoning)
         from shapely.geometry import Polygon
+
         result = Polygon(buildable)
         # 30x20 with 3m uniform setback => 24x14 = 336
         assert result.area == pytest.approx(336.0, abs=5.0)
@@ -66,6 +68,7 @@ class TestComputeSetbackPerSide:
         buildable = compute_setback_per_side(rectangular_parcel, default_zoning)
         assert len(buildable) >= 3
         from shapely.geometry import Polygon
+
         result = Polygon(buildable)
         assert result.area > 0
         assert result.area < 600.0

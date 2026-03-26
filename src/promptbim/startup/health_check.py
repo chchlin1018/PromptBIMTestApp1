@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 from promptbim.debug import get_logger
@@ -41,6 +41,7 @@ class HealthChecker:
     def __init__(self, settings=None):
         if settings is None:
             from promptbim.config import get_settings
+
             settings = get_settings()
         self._settings = settings
         self._results: list[CheckResult] = []
@@ -77,18 +78,29 @@ class HealthChecker:
         for i, check_fn in enumerate(checks, 1):
             result = check_fn()
             self._results.append(result)
-            status_icon = {"pass": "\u2705", "fail": "\u274c", "warn": "\u26a0\ufe0f", "skip": "\u23ed\ufe0f"}
+            status_icon = {
+                "pass": "\u2705",
+                "fail": "\u274c",
+                "warn": "\u26a0\ufe0f",
+                "skip": "\u23ed\ufe0f",
+            }
             logger.debug(
                 "[%d/%d] %s: %s %s (%.0fms)",
-                i, len(checks), result.name, result.message,
-                status_icon.get(result.status, "?"), result.elapsed_ms,
+                i,
+                len(checks),
+                result.name,
+                result.message,
+                status_icon.get(result.status, "?"),
+                result.elapsed_ms,
             )
 
         total_ms = (time.monotonic() - total_start) * 1000
         passed = sum(1 for r in self._results if r.status == "pass")
         logger.debug(
             "=== Health Check Complete: %d/%d PASS (%.1fs) ===",
-            passed, len(self._results), total_ms / 1000,
+            passed,
+            len(self._results),
+            total_ms / 1000,
         )
         return self._results
 
@@ -143,14 +155,19 @@ class HealthChecker:
         elapsed = (time.monotonic() - start) * 1000
         if vi >= (3, 11):
             return CheckResult(
-                name="Python version", category="Python environment",
-                status="pass", message=f"Python {version_str}",
+                name="Python version",
+                category="Python environment",
+                status="pass",
+                message=f"Python {version_str}",
                 elapsed_ms=elapsed,
             )
         return CheckResult(
-            name="Python version", category="Python environment",
-            status="fail", message=f"Python {version_str} (need >= 3.11)",
-            fix_hint="conda install python=3.11", elapsed_ms=elapsed,
+            name="Python version",
+            category="Python environment",
+            status="fail",
+            message=f"Python {version_str} (need >= 3.11)",
+            fix_hint="conda install python=3.11",
+            elapsed_ms=elapsed,
         )
 
     def _check_conda_env(self) -> CheckResult:
@@ -159,98 +176,129 @@ class HealthChecker:
         elapsed = (time.monotonic() - start) * 1000
         if conda_env == "promptbim":
             return CheckResult(
-                name="Conda env", category="Python environment",
-                status="pass", message="conda env: promptbim",
+                name="Conda env",
+                category="Python environment",
+                status="pass",
+                message="conda env: promptbim",
                 elapsed_ms=elapsed,
             )
         if conda_env:
             return CheckResult(
-                name="Conda env", category="Python environment",
-                status="warn", message=f"conda env: {conda_env} (expected: promptbim)",
-                fix_hint="conda activate promptbim", elapsed_ms=elapsed,
+                name="Conda env",
+                category="Python environment",
+                status="warn",
+                message=f"conda env: {conda_env} (expected: promptbim)",
+                fix_hint="conda activate promptbim",
+                elapsed_ms=elapsed,
             )
         return CheckResult(
-            name="Conda env", category="Python environment",
-            status="warn", message="No conda env active",
-            fix_hint="conda activate promptbim", elapsed_ms=elapsed,
+            name="Conda env",
+            category="Python environment",
+            status="warn",
+            message="No conda env active",
+            fix_hint="conda activate promptbim",
+            elapsed_ms=elapsed,
         )
 
     # ── Core dependency checks ──
 
-    def _check_import(self, import_fn, name: str, category: str = "Core dependencies",
-                      fix_hint: str | None = None) -> CheckResult:
+    def _check_import(
+        self, import_fn, name: str, category: str = "Core dependencies", fix_hint: str | None = None
+    ) -> CheckResult:
         """Helper to check an import and return a CheckResult."""
         start = time.monotonic()
         try:
             version_info = import_fn()
             elapsed = (time.monotonic() - start) * 1000
             return CheckResult(
-                name=name, category=category,
-                status="pass", message=version_info,
+                name=name,
+                category=category,
+                status="pass",
+                message=version_info,
                 elapsed_ms=elapsed,
             )
         except ImportError as e:
             elapsed = (time.monotonic() - start) * 1000
             return CheckResult(
-                name=name, category=category,
-                status="fail", message=f"Not installed",
-                detail=str(e), fix_hint=fix_hint,
+                name=name,
+                category=category,
+                status="fail",
+                message="Not installed",
+                detail=str(e),
+                fix_hint=fix_hint,
                 elapsed_ms=elapsed,
             )
         except Exception as e:
             elapsed = (time.monotonic() - start) * 1000
             return CheckResult(
-                name=name, category=category,
-                status="fail", message=f"Error: {e}",
-                detail=str(e), elapsed_ms=elapsed,
+                name=name,
+                category=category,
+                status="fail",
+                message=f"Error: {e}",
+                detail=str(e),
+                elapsed_ms=elapsed,
             )
 
     def _check_ifcopenshell(self) -> CheckResult:
         def _import():
             import ifcopenshell
+
             return f"ifcopenshell {ifcopenshell.version}"
+
         return self._check_import(
-            _import, "ifcopenshell",
+            _import,
+            "ifcopenshell",
             fix_hint="conda install -c conda-forge ifcopenshell",
         )
 
     def _check_pxr(self) -> CheckResult:
         def _import():
             from pxr import Usd
+
             stage = Usd.Stage.CreateInMemory()
             stage = None  # noqa: F841
             return "pxr (OpenUSD): OK"
+
         return self._check_import(
-            _import, "pxr (OpenUSD)",
+            _import,
+            "pxr (OpenUSD)",
             fix_hint="pip install usd-core",
         )
 
     def _check_pyside6(self) -> CheckResult:
         def _import():
-            from PySide6.QtWidgets import QApplication
             from PySide6 import __version__
+
             return f"PySide6 {__version__}"
+
         return self._check_import(
-            _import, "PySide6",
+            _import,
+            "PySide6",
             fix_hint="pip install PySide6",
         )
 
     def _check_anthropic(self) -> CheckResult:
         def _import():
             import anthropic
+
             return f"anthropic {anthropic.__version__}"
+
         return self._check_import(
-            _import, "anthropic SDK",
+            _import,
+            "anthropic SDK",
             fix_hint="pip install anthropic",
         )
 
     def _check_shapely_pyproj(self) -> CheckResult:
         def _import():
-            import shapely
             import pyproj
+            import shapely
+
             return f"shapely {shapely.__version__} + pyproj {pyproj.__version__}"
+
         return self._check_import(
-            _import, "shapely + pyproj",
+            _import,
+            "shapely + pyproj",
             fix_hint="pip install shapely pyproj",
         )
 
@@ -258,9 +306,12 @@ class HealthChecker:
         def _import():
             import pyvista
             import pyvistaqt  # noqa: F401
+
             return f"pyvista {pyvista.__version__} + pyvistaqt"
+
         return self._check_import(
-            _import, "pyvista + pyvistaqt",
+            _import,
+            "pyvista + pyvistaqt",
             fix_hint="pip install pyvista pyvistaqt",
         )
 
@@ -268,6 +319,7 @@ class HealthChecker:
 
     def _check_api_key(self) -> CheckResult:
         from promptbim.startup.ai_check import check_api_key
+
         return check_api_key(self._settings)
 
     def _check_claude_ping(self) -> CheckResult:
@@ -275,17 +327,22 @@ class HealthChecker:
         key_results = [r for r in self._results if r.name == "API Key"]
         if key_results and key_results[0].status == "fail":
             return CheckResult(
-                name="Claude API ping", category="AI services",
-                status="skip", message="Skipped (API key not available)",
+                name="Claude API ping",
+                category="AI services",
+                status="skip",
+                message="Skipped (API key not available)",
                 elapsed_ms=0.0,
             )
         if self._settings.startup_check_skip_ai:
             return CheckResult(
-                name="Claude API ping", category="AI services",
-                status="skip", message="Skipped (offline mode)",
+                name="Claude API ping",
+                category="AI services",
+                status="skip",
+                message="Skipped (offline mode)",
                 elapsed_ms=0.0,
             )
         from promptbim.startup.ai_check import ping_claude
+
         return ping_claude(self._settings)
 
     def _check_model_available(self) -> CheckResult:
@@ -293,11 +350,14 @@ class HealthChecker:
         ping_results = [r for r in self._results if r.name == "Claude API ping"]
         if ping_results and ping_results[0].status != "pass":
             return CheckResult(
-                name="Model available", category="AI services",
-                status="skip", message="Skipped (API not available)",
+                name="Model available",
+                category="AI services",
+                status="skip",
+                message="Skipped (API not available)",
                 elapsed_ms=0.0,
             )
         from promptbim.startup.ai_check import check_model_available
+
         return check_model_available(self._settings)
 
     # ── Filesystem checks ──
@@ -324,8 +384,10 @@ class HealthChecker:
 
         if not issues:
             return CheckResult(
-                name="Filesystem", category="Filesystem",
-                status="pass", message=".env exists, output/ writable",
+                name="Filesystem",
+                category="Filesystem",
+                status="pass",
+                message=".env exists, output/ writable",
                 elapsed_ms=elapsed,
             )
 
@@ -336,7 +398,8 @@ class HealthChecker:
             fix_hints.append("mkdir -p output && chmod 755 output")
 
         return CheckResult(
-            name="Filesystem", category="Filesystem",
+            name="Filesystem",
+            category="Filesystem",
             status="fail" if not output_ok else "warn",
             message="; ".join(issues),
             fix_hint=" | ".join(fix_hints),

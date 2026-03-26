@@ -8,13 +8,12 @@ faster-whisper is unavailable.  Audio is captured via ``sounddevice``
 from __future__ import annotations
 
 import io
-import struct
 import tempfile
 import threading
 import time
 import wave
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from promptbim.debug import get_logger
 
@@ -43,6 +42,7 @@ def _pcm_to_wav(frames: list[bytes], sample_rate: int = SAMPLE_RATE) -> bytes:
 # ---------------------------------------------------------------------------
 # Recorder: capture audio via sounddevice
 # ---------------------------------------------------------------------------
+
 
 class AudioRecorder:
     """Record audio from the default input device.
@@ -107,6 +107,7 @@ class AudioRecorder:
 # Transcriber: faster-whisper (local) → fallback to macOS native
 # ---------------------------------------------------------------------------
 
+
 class Transcriber:
     """Transcribe WAV audio to text.
 
@@ -127,9 +128,7 @@ class Transcriber:
 
             logger.debug("Loading faster-whisper model '%s'...", self._model_size)
             t0 = time.monotonic()
-            self._model = WhisperModel(
-                self._model_size, device="cpu", compute_type="int8"
-            )
+            self._model = WhisperModel(self._model_size, device="cpu", compute_type="int8")
             elapsed = time.monotonic() - t0
             self._backend = "faster-whisper"
             logger.info("Loaded faster-whisper model: %s (%.2fs)", self._model_size, elapsed)
@@ -171,8 +170,7 @@ class Transcriber:
             text = " ".join(seg.text.strip() for seg in seg_list)
             elapsed = time.monotonic() - t0
             avg_confidence = (
-                sum(seg.avg_log_prob for seg in seg_list) / len(seg_list)
-                if seg_list else 0.0
+                sum(seg.avg_log_prob for seg in seg_list) / len(seg_list) if seg_list else 0.0
             )
             logger.info(
                 "Transcribed (%s, %.1fs audio, %.2fs processing): %s",
@@ -204,6 +202,7 @@ class Transcriber:
 # ---------------------------------------------------------------------------
 # High-level convenience: record → transcribe in one call (threaded)
 # ---------------------------------------------------------------------------
+
 
 class VoiceInput:
     """High-level voice input: manages recording + transcription.

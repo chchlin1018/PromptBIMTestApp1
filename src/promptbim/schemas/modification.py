@@ -58,7 +58,9 @@ class ModificationRecord(BaseModel):
     command: str = Field(description="User's modification command")
     intent: ModificationIntent | None = Field(default=None)
     impacts: list[ImpactItem] = Field(default_factory=list)
-    plan_snapshot_json: dict = Field(default_factory=dict, description="BuildingPlan JSON before this change")
+    plan_snapshot_json: dict = Field(
+        default_factory=dict, description="BuildingPlan JSON before this change"
+    )
     success: bool = Field(default=True)
     error: str | None = Field(default=None)
 

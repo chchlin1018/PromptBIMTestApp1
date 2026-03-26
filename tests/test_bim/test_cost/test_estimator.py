@@ -1,7 +1,5 @@
 """Tests for bim/cost/estimator.py — Cost Estimation Engine."""
 
-import pytest
-
 from promptbim.bim.cost.estimator import CostEstimate, CostEstimator
 from promptbim.schemas.plan import (
     BuildingPlan,
@@ -23,8 +21,14 @@ def _make_two_story_plan() -> BuildingPlan:
     ]
     openings = [
         OpeningDef(wall_index=0, offset_m=4, width_m=1.0, height_m=2.1, opening_type="door"),
-        OpeningDef(wall_index=1, offset_m=3, width_m=1.5, height_m=1.2,
-                   sill_height_m=0.9, opening_type="window"),
+        OpeningDef(
+            wall_index=1,
+            offset_m=3,
+            width_m=1.5,
+            height_m=1.2,
+            sill_height_m=0.9,
+            opening_type="window",
+        ),
     ]
     return BuildingPlan(
         name="Two Story Box",
@@ -34,12 +38,20 @@ def _make_two_story_plan() -> BuildingPlan:
         building_far=0.50,
         stories=[
             StoryPlan(
-                name="1F", elevation_m=0.0, height_m=3.0,
-                walls=walls, openings=openings, slab_boundary=fp,
+                name="1F",
+                elevation_m=0.0,
+                height_m=3.0,
+                walls=walls,
+                openings=openings,
+                slab_boundary=fp,
             ),
             StoryPlan(
-                name="2F", elevation_m=3.0, height_m=3.0,
-                walls=walls, openings=openings, slab_boundary=fp,
+                name="2F",
+                elevation_m=3.0,
+                height_m=3.0,
+                walls=walls,
+                openings=openings,
+                slab_boundary=fp,
             ),
         ],
         roof=RoofPlan(roof_type="flat"),

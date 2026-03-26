@@ -29,7 +29,9 @@ class MapView(QWidget):
         self._buildable_area: list[tuple[float, float]] = []
         self._basemap_style: str = "none"
 
-    def set_parcel(self, parcel: LandParcel, buildable_area: list[tuple[float, float]] | None = None):
+    def set_parcel(
+        self, parcel: LandParcel, buildable_area: list[tuple[float, float]] | None = None
+    ):
         """Display a land parcel with optional buildable area overlay."""
         self._parcel = parcel
         self._buildable_area = buildable_area or []

@@ -7,10 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from promptbim.bim.templates import generate_from_template
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
-from promptbim.bim.templates import generate_from_template
-
 
 # Standard test land
 LAND = [(0, 0), (100, 0), (100, 80), (0, 80)]
@@ -57,8 +56,8 @@ class TestPerformance:
     @pytest.mark.benchmark
     def test_compliance_check_speed(self):
         """Compliance check (run_all_checks) should complete in under 1 second."""
-        from promptbim.schemas.zoning import ZoningRules
         from promptbim.codes.registry import run_all_checks
+        from promptbim.schemas.zoning import ZoningRules
 
         plan = generate_from_template("school", LAND, BUILDABLE)
 
@@ -87,9 +86,10 @@ class TestPerformance:
     @pytest.mark.benchmark
     def test_schedule_generation_speed(self, tmp_path: Path):
         """Schedule generation should complete in under 2 seconds."""
-        from promptbim.bim.simulation.scheduler import generate_schedule
-        from promptbim.bim.ifc_generator import IFCGenerator
         import ifcopenshell
+
+        from promptbim.bim.ifc_generator import IFCGenerator
+        from promptbim.bim.simulation.scheduler import generate_schedule
 
         plan = generate_from_template("school", LAND, BUILDABLE, num_stories=3)
         ifc_path = tmp_path / "sched.ifc"
@@ -106,9 +106,9 @@ class TestPerformance:
     @pytest.mark.benchmark
     def test_full_pipeline_speed(self, tmp_path: Path):
         """Full pipeline (template -> IFC -> USD -> cost -> compliance) with mock AI < 5s."""
+        from promptbim.bim.cost.estimator import CostEstimator
         from promptbim.bim.ifc_generator import IFCGenerator
         from promptbim.bim.usd_generator import USDGenerator
-        from promptbim.bim.cost.estimator import CostEstimator
         from promptbim.codes.registry import run_all_checks
         from promptbim.schemas.zoning import ZoningRules
 

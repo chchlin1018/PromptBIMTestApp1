@@ -1,6 +1,5 @@
 """P0 Sprint tests — verify project skeleton is properly set up."""
 
-import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -67,7 +66,7 @@ class TestPythonPackage:
         assert promptbim.__version__ == "1.5.0"
 
     def test_import_config(self):
-        from promptbim.config import Settings, get_settings
+        from promptbim.config import get_settings
 
         settings = get_settings()
         assert settings.log_level == "INFO"
@@ -75,10 +74,8 @@ class TestPythonPackage:
 
     def test_import_schemas(self):
         from promptbim.schemas.land import LandParcel
+        from promptbim.schemas.plan import BuildingPlan
         from promptbim.schemas.zoning import ZoningRules
-        from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
-        from promptbim.schemas.requirement import BuildingRequirement
-        from promptbim.schemas.result import GenerationResult
 
         # Test LandParcel creation
         parcel = LandParcel(

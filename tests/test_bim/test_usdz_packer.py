@@ -1,7 +1,6 @@
 """Tests for USDZ packer."""
 
 import zipfile
-from pathlib import Path
 
 import pytest
 

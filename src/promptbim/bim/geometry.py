@@ -49,6 +49,7 @@ def poly_area(coords: list[tuple[float, float]]) -> float:
 # Wall
 # ---------------------------------------------------------------------------
 
+
 def wall_mesh(
     start: tuple[float, float],
     end: tuple[float, float],
@@ -89,13 +90,21 @@ def wall_mesh(
         dtype=np.float64,
     )
     faces = _box_faces()
-    logger.debug("wall_mesh: length=%.2f, height=%.2f, thickness=%.2f, verts=%d, faces=%d", length, height, thickness, len(verts), len(faces))
+    logger.debug(
+        "wall_mesh: length=%.2f, height=%.2f, thickness=%.2f, verts=%d, faces=%d",
+        length,
+        height,
+        thickness,
+        len(verts),
+        len(faces),
+    )
     return Mesh(vertices=verts, faces=faces)
 
 
 # ---------------------------------------------------------------------------
 # Slab
 # ---------------------------------------------------------------------------
+
 
 def slab_mesh(
     boundary: list[tuple[float, float]],
@@ -139,13 +148,19 @@ def slab_mesh(
         faces.append([bi, tj, ti])
 
     result = Mesh(vertices=verts, faces=np.array(faces, dtype=np.int32))
-    logger.debug("slab_mesh: boundary_pts=%d, verts=%d, faces=%d", len(boundary), len(result.vertices), len(result.faces))
+    logger.debug(
+        "slab_mesh: boundary_pts=%d, verts=%d, faces=%d",
+        len(boundary),
+        len(result.vertices),
+        len(result.faces),
+    )
     return result
 
 
 # ---------------------------------------------------------------------------
 # Roof
 # ---------------------------------------------------------------------------
+
 
 def flat_roof_mesh(
     boundary: list[tuple[float, float]],
@@ -181,15 +196,21 @@ def gable_roof_mesh(
         mid_y = (y0 + y1) / 2.0
         verts = np.array(
             [
-                [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],  # base
-                [x0, mid_y, zr], [x1, mid_y, zr],  # ridge
+                [x0, y0, z0],
+                [x1, y0, z0],
+                [x1, y1, z0],
+                [x0, y1, z0],  # base
+                [x0, mid_y, zr],
+                [x1, mid_y, zr],  # ridge
             ],
             dtype=np.float64,
         )
         faces = np.array(
             [
-                [0, 1, 5], [0, 5, 4],  # front slope
-                [2, 3, 4], [2, 4, 5],  # back slope
+                [0, 1, 5],
+                [0, 5, 4],  # front slope
+                [2, 3, 4],
+                [2, 4, 5],  # back slope
                 [0, 4, 3],  # left gable
                 [1, 2, 5],  # right gable
             ],
@@ -200,8 +221,12 @@ def gable_roof_mesh(
         mid_x = (x0 + x1) / 2.0
         verts = np.array(
             [
-                [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
-                [mid_x, y0, zr], [mid_x, y1, zr],
+                [x0, y0, z0],
+                [x1, y0, z0],
+                [x1, y1, z0],
+                [x0, y1, z0],
+                [mid_x, y0, zr],
+                [mid_x, y1, zr],
             ],
             dtype=np.float64,
         )
@@ -209,8 +234,10 @@ def gable_roof_mesh(
             [
                 [0, 1, 4],  # front gable
                 [2, 3, 5],  # back gable
-                [1, 2, 5], [1, 5, 4],  # right slope
-                [0, 4, 5], [0, 5, 3],  # left slope
+                [1, 2, 5],
+                [1, 5, 4],  # right slope
+                [0, 4, 5],
+                [0, 5, 3],  # left slope
             ],
             dtype=np.int32,
         )
@@ -222,22 +249,29 @@ def gable_roof_mesh(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _box_faces() -> np.ndarray:
     """12 triangles forming a box with vertices 0-3 (bottom) and 4-7 (top)."""
     return np.array(
         [
             # bottom
-            [0, 2, 1], [0, 3, 2],
+            [0, 2, 1],
+            [0, 3, 2],
             # top
-            [4, 5, 6], [4, 6, 7],
+            [4, 5, 6],
+            [4, 6, 7],
             # front
-            [0, 1, 5], [0, 5, 4],
+            [0, 1, 5],
+            [0, 5, 4],
             # back
-            [2, 3, 7], [2, 7, 6],
+            [2, 3, 7],
+            [2, 7, 6],
             # left
-            [0, 4, 7], [0, 7, 3],
+            [0, 4, 7],
+            [0, 7, 3],
             # right
-            [1, 2, 6], [1, 6, 5],
+            [1, 2, 6],
+            [1, 6, 5],
         ],
         dtype=np.int32,
     )

@@ -46,6 +46,7 @@ class TestSmoke:
             # Try loading from .env
             try:
                 from promptbim.config import get_settings
+
                 settings = get_settings()
                 if not settings.anthropic_api_key.startswith("sk-"):
                     pytest.skip("No API key available")

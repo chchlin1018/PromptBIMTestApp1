@@ -66,21 +66,31 @@ def generate_school_plan(
 
         # Central corridor wall (divides building into two rows)
         corridor_y = oy + (depth - corridor_width) / 2
-        walls.append(WallDef(start=(ox, corridor_y), end=(ox + width, corridor_y), wall_type="interior"))
-        walls.append(WallDef(
-            start=(ox, corridor_y + corridor_width),
-            end=(ox + width, corridor_y + corridor_width),
-            wall_type="interior",
-        ))
+        walls.append(
+            WallDef(start=(ox, corridor_y), end=(ox + width, corridor_y), wall_type="interior")
+        )
+        walls.append(
+            WallDef(
+                start=(ox, corridor_y + corridor_width),
+                end=(ox + width, corridor_y + corridor_width),
+                wall_type="interior",
+            )
+        )
 
         # Corridor space
-        spaces.append(SpaceDef(
-            name=f"Corridor {floor_name}",
-            boundary=[(ox, corridor_y), (ox + width, corridor_y),
-                      (ox + width, corridor_y + corridor_width), (ox, corridor_y + corridor_width)],
-            space_type="corridor",
-            area_sqm=width * corridor_width,
-        ))
+        spaces.append(
+            SpaceDef(
+                name=f"Corridor {floor_name}",
+                boundary=[
+                    (ox, corridor_y),
+                    (ox + width, corridor_y),
+                    (ox + width, corridor_y + corridor_width),
+                    (ox, corridor_y + corridor_width),
+                ],
+                space_type="corridor",
+                area_sqm=width * corridor_width,
+            )
+        )
 
         # Rooms on each side
         room_depth_south = corridor_y - oy
@@ -102,51 +112,79 @@ def generate_school_plan(
                 room_name = f"Classroom {floor_name}-{r + 1}"
 
             # South side room
-            spaces.append(SpaceDef(
-                name=f"{room_name}S",
-                boundary=[(rx, oy), (rx + room_width, oy),
-                          (rx + room_width, corridor_y), (rx, corridor_y)],
-                space_type=space_type,
-                area_sqm=room_width * room_depth_south,
-            ))
+            spaces.append(
+                SpaceDef(
+                    name=f"{room_name}S",
+                    boundary=[
+                        (rx, oy),
+                        (rx + room_width, oy),
+                        (rx + room_width, corridor_y),
+                        (rx, corridor_y),
+                    ],
+                    space_type=space_type,
+                    area_sqm=room_width * room_depth_south,
+                )
+            )
 
             # North side room
-            spaces.append(SpaceDef(
-                name=f"{room_name}N",
-                boundary=[(rx, corridor_y + corridor_width), (rx + room_width, corridor_y + corridor_width),
-                          (rx + room_width, oy + depth), (rx, oy + depth)],
-                space_type=space_type,
-                area_sqm=room_width * room_depth_north,
-            ))
+            spaces.append(
+                SpaceDef(
+                    name=f"{room_name}N",
+                    boundary=[
+                        (rx, corridor_y + corridor_width),
+                        (rx + room_width, corridor_y + corridor_width),
+                        (rx + room_width, oy + depth),
+                        (rx, oy + depth),
+                    ],
+                    space_type=space_type,
+                    area_sqm=room_width * room_depth_north,
+                )
+            )
 
             # Partition walls between rooms
             if r > 0:
                 walls.append(WallDef(start=(rx, oy), end=(rx, corridor_y), wall_type="partition"))
-                walls.append(WallDef(
-                    start=(rx, corridor_y + corridor_width),
-                    end=(rx, oy + depth),
-                    wall_type="partition",
-                ))
+                walls.append(
+                    WallDef(
+                        start=(rx, corridor_y + corridor_width),
+                        end=(rx, oy + depth),
+                        wall_type="partition",
+                    )
+                )
 
             # Windows on exterior walls (south and north)
-            openings.append(OpeningDef(
-                wall_index=0, offset_m=rx - ox + 1.0, width_m=2.0, height_m=1.5,
-                sill_height_m=0.9, opening_type="window",
-            ))
-            openings.append(OpeningDef(
-                wall_index=2, offset_m=rx - ox + 1.0, width_m=2.0, height_m=1.5,
-                sill_height_m=0.9, opening_type="window",
-            ))
+            openings.append(
+                OpeningDef(
+                    wall_index=0,
+                    offset_m=rx - ox + 1.0,
+                    width_m=2.0,
+                    height_m=1.5,
+                    sill_height_m=0.9,
+                    opening_type="window",
+                )
+            )
+            openings.append(
+                OpeningDef(
+                    wall_index=2,
+                    offset_m=rx - ox + 1.0,
+                    width_m=2.0,
+                    height_m=1.5,
+                    sill_height_m=0.9,
+                    opening_type="window",
+                )
+            )
 
-        stories.append(StoryPlan(
-            name=floor_name,
-            elevation_m=elevation,
-            height_m=story_height,
-            walls=walls,
-            spaces=spaces,
-            openings=openings,
-            slab_boundary=footprint,
-        ))
+        stories.append(
+            StoryPlan(
+                name=floor_name,
+                elevation_m=elevation,
+                height_m=story_height,
+                walls=walls,
+                spaces=spaces,
+                openings=openings,
+                slab_boundary=footprint,
+            )
+        )
 
     return BuildingPlan(
         name=name,

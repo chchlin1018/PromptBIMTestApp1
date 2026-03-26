@@ -1,17 +1,17 @@
 """Tests for Web UI module."""
 
-import pytest
-
 
 class TestWebAppModule:
     def test_streamlit_importable(self):
         """Verify streamlit is installed."""
         import streamlit
+
         assert hasattr(streamlit, "set_page_config")
 
     def test_web_init_importable(self):
         """Verify web module is importable."""
         import promptbim.web
+
         assert promptbim.web is not None
 
     def test_compute_area_function(self):

@@ -5,13 +5,11 @@ Only ``pxr.Usd``, ``pxr.UsdGeom``, and ``pxr.UsdShade`` are used.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import numpy as np
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, Vt
 
-from promptbim.debug import get_logger
 from promptbim.bim.geometry import (
     Mesh,
     flat_roof_mesh,
@@ -25,6 +23,7 @@ from promptbim.bim.materials import (
     slab_material,
     wall_material,
 )
+from promptbim.debug import get_logger
 from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
 
 _logger = get_logger("bim.usd")
@@ -44,6 +43,7 @@ class USDGenerator:
     def generate(self, plan: BuildingPlan, output_path: str | Path) -> Path:
         """Generate a ``.usda`` file from *plan*."""
         import time as _time
+
         _t0 = _time.time()
 
         output_path = Path(output_path)
@@ -78,7 +78,11 @@ class USDGenerator:
         file_size = output_path.stat().st_size / 1024
         _logger.debug(
             "USD written: %s (%d prims, %d materials, %.0f KB, %.2fs)",
-            output_path, prim_count, mat_count, file_size, _elapsed,
+            output_path,
+            prim_count,
+            mat_count,
+            file_size,
+            _elapsed,
         )
         return output_path
 
@@ -103,9 +107,7 @@ class USDGenerator:
     # Wall
     # ------------------------------------------------------------------
 
-    def _add_wall(
-        self, wall_def: WallDef, story: StoryPlan, parent_path: str, idx: int
-    ) -> None:
+    def _add_wall(self, wall_def: WallDef, story: StoryPlan, parent_path: str, idx: int) -> None:
         mesh_data = wall_mesh(
             start=wall_def.start,
             end=wall_def.end,
@@ -121,9 +123,7 @@ class USDGenerator:
 
         mat_def = wall_material(wall_def.wall_type)
         usd_mat = self._get_or_create_material(mat_def)
-        UsdShade.MaterialBindingAPI(
-            self._stage.GetPrimAtPath(prim_path)
-        ).Bind(usd_mat)
+        UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(prim_path)).Bind(usd_mat)
 
     # ------------------------------------------------------------------
     # Slab
@@ -144,9 +144,7 @@ class USDGenerator:
 
         mat_def = slab_material()
         usd_mat = self._get_or_create_material(mat_def)
-        UsdShade.MaterialBindingAPI(
-            self._stage.GetPrimAtPath(prim_path)
-        ).Bind(usd_mat)
+        UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(prim_path)).Bind(usd_mat)
 
     # ------------------------------------------------------------------
     # Roof
@@ -171,9 +169,7 @@ class USDGenerator:
 
         mat_def = roof_material(roof_type)
         usd_mat = self._get_or_create_material(mat_def)
-        UsdShade.MaterialBindingAPI(
-            self._stage.GetPrimAtPath(prim_path)
-        ).Bind(usd_mat)
+        UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(prim_path)).Bind(usd_mat)
 
     # ------------------------------------------------------------------
     # Mesh helper
@@ -215,19 +211,11 @@ class USDGenerator:
         shader_path = f"{mat_path}/PBRShader"
         shader = UsdShade.Shader.Define(self._stage, shader_path)
         shader.CreateIdAttr("UsdPreviewSurface")
-        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
-            Gf.Vec3f(*mat_def.color)
-        )
-        shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(
-            mat_def.roughness
-        )
-        shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(
-            mat_def.metallic
-        )
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*mat_def.color))
+        shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(mat_def.roughness)
+        shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(mat_def.metallic)
         if mat_def.transparency > 0:
-            shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(
-                1.0 - mat_def.transparency
-            )
+            shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(1.0 - mat_def.transparency)
 
         usd_mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
 
@@ -239,11 +227,16 @@ class USDGenerator:
 # Utilities
 # ---------------------------------------------------------------------------
 
+
 def _compute_face_normals(mesh_data: Mesh) -> list[Gf.Vec3f]:
     """Compute per-face normals for a triangle mesh (flat shading)."""
     normals: list[Gf.Vec3f] = []
     for tri in mesh_data.faces:
-        v0, v1, v2 = mesh_data.vertices[tri[0]], mesh_data.vertices[tri[1]], mesh_data.vertices[tri[2]]
+        v0, v1, v2 = (
+            mesh_data.vertices[tri[0]],
+            mesh_data.vertices[tri[1]],
+            mesh_data.vertices[tri[2]],
+        )
         e1 = v1 - v0
         e2 = v2 - v0
         n = np.cross(e1, e2)

@@ -11,9 +11,9 @@ import math
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from promptbim.schemas.plan import BuildingPlan, OpeningDef, StoryPlan, WallDef
-
 from promptbim.debug import get_logger
+from promptbim.schemas.plan import BuildingPlan, StoryPlan
+
 logger = get_logger("viz.floorplan")
 
 # ---------------------------------------------------------------------------
@@ -38,6 +38,7 @@ _MARGIN = 40  # px
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _bounds(points: list[tuple[float, float]]) -> tuple[float, float, float, float]:
     """Return (min_x, min_y, max_x, max_y) of a point list."""
     xs = [p[0] for p in points]
@@ -55,9 +56,7 @@ def _polygon_centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
     return cx, cy
 
 
-def _to_svg_coords(
-    x: float, y: float, ox: float, oy: float
-) -> tuple[float, float]:
+def _to_svg_coords(x: float, y: float, ox: float, oy: float) -> tuple[float, float]:
     """Convert model coords to SVG pixel coords (Y-flipped)."""
     sx = (x - ox) * _SCALE + _MARGIN
     sy = -(y - oy) * _SCALE + _MARGIN  # flip Y
@@ -67,6 +66,7 @@ def _to_svg_coords(
 # ---------------------------------------------------------------------------
 # SVG generation for a single story
 # ---------------------------------------------------------------------------
+
 
 def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
     """Generate an SVG string for one story."""
@@ -91,29 +91,40 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
     height = (max_y - min_y) * _SCALE + 2 * _MARGIN
 
     # Build SVG
-    root = ET.Element("svg", {
-        "xmlns": _SVG_NS,
-        "width": f"{width:.0f}",
-        "height": f"{height:.0f}",
-        "viewBox": f"0 0 {width:.0f} {height:.0f}",
-    })
+    root = ET.Element(
+        "svg",
+        {
+            "xmlns": _SVG_NS,
+            "width": f"{width:.0f}",
+            "height": f"{height:.0f}",
+            "viewBox": f"0 0 {width:.0f} {height:.0f}",
+        },
+    )
 
     # Background
-    ET.SubElement(root, "rect", {
-        "width": "100%",
-        "height": "100%",
-        "fill": "white",
-    })
+    ET.SubElement(
+        root,
+        "rect",
+        {
+            "width": "100%",
+            "height": "100%",
+            "fill": "white",
+        },
+    )
 
     # Title
-    title = ET.SubElement(root, "text", {
-        "x": str(_MARGIN),
-        "y": "20",
-        "font-family": _LABEL_FONT,
-        "font-size": "14",
-        "font-weight": "bold",
-        "fill": "#333",
-    })
+    title = ET.SubElement(
+        root,
+        "text",
+        {
+            "x": str(_MARGIN),
+            "y": "20",
+            "font-family": _LABEL_FONT,
+            "font-size": "14",
+            "font-weight": "bold",
+            "fill": "#333",
+        },
+    )
     title.text = f"Floor Plan — {story.name} (elev {story.elevation_m:.1f}m)"
 
     # Draw slab / footprint outline
@@ -124,12 +135,16 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
             f"{_to_svg_coords(p[0], p[1], min_x, max_y)[1]:.1f}"
             for p in outline
         )
-        ET.SubElement(root, "polygon", {
-            "points": pts_str,
-            "fill": "#FAFAFA",
-            "stroke": "#999",
-            "stroke-width": "1",
-        })
+        ET.SubElement(
+            root,
+            "polygon",
+            {
+                "points": pts_str,
+                "fill": "#FAFAFA",
+                "stroke": "#999",
+                "stroke-width": "1",
+            },
+        )
 
     # Draw spaces
     for space in story.spaces:
@@ -140,25 +155,33 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
             f"{_to_svg_coords(p[0], p[1], min_x, max_y)[1]:.1f}"
             for p in space.boundary
         )
-        ET.SubElement(root, "polygon", {
-            "points": pts_str,
-            "fill": _SPACE_FILL,
-            "stroke": _SPACE_STROKE,
-            "stroke-width": "1",
-            "opacity": "0.6",
-        })
+        ET.SubElement(
+            root,
+            "polygon",
+            {
+                "points": pts_str,
+                "fill": _SPACE_FILL,
+                "stroke": _SPACE_STROKE,
+                "stroke-width": "1",
+                "opacity": "0.6",
+            },
+        )
         # Space label
         cx, cy = _polygon_centroid(space.boundary)
         sx, sy = _to_svg_coords(cx, cy, min_x, max_y)
-        lbl = ET.SubElement(root, "text", {
-            "x": f"{sx:.1f}",
-            "y": f"{sy:.1f}",
-            "font-family": _LABEL_FONT,
-            "font-size": str(_LABEL_SIZE),
-            "text-anchor": "middle",
-            "dominant-baseline": "central",
-            "fill": "#666",
-        })
+        lbl = ET.SubElement(
+            root,
+            "text",
+            {
+                "x": f"{sx:.1f}",
+                "y": f"{sy:.1f}",
+                "font-family": _LABEL_FONT,
+                "font-size": str(_LABEL_SIZE),
+                "text-anchor": "middle",
+                "dominant-baseline": "central",
+                "fill": "#666",
+            },
+        )
         lbl.text = f"{space.name}\n{space.area_sqm:.1f}m²"
 
     # Draw walls
@@ -166,15 +189,19 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
         x1, y1 = _to_svg_coords(wall.start[0], wall.start[1], min_x, max_y)
         x2, y2 = _to_svg_coords(wall.end[0], wall.end[1], min_x, max_y)
         stroke_w = _EXT_WALL_WIDTH if wall.wall_type == "exterior" else _INT_WALL_WIDTH
-        ET.SubElement(root, "line", {
-            "x1": f"{x1:.1f}",
-            "y1": f"{y1:.1f}",
-            "x2": f"{x2:.1f}",
-            "y2": f"{y2:.1f}",
-            "stroke": _WALL_COLOR,
-            "stroke-width": f"{stroke_w:.1f}",
-            "stroke-linecap": "round",
-        })
+        ET.SubElement(
+            root,
+            "line",
+            {
+                "x1": f"{x1:.1f}",
+                "y1": f"{y1:.1f}",
+                "x2": f"{x2:.1f}",
+                "y2": f"{y2:.1f}",
+                "stroke": _WALL_COLOR,
+                "stroke-width": f"{stroke_w:.1f}",
+                "stroke-linecap": "round",
+            },
+        )
 
     # Draw openings
     for opening in story.openings:
@@ -196,36 +223,48 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
         # Draw as a coloured rectangle mark
         color = _DOOR_COLOR if opening.opening_type == "door" else _WINDOW_COLOR
         half_w = opening.width_m * _SCALE / 2
-        ET.SubElement(root, "rect", {
-            "x": f"{sx - half_w:.1f}",
-            "y": f"{sy - 3:.1f}",
-            "width": f"{2 * half_w:.1f}",
-            "height": "6",
-            "fill": color,
-            "opacity": "0.7",
-            "rx": "2",
-        })
+        ET.SubElement(
+            root,
+            "rect",
+            {
+                "x": f"{sx - half_w:.1f}",
+                "y": f"{sy - 3:.1f}",
+                "width": f"{2 * half_w:.1f}",
+                "height": "6",
+                "fill": color,
+                "opacity": "0.7",
+                "rx": "2",
+            },
+        )
 
     # Compass indicator (N arrow)
     arrow_x = width - _MARGIN
     arrow_y = _MARGIN + 10
-    ET.SubElement(root, "line", {
-        "x1": f"{arrow_x:.0f}",
-        "y1": f"{arrow_y + 20:.0f}",
-        "x2": f"{arrow_x:.0f}",
-        "y2": f"{arrow_y:.0f}",
-        "stroke": "#999",
-        "stroke-width": "2",
-        "marker-end": "",
-    })
-    n_lbl = ET.SubElement(root, "text", {
-        "x": f"{arrow_x:.0f}",
-        "y": f"{arrow_y - 4:.0f}",
-        "font-family": _LABEL_FONT,
-        "font-size": "10",
-        "text-anchor": "middle",
-        "fill": "#999",
-    })
+    ET.SubElement(
+        root,
+        "line",
+        {
+            "x1": f"{arrow_x:.0f}",
+            "y1": f"{arrow_y + 20:.0f}",
+            "x2": f"{arrow_x:.0f}",
+            "y2": f"{arrow_y:.0f}",
+            "stroke": "#999",
+            "stroke-width": "2",
+            "marker-end": "",
+        },
+    )
+    n_lbl = ET.SubElement(
+        root,
+        "text",
+        {
+            "x": f"{arrow_x:.0f}",
+            "y": f"{arrow_y - 4:.0f}",
+            "font-family": _LABEL_FONT,
+            "font-size": "10",
+            "text-anchor": "middle",
+            "fill": "#999",
+        },
+    )
     n_lbl.text = "N"
 
     return ET.tostring(root, encoding="unicode", xml_declaration=True)
@@ -233,21 +272,28 @@ def _story_svg(story: StoryPlan, footprint: list[tuple[float, float]]) -> str:
 
 def _empty_svg(name: str) -> str:
     """Return a placeholder SVG for an empty story."""
-    root = ET.Element("svg", {
-        "xmlns": _SVG_NS,
-        "width": "200",
-        "height": "100",
-        "viewBox": "0 0 200 100",
-    })
+    root = ET.Element(
+        "svg",
+        {
+            "xmlns": _SVG_NS,
+            "width": "200",
+            "height": "100",
+            "viewBox": "0 0 200 100",
+        },
+    )
     ET.SubElement(root, "rect", {"width": "100%", "height": "100%", "fill": "white"})
-    txt = ET.SubElement(root, "text", {
-        "x": "100",
-        "y": "50",
-        "text-anchor": "middle",
-        "font-family": _LABEL_FONT,
-        "font-size": "12",
-        "fill": "#999",
-    })
+    txt = ET.SubElement(
+        root,
+        "text",
+        {
+            "x": "100",
+            "y": "50",
+            "text-anchor": "middle",
+            "font-family": _LABEL_FONT,
+            "font-size": "12",
+            "fill": "#999",
+        },
+    )
     txt.text = f"{name} — no geometry"
     return ET.tostring(root, encoding="unicode", xml_declaration=True)
 
@@ -255,6 +301,7 @@ def _empty_svg(name: str) -> str:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def generate_floorplans(
     plan: BuildingPlan,

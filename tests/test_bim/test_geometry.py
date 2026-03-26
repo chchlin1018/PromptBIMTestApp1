@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from promptbim.bim.geometry import (
-    Mesh,
     flat_roof_mesh,
     gable_roof_mesh,
     slab_mesh,
@@ -57,7 +56,6 @@ class TestSlabMesh:
         z_vals = set(m.vertices[:, 2])
         assert 3.0 in z_vals
         assert 3.2 in z_vals
-
 
     def test_concave_l_shaped_slab(self):
         """L-shaped concave polygon should triangulate correctly with earcut."""

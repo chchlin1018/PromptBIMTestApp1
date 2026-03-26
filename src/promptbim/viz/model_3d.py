@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("viz.model_3d")
 
 import numpy as np
 import pyvista as pv
 
-from promptbim.bim.geometry import Mesh, wall_mesh, slab_mesh, flat_roof_mesh, gable_roof_mesh
-from promptbim.bim.materials import wall_material, slab_material, roof_material
+from promptbim.bim.geometry import Mesh, flat_roof_mesh, gable_roof_mesh, slab_mesh, wall_mesh
+from promptbim.bim.materials import roof_material, slab_material, wall_material
 from promptbim.schemas.plan import BuildingPlan, StoryPlan
 
 
@@ -19,17 +20,19 @@ def _mesh_to_polydata(mesh: Mesh) -> pv.PolyData | None:
         return None
     n_faces = mesh.faces.shape[0]
     # PyVista face format: [n_verts, v0, v1, v2, ...]
-    face_arr = np.column_stack([
-        np.full(n_faces, 3, dtype=np.int32),
-        mesh.faces,
-    ]).ravel()
+    face_arr = np.column_stack(
+        [
+            np.full(n_faces, 3, dtype=np.int32),
+            mesh.faces,
+        ]
+    ).ravel()
     return pv.PolyData(mesh.vertices, face_arr)
 
 
 def _color_from_material(mat) -> str:
     """Convert MaterialDef color tuple to hex string."""
     r, g, b = mat.color
-    return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
+    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
 
 
 def story_meshes(story: StoryPlan) -> list[tuple[pv.PolyData, str, str]]:
@@ -74,6 +77,7 @@ def build_model(plan: BuildingPlan) -> list[tuple[pv.PolyData, str, str]]:
     Returns list of (polydata, color_hex, label) tuples for all elements.
     """
     import time as _time
+
     t0 = _time.perf_counter()
     all_meshes: list[tuple[pv.PolyData, str, str]] = []
 
@@ -121,7 +125,10 @@ def build_model(plan: BuildingPlan) -> list[tuple[pv.PolyData, str, str]]:
     total_faces = sum(pd.n_cells for pd, _, _ in all_meshes)
     logger.debug(
         "build_model complete: %d meshes, %d vertices, %d faces in %.3fs",
-        len(all_meshes), total_verts, total_faces, _time.perf_counter() - t0,
+        len(all_meshes),
+        total_verts,
+        total_faces,
+        _time.perf_counter() - t0,
     )
     return all_meshes
 

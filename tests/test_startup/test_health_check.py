@@ -2,11 +2,9 @@
 
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pytest
-
-from promptbim.startup.health_check import HealthChecker, CheckResult
+from promptbim.startup.health_check import CheckResult, HealthChecker
 
 
 class TestCheckResult:
@@ -14,8 +12,10 @@ class TestCheckResult:
 
     def test_basic_creation(self):
         r = CheckResult(
-            name="test", category="test_cat",
-            status="pass", message="OK",
+            name="test",
+            category="test_cat",
+            status="pass",
+            message="OK",
         )
         assert r.name == "test"
         assert r.status == "pass"
@@ -25,9 +25,12 @@ class TestCheckResult:
 
     def test_with_all_fields(self):
         r = CheckResult(
-            name="test", category="cat",
-            status="fail", message="Failed",
-            detail="some error", fix_hint="do this",
+            name="test",
+            category="cat",
+            status="fail",
+            message="Failed",
+            detail="some error",
+            fix_hint="do this",
             elapsed_ms=42.5,
         )
         assert r.detail == "some error"
@@ -74,7 +77,8 @@ class TestHealthChecker:
     def test_import_check_success(self):
         checker = HealthChecker()
         result = checker._check_import(
-            lambda: "ok 1.0", "test_pkg",
+            lambda: "ok 1.0",
+            "test_pkg",
         )
         assert result.status == "pass"
         assert result.message == "ok 1.0"
@@ -86,7 +90,9 @@ class TestHealthChecker:
             raise ImportError("no module")
 
         result = checker._check_import(
-            _fail, "missing_pkg", fix_hint="pip install missing_pkg",
+            _fail,
+            "missing_pkg",
+            fix_hint="pip install missing_pkg",
         )
         assert result.status == "fail"
         assert result.fix_hint == "pip install missing_pkg"
@@ -110,21 +116,28 @@ class TestHealthChecker:
         checker = HealthChecker()
 
         # Mock AI checks to avoid real API calls
-        with patch("promptbim.startup.ai_check.check_api_key") as mock_key, \
-             patch("promptbim.startup.ai_check.ping_claude") as mock_ping, \
-             patch("promptbim.startup.ai_check.check_model_available") as mock_model:
-
+        with (
+            patch("promptbim.startup.ai_check.check_api_key") as mock_key,
+            patch("promptbim.startup.ai_check.ping_claude") as mock_ping,
+            patch("promptbim.startup.ai_check.check_model_available") as mock_model,
+        ):
             mock_key.return_value = CheckResult(
-                name="API Key", category="AI services",
-                status="pass", message="mocked",
+                name="API Key",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
             mock_ping.return_value = CheckResult(
-                name="Claude API ping", category="AI services",
-                status="pass", message="mocked",
+                name="Claude API ping",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
             mock_model.return_value = CheckResult(
-                name="Model available", category="AI services",
-                status="pass", message="mocked",
+                name="Model available",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
 
             results = checker.run_all()
@@ -134,21 +147,28 @@ class TestHealthChecker:
         """Test run_ai_only returns 3 results."""
         checker = HealthChecker()
 
-        with patch("promptbim.startup.ai_check.check_api_key") as mock_key, \
-             patch("promptbim.startup.ai_check.ping_claude") as mock_ping, \
-             patch("promptbim.startup.ai_check.check_model_available") as mock_model:
-
+        with (
+            patch("promptbim.startup.ai_check.check_api_key") as mock_key,
+            patch("promptbim.startup.ai_check.ping_claude") as mock_ping,
+            patch("promptbim.startup.ai_check.check_model_available") as mock_model,
+        ):
             mock_key.return_value = CheckResult(
-                name="API Key", category="AI services",
-                status="pass", message="mocked",
+                name="API Key",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
             mock_ping.return_value = CheckResult(
-                name="Claude API ping", category="AI services",
-                status="pass", message="mocked",
+                name="Claude API ping",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
             mock_model.return_value = CheckResult(
-                name="Model available", category="AI services",
-                status="pass", message="mocked",
+                name="Model available",
+                category="AI services",
+                status="pass",
+                message="mocked",
             )
 
             results = checker.run_ai_only()
@@ -191,7 +211,9 @@ class TestHealthChecker:
         """Model check should be skipped if ping failed."""
         checker = HealthChecker()
         checker._results = [
-            CheckResult(name="Claude API ping", category="AI services", status="fail", message="failed"),
+            CheckResult(
+                name="Claude API ping", category="AI services", status="fail", message="failed"
+            ),
         ]
         result = checker._check_model_available()
         assert result.status == "skip"

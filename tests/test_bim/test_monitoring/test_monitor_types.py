@@ -1,12 +1,9 @@
 """Tests for bim/monitoring/monitor_types.py — 48 sensor/actuator definitions."""
 
-import pytest
-
 from promptbim.bim.monitoring.monitor_types import (
     MONITOR_CATEGORIES,
     MONITOR_TYPES,
     MonitorCategory,
-    MonitorType,
     get_types_for_space,
 )
 
@@ -68,8 +65,14 @@ class TestMonitorCategory:
 
     def test_expected_categories(self):
         expected = {
-            "environmental", "safety", "security", "energy",
-            "structural", "mep", "smart", "accessibility",
+            "environmental",
+            "safety",
+            "security",
+            "energy",
+            "structural",
+            "mep",
+            "smart",
+            "accessibility",
         }
         actual = {cat.value for cat in MonitorCategory}
         assert actual == expected

@@ -4,7 +4,7 @@ import pytest
 
 from promptbim.agents.checker import CheckerAgent, CheckResult, CheckViolation
 from promptbim.schemas.land import LandParcel
-from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan, WallDef, RoofPlan
+from promptbim.schemas.plan import BuildingPlan, RoofPlan, SpaceDef, StoryPlan, WallDef
 from promptbim.schemas.zoning import ZoningRules
 
 
@@ -47,7 +47,11 @@ def compliant_plan():
                     WallDef(start=(20, 17), end=(2, 17)),
                     WallDef(start=(2, 17), end=(2, 3)),
                 ],
-                spaces=[SpaceDef(name="Room 1F", boundary=footprint, space_type="office", area_sqm=fp_area)],
+                spaces=[
+                    SpaceDef(
+                        name="Room 1F", boundary=footprint, space_type="office", area_sqm=fp_area
+                    )
+                ],
                 slab_boundary=footprint,
             ),
             StoryPlan(
@@ -60,7 +64,11 @@ def compliant_plan():
                     WallDef(start=(20, 17), end=(2, 17)),
                     WallDef(start=(2, 17), end=(2, 3)),
                 ],
-                spaces=[SpaceDef(name="Room 2F", boundary=footprint, space_type="office", area_sqm=fp_area)],
+                spaces=[
+                    SpaceDef(
+                        name="Room 2F", boundary=footprint, space_type="office", area_sqm=fp_area
+                    )
+                ],
                 slab_boundary=footprint,
             ),
         ],
@@ -83,11 +91,15 @@ class TestCheckerRules:
             building_footprint=fp,
             building_bcr=0.83,
             building_far=0.83,
-            stories=[StoryPlan(
-                name="1F", elevation_m=0.0, height_m=3.0,
-                spaces=[SpaceDef(name="Room", boundary=fp, space_type="office", area_sqm=500)],
-                slab_boundary=fp,
-            )],
+            stories=[
+                StoryPlan(
+                    name="1F",
+                    elevation_m=0.0,
+                    height_m=3.0,
+                    spaces=[SpaceDef(name="Room", boundary=fp, space_type="office", area_sqm=500)],
+                    slab_boundary=fp,
+                )
+            ],
         )
         checker = CheckerAgent.__new__(CheckerAgent)
         result = checker.check(plan, sample_land, sample_zoning)
@@ -103,8 +115,14 @@ class TestCheckerRules:
             building_far=2.67,
             stories=[
                 StoryPlan(
-                    name=f"{i+1}F", elevation_m=i * 3.0, height_m=3.0,
-                    spaces=[SpaceDef(name=f"Room {i+1}F", boundary=fp, space_type="office", area_sqm=400)],
+                    name=f"{i + 1}F",
+                    elevation_m=i * 3.0,
+                    height_m=3.0,
+                    spaces=[
+                        SpaceDef(
+                            name=f"Room {i + 1}F", boundary=fp, space_type="office", area_sqm=400
+                        )
+                    ],
                     slab_boundary=fp,
                 )
                 for i in range(4)
@@ -123,8 +141,14 @@ class TestCheckerRules:
             building_far=1.0,
             stories=[
                 StoryPlan(
-                    name=f"{i+1}F", elevation_m=i * 3.0, height_m=3.0,
-                    spaces=[SpaceDef(name=f"Room {i+1}F", boundary=fp, space_type="office", area_sqm=100)],
+                    name=f"{i + 1}F",
+                    elevation_m=i * 3.0,
+                    height_m=3.0,
+                    spaces=[
+                        SpaceDef(
+                            name=f"Room {i + 1}F", boundary=fp, space_type="office", area_sqm=100
+                        )
+                    ],
                     slab_boundary=fp,
                 )
                 for i in range(6)  # 18m > 15m limit
@@ -132,7 +156,11 @@ class TestCheckerRules:
         )
         checker = CheckerAgent.__new__(CheckerAgent)
         result = checker.check(plan, sample_land, sample_zoning)
-        assert any("24-1" in v.rule or "Height" in v.rule for v in result.violations if v.severity == "error")
+        assert any(
+            "24-1" in v.rule or "Height" in v.rule
+            for v in result.violations
+            if v.severity == "error"
+        )
 
     def test_ceiling_height_violation(self, sample_land, sample_zoning):
         fp = [(0, 0), (10, 0), (10, 10), (0, 10)]
@@ -141,11 +169,15 @@ class TestCheckerRules:
             building_footprint=fp,
             building_bcr=0.17,
             building_far=0.17,
-            stories=[StoryPlan(
-                name="1F", elevation_m=0.0, height_m=2.2,
-                spaces=[SpaceDef(name="Room", boundary=fp, space_type="office", area_sqm=100)],
-                slab_boundary=fp,
-            )],
+            stories=[
+                StoryPlan(
+                    name="1F",
+                    elevation_m=0.0,
+                    height_m=2.2,
+                    spaces=[SpaceDef(name="Room", boundary=fp, space_type="office", area_sqm=100)],
+                    slab_boundary=fp,
+                )
+            ],
         )
         checker = CheckerAgent.__new__(CheckerAgent)
         result = checker.check(plan, sample_land, sample_zoning)
@@ -174,13 +206,13 @@ class TestCheckerIntegration:
 
 class TestCheckResult:
     def test_passed_when_no_errors(self):
-        result = CheckResult(violations=[
-            CheckViolation(rule="Test", message="ok", severity="warning")
-        ])
+        result = CheckResult(
+            violations=[CheckViolation(rule="Test", message="ok", severity="warning")]
+        )
         assert result.passed is True
 
     def test_not_passed_when_errors(self):
-        result = CheckResult(violations=[
-            CheckViolation(rule="BCR", message="exceeded", severity="error")
-        ])
+        result = CheckResult(
+            violations=[CheckViolation(rule="BCR", message="exceeded", severity="error")]
+        )
         assert result.passed is False

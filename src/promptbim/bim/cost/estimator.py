@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from promptbim.debug import get_logger
 from promptbim.bim.cost.qto import QTOItem, QuantityTakeOff
 from promptbim.bim.cost.unit_prices_tw import (
     CATEGORY_LABELS,
     UNIT_PRICES_TWD,
 )
+from promptbim.debug import get_logger
 from promptbim.schemas.plan import BuildingPlan
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from promptbim.bim.monitoring.auto_placement import MonitorPlan
@@ -135,9 +134,7 @@ class CostEstimator:
             total += sum(li.total_twd for li in monitor_items)
 
         # Calculate total floor area
-        total_floor_area = sum(
-            qi.quantity for qi in qto_items if qi.category == "slab"
-        )
+        total_floor_area = sum(qi.quantity for qi in qto_items if qi.category == "slab")
 
         # Breakdown by category
         cat_totals: dict[str, float] = {}
@@ -147,17 +144,26 @@ class CostEstimator:
 
         breakdown = []
         for cat, cost in sorted(cat_totals.items(), key=lambda x: -x[1]):
-            breakdown.append(CostBreakdown(
-                category=cat,
-                label=CATEGORY_LABELS.get(cat, cat),
-                cost_twd=cost,
-                ratio=cost / total if total > 0 else 0,
-            ))
+            breakdown.append(
+                CostBreakdown(
+                    category=cat,
+                    label=CATEGORY_LABELS.get(cat, cat),
+                    cost_twd=cost,
+                    ratio=cost / total if total > 0 else 0,
+                )
+            )
 
         cost_per_sqm = total / total_floor_area if total_floor_area > 0 else 0
 
         for li in line_items:
-            logger.debug("Cost: %s — %.0f %s x NT$%.0f = NT$%.0f", li.name, li.quantity, li.unit, li.unit_price_twd, li.total_twd)
+            logger.debug(
+                "Cost: %s — %.0f %s x NT$%.0f = NT$%.0f",
+                li.name,
+                li.quantity,
+                li.unit,
+                li.unit_price_twd,
+                li.total_twd,
+            )
         for b in breakdown:
             logger.debug("Breakdown: %s — NT$%.0f (%.1f%%)", b.label, b.cost_twd, b.ratio * 100)
         logger.debug("Total cost: NT$%.0f (NT$%.0f/sqm)", total, cost_per_sqm)
@@ -182,15 +188,17 @@ class CostEstimator:
                 continue
             unit_price = entry["price"]
             total = qi.quantity * unit_price
-            result.append(CostLineItem(
-                category=_QTO_COST_CATEGORY.get(qi.category, qi.category),
-                name=qi.name,
-                quantity=qi.quantity,
-                unit=qi.unit,
-                unit_price_twd=unit_price,
-                total_twd=total,
-                price_key=qi.category,
-            ))
+            result.append(
+                CostLineItem(
+                    category=_QTO_COST_CATEGORY.get(qi.category, qi.category),
+                    name=qi.name,
+                    quantity=qi.quantity,
+                    unit=qi.unit,
+                    unit_price_twd=unit_price,
+                    total_twd=total,
+                    price_key=qi.category,
+                )
+            )
         return result
 
     def _monitoring_cost_items(self, monitor_plan: MonitorPlan) -> list[CostLineItem]:
@@ -204,15 +212,17 @@ class CostEstimator:
             mt = MONITOR_TYPES.get(type_id)
             if mt is None:
                 continue
-            items.append(CostLineItem(
-                category="monitoring",
-                name=mt.name,
-                quantity=count,
-                unit="unit",
-                unit_price_twd=mt.unit_cost_twd,
-                total_twd=count * mt.unit_cost_twd,
-                price_key="monitoring",
-            ))
+            items.append(
+                CostLineItem(
+                    category="monitoring",
+                    name=mt.name,
+                    quantity=count,
+                    unit="unit",
+                    unit_price_twd=mt.unit_cost_twd,
+                    total_twd=count * mt.unit_cost_twd,
+                    price_key="monitoring",
+                )
+            )
         return items
 
     def _interior_finish_allowance(self, qto_items: list[QTOItem]) -> list[CostLineItem]:
@@ -224,24 +234,28 @@ class CostEstimator:
             area = qi.quantity
             # Ceiling
             ceiling_price = UNIT_PRICES_TWD["ceiling_sqm"]["price"]
-            items.append(CostLineItem(
-                category="interior",
-                name=f"Ceiling-{qi.story}",
-                quantity=area,
-                unit="m2",
-                unit_price_twd=ceiling_price,
-                total_twd=area * ceiling_price,
-                price_key="ceiling",
-            ))
+            items.append(
+                CostLineItem(
+                    category="interior",
+                    name=f"Ceiling-{qi.story}",
+                    quantity=area,
+                    unit="m2",
+                    unit_price_twd=ceiling_price,
+                    total_twd=area * ceiling_price,
+                    price_key="ceiling",
+                )
+            )
             # Floor tile
             tile_price = UNIT_PRICES_TWD["floor_tile_sqm"]["price"]
-            items.append(CostLineItem(
-                category="interior",
-                name=f"FloorTile-{qi.story}",
-                quantity=area,
-                unit="m2",
-                unit_price_twd=tile_price,
-                total_twd=area * tile_price,
-                price_key="floor_tile",
-            ))
+            items.append(
+                CostLineItem(
+                    category="interior",
+                    name=f"FloorTile-{qi.story}",
+                    quantity=area,
+                    unit="m2",
+                    unit_price_twd=tile_price,
+                    total_twd=area * tile_price,
+                    price_key="floor_tile",
+                )
+            )
         return items

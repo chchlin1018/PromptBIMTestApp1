@@ -1,35 +1,32 @@
 """PySide6 main window for PromptBIM desktop application."""
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.main_window")
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
     QSplitter,
     QTabWidget,
-    QLineEdit,
-    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt
 
 from promptbim import __version__
 from promptbim.gui.chat_panel import ChatPanel
+from promptbim.gui.cost_panel import CostPanel
+from promptbim.gui.dialogs.import_land import ImportLandDialog
 from promptbim.gui.land_panel import LandPanel
 from promptbim.gui.map_view import MapView
 from promptbim.gui.model_view import ModelView
 from promptbim.gui.modification_panel import ModificationPanel
-from promptbim.gui.dialogs.import_land import ImportLandDialog
+from promptbim.gui.simulation_tab import SimulationTab
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.zoning import ZoningRules
-from promptbim.gui.cost_panel import CostPanel
-from promptbim.gui.simulation_tab import SimulationTab
 from promptbim.viz.site_plan import SitePlanView
 
 
@@ -107,9 +104,7 @@ class MainWindow(QMainWindow):
         self._site_plan.set_data(parcel=parcel, buildable_area=buildable)
         self._chat_panel.set_context(parcel, self._zoning)
         self._tabs.setCurrentIndex(0)  # switch to 2D Map tab
-        self.statusBar().showMessage(
-            f"Loaded: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)"
-        )
+        self.statusBar().showMessage(f"Loaded: {parcel.name} ({parcel.area_sqm:.1f} m\u00b2)")
 
     def _on_generation_finished(self, result):
         if result.success:
@@ -187,6 +182,7 @@ class MainWindow(QMainWindow):
 
     def dropEvent(self, event):
         from pathlib import Path
+
         from promptbim.gui.dialogs.import_land import SUPPORTED_EXTENSIONS, _parse_file
 
         for url in event.mimeData().urls():
@@ -210,6 +206,7 @@ def launch_main_window():
 
     # Startup health check
     from promptbim.config import get_settings
+
     settings = get_settings()
 
     if settings.startup_check_enabled:

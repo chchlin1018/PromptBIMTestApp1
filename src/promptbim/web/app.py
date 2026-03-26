@@ -9,7 +9,6 @@ land import, AI building generation, 3D preview, compliance check, cost estimate
 
 from __future__ import annotations
 
-import json
 import sys
 import tempfile
 import time
@@ -73,7 +72,12 @@ with st.sidebar:
                     source_type="manual",
                 )
                 st.session_state["land"] = land_parcel
-                logger.info("Land imported (manual): name=%s, area=%.1f m², vertices=%d", land_name, area, len(coords))
+                logger.info(
+                    "Land imported (manual): name=%s, area=%.1f m², vertices=%d",
+                    land_name,
+                    area,
+                    len(coords),
+                )
                 st.success(f"Imported: {land_name} ({area:.1f} m²)")
             except Exception as e:
                 logger.error("Land import failed: %s", e)
@@ -92,7 +96,11 @@ with st.sidebar:
                 parcels = parse_geojson(tmp_path)
                 if parcels:
                     st.session_state["land"] = parcels[0]
-                    logger.info("Land imported (GeoJSON): name=%s, area=%.1f m²", parcels[0].name, parcels[0].area_sqm)
+                    logger.info(
+                        "Land imported (GeoJSON): name=%s, area=%.1f m²",
+                        parcels[0].name,
+                        parcels[0].area_sqm,
+                    )
                     st.success(f"Imported: {parcels[0].name} ({parcels[0].area_sqm:.1f} m²)")
                 else:
                     logger.warning("GeoJSON upload: no valid parcels found")
@@ -163,10 +171,14 @@ with col_chat:
 
                     elapsed = time.monotonic() - t0
                     if result.success:
-                        logger.info("Generation succeeded in %.2fs: name=%s", elapsed, result.building_name)
+                        logger.info(
+                            "Generation succeeded in %.2fs: name=%s", elapsed, result.building_name
+                        )
                         st.success(f"Generated: {result.building_name}")
                     else:
-                        logger.error("Generation failed in %.2fs: %s", elapsed, "; ".join(result.errors))
+                        logger.error(
+                            "Generation failed in %.2fs: %s", elapsed, "; ".join(result.errors)
+                        )
                         st.error(f"Generation failed: {'; '.join(result.errors)}")
                 except Exception as e:
                     logger.error("Generation exception: %s", e)

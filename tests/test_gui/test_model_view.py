@@ -1,7 +1,5 @@
 """Tests for gui/model_view.py — 3D model viewer widget."""
 
-import pytest
-
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
@@ -39,11 +37,13 @@ class TestModelViewImport:
     def test_import_model_view(self):
         """ModelView can be imported without error."""
         from promptbim.gui.model_view import ModelView
+
         assert ModelView is not None
 
     def test_import_build_model(self):
         """build_model function is accessible."""
         from promptbim.viz.model_3d import build_model
+
         plan = _simple_plan()
         meshes = build_model(plan)
         assert len(meshes) > 0

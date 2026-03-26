@@ -7,22 +7,22 @@ Planner is re-invoked with the fix suggestions (up to ``max_iterations``).
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from promptbim.agents.builder import BuilderAgent, BuildResult
-from promptbim.bim.geometry import poly_area
 from promptbim.agents.checker import CheckerAgent, CheckResult
 from promptbim.agents.enhancer import EnhancerAgent
 from promptbim.agents.modifier import ModifierAgent
 from promptbim.agents.planner import PlannerAgent
+from promptbim.bim.geometry import poly_area
+from promptbim.debug import get_logger
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.modification import ModificationRecord
 from promptbim.schemas.plan import BuildingPlan
 from promptbim.schemas.requirement import BuildingRequirement
 from promptbim.schemas.result import GenerationResult
-from promptbim.debug import get_logger
 from promptbim.schemas.zoning import ZoningRules
 
 logger = get_logger("agents.orchestrator")
@@ -96,10 +96,10 @@ class Orchestrator:
             progress_base = 0.2 + iteration * 0.2
 
             # Plan
-            self._emit("planner", f"Planning building (iteration {iteration + 1})...", progress_base)
-            self.plan = self._planner.plan(
-                self.requirement, land, zoning, buildable_area
+            self._emit(
+                "planner", f"Planning building (iteration {iteration + 1})...", progress_base
             )
+            self.plan = self._planner.plan(self.requirement, land, zoning, buildable_area)
             logger.info(
                 "Plan: %s, %d stories, BCR=%.2f, FAR=%.2f",
                 self.plan.name,
@@ -129,7 +129,7 @@ class Orchestrator:
 
         # --- Build ---
         self._emit("builder", "Generating IFC + USD files...", 0.8)
-        output_dir = self._builder._output_dir if hasattr(self._builder, '_output_dir') else None
+        output_dir = self._builder._output_dir if hasattr(self._builder, "_output_dir") else None
         try:
             self.build_result = self._builder.build(self.plan)
         except Exception as e:

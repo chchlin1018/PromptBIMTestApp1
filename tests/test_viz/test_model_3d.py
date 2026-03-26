@@ -1,14 +1,13 @@
 """Tests for viz/model_3d.py — BuildingPlan -> PyVista mesh assembly."""
 
 import pyvista as pv
-import pytest
 
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
+    SpaceDef,
     StoryPlan,
     WallDef,
-    SpaceDef,
 )
 from promptbim.viz.model_3d import (
     build_model,
@@ -46,7 +45,9 @@ def _simple_box_plan() -> BuildingPlan:
                 height_m=3.0,
                 walls=walls_1f,
                 slab_boundary=footprint,
-                spaces=[SpaceDef(name="Room A", boundary=footprint, space_type="office", area_sqm=40.0)],
+                spaces=[
+                    SpaceDef(name="Room A", boundary=footprint, space_type="office", area_sqm=40.0)
+                ],
             ),
             StoryPlan(
                 name="2F",

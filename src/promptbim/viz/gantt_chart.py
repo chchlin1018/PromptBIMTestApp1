@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.patches as mpatches
 
 if TYPE_CHECKING:
     from promptbim.bim.simulation.scheduler import ConstructionSchedule
@@ -34,10 +33,14 @@ class GanttChart(FigureCanvas):
     def _draw_empty(self) -> None:
         self._ax.clear()
         self._ax.text(
-            0.5, 0.5, "No schedule loaded",
-            ha="center", va="center",
+            0.5,
+            0.5,
+            "No schedule loaded",
+            ha="center",
+            va="center",
             transform=self._ax.transAxes,
-            fontsize=12, color="#999",
+            fontsize=12,
+            color="#999",
         )
         self._ax.set_axis_off()
         self._fig.tight_layout()
@@ -88,9 +91,13 @@ class GanttChart(FigureCanvas):
             # Phase label inside bar
             mid_x = sp.start_day + sp.duration_days / 2
             self._ax.text(
-                mid_x, i, f"{sp.phase.phase_id}",
-                ha="center", va="center",
-                fontsize=7, fontweight="bold",
+                mid_x,
+                i,
+                f"{sp.phase.phase_id}",
+                ha="center",
+                va="center",
+                fontsize=7,
+                fontweight="bold",
                 color="white" if is_active else "black",
             )
 
@@ -104,7 +111,10 @@ class GanttChart(FigureCanvas):
 
         # Day marker line
         self._day_line = self._ax.axvline(
-            self._current_day, color="red", linewidth=1.5, linestyle="--",
+            self._current_day,
+            color="red",
+            linewidth=1.5,
+            linestyle="--",
         )
 
         self._ax.set_xlabel("Day", fontsize=9)

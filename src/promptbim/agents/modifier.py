@@ -7,9 +7,6 @@ Uses Claude to parse intent, but applies changes deterministically.
 
 from __future__ import annotations
 
-import copy
-import json
-
 from promptbim.agents.base import BaseAgent
 from promptbim.bim.geometry import poly_area
 from promptbim.debug import get_logger
@@ -23,11 +20,8 @@ from promptbim.schemas.modification import (
 )
 from promptbim.schemas.plan import (
     BuildingPlan,
-    OpeningDef,
     RoofPlan,
-    SpaceDef,
     StoryPlan,
-    WallDef,
 )
 from promptbim.schemas.zoning import ZoningRules
 
@@ -104,13 +98,15 @@ def compute_impacts(
     for component, level in base_impacts:
         before, after, desc = _diff_component(component, old_plan, new_plan)
         if before != after:
-            items.append(ImpactItem(
-                component=component,
-                level=level,
-                description=desc,
-                before_value=str(before),
-                after_value=str(after),
-            ))
+            items.append(
+                ImpactItem(
+                    component=component,
+                    level=level,
+                    description=desc,
+                    before_value=str(before),
+                    after_value=str(after),
+                )
+            )
 
     return items
 
@@ -144,11 +140,19 @@ def _diff_component(
         new_h = sum(s.height_m for s in new.stories)
         return (f"{old_h:.1f}m", f"{new_h:.1f}m", f"Total height: {old_h:.1f}m → {new_h:.1f}m")
     if component == "roof":
-        return (old.roof.roof_type, new.roof.roof_type, f"Roof: {old.roof.roof_type} → {new.roof.roof_type}")
+        return (
+            old.roof.roof_type,
+            new.roof.roof_type,
+            f"Roof: {old.roof.roof_type} → {new.roof.roof_type}",
+        )
     if component == "cost":
         old_area = sum(s.slab_boundary and poly_area(s.slab_boundary) or 0 for s in old.stories)
         new_area = sum(s.slab_boundary and poly_area(s.slab_boundary) or 0 for s in new.stories)
-        return (f"{old_area:.0f}m²", f"{new_area:.0f}m²", f"Total area: {old_area:.0f} → {new_area:.0f} m²")
+        return (
+            f"{old_area:.0f}m²",
+            f"{new_area:.0f}m²",
+            f"Total area: {old_area:.0f} → {new_area:.0f} m²",
+        )
     # Default: no meaningful diff
     return ("—", "—", component)
 
@@ -222,7 +226,12 @@ class ModifierAgent(BaseAgent):
         # Parse intent via Claude
         logger.debug("Parsing modification: '%s'", command)
         intent = self._parse_intent(command, current_plan)
-        logger.debug("Intent: type=%s, params=%s, confidence=%.2f", intent.modification_type.value, intent.parameters, intent.confidence)
+        logger.debug(
+            "Intent: type=%s, params=%s, confidence=%.2f",
+            intent.modification_type.value,
+            intent.parameters,
+            intent.confidence,
+        )
 
         # Apply modification deterministically
         try:
@@ -249,7 +258,9 @@ class ModifierAgent(BaseAgent):
         self._history.add(record)
         return new_plan, record
 
-    def undo(self, current_plan: BuildingPlan) -> tuple[BuildingPlan | None, ModificationRecord | None]:
+    def undo(
+        self, current_plan: BuildingPlan
+    ) -> tuple[BuildingPlan | None, ModificationRecord | None]:
         """Undo the last modification by restoring the snapshot."""
         record = self._history.pop_last()
         if record is None:
@@ -293,6 +304,7 @@ class ModifierAgent(BaseAgent):
 
         # Story changes
         import re
+
         story_match = re.search(r"(\d+)\s*(?:層|layer|stor(?:y|ies)|floor)", cmd_lower)
         if story_match or "層" in cmd_lower or "story" in cmd_lower or "stories" in cmd_lower:
             mod_type = ModificationType.STORIES
@@ -300,7 +312,9 @@ class ModifierAgent(BaseAgent):
                 params["target_stories"] = int(story_match.group(1))
 
         # Height changes
-        height_match = re.search(r"(?:層高|story.?height|floor.?height)\s*[=:：]?\s*(\d+\.?\d*)", cmd_lower)
+        height_match = re.search(
+            r"(?:層高|story.?height|floor.?height)\s*[=:：]?\s*(\d+\.?\d*)", cmd_lower
+        )
         if height_match:
             mod_type = ModificationType.HEIGHT
             params["story_height_m"] = float(height_match.group(1))
@@ -367,9 +381,7 @@ class ModifierAgent(BaseAgent):
 
         if target > current:
             # Add stories by cloning the top floor
-            template = plan.stories[-1] if plan.stories else StoryPlan(
-                name="1F", elevation_m=0.0
-            )
+            template = plan.stories[-1] if plan.stories else StoryPlan(name="1F", elevation_m=0.0)
             for i in range(current, target):
                 new_story = template.model_copy(deep=True)
                 new_story.name = f"{i + 1}F"
@@ -445,9 +457,7 @@ class ModifierAgent(BaseAgent):
         return plan
 
 
-def _scale_polygon(
-    coords: list[tuple[float, float]], scale: float
-) -> list[tuple[float, float]]:
+def _scale_polygon(coords: list[tuple[float, float]], scale: float) -> list[tuple[float, float]]:
     """Scale polygon around its centroid."""
     if not coords:
         return coords
@@ -477,8 +487,7 @@ def _recalculate_metrics(plan: BuildingPlan) -> BuildingPlan:
     if land_area > 0:
         plan.building_bcr = round(footprint_area / land_area, 4)
         total_floor_area = sum(
-            poly_area(s.slab_boundary) if s.slab_boundary else footprint_area
-            for s in plan.stories
+            poly_area(s.slab_boundary) if s.slab_boundary else footprint_area for s in plan.stories
         )
         plan.building_far = round(total_floor_area / land_area, 4)
 

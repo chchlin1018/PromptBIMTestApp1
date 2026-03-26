@@ -5,15 +5,12 @@ Uses only ``ifcopenshell.api.run()`` high-level API.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import ifcopenshell
 import ifcopenshell.api
 
-from promptbim.bim.monitoring.auto_placement import MonitorPlan, MonitorPlacement
-from promptbim.bim.monitoring.monitor_types import MONITOR_TYPES
-
+from promptbim.bim.monitoring.auto_placement import MonitorPlacement, MonitorPlan
 
 # Colour coding per category
 _CATEGORY_COLORS: dict[str, tuple[float, float, float]] = {
@@ -96,8 +93,12 @@ class IFCMonitorGenerator:
         building = ifcopenshell.api.run(
             "root.create_entity", self._file, ifc_class="IfcBuilding", name=project_name
         )
-        ifcopenshell.api.run("aggregate.assign_object", self._file, products=[site], relating_object=project)
-        ifcopenshell.api.run("aggregate.assign_object", self._file, products=[building], relating_object=site)
+        ifcopenshell.api.run(
+            "aggregate.assign_object", self._file, products=[site], relating_object=project
+        )
+        ifcopenshell.api.run(
+            "aggregate.assign_object", self._file, products=[building], relating_object=site
+        )
 
         # Create storeys
         floors = sorted(set(p.floor for p in monitor_plan.placements))
@@ -167,7 +168,9 @@ class IFCMonitorGenerator:
             height=size,
             thickness=size,
         )
-        ifcopenshell.api.run("geometry.assign_representation", f, product=element, representation=rep)
+        ifcopenshell.api.run(
+            "geometry.assign_representation", f, product=element, representation=rep
+        )
 
         # Style by category
         self._apply_category_style(element, placement.category)

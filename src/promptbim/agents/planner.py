@@ -7,8 +7,6 @@ agent — it must place a valid building on the real land parcel.
 
 from __future__ import annotations
 
-import json
-
 from promptbim.agents.base import AgentResponse, BaseAgent
 from promptbim.codes.tw_seismic_code import get_min_column_cm, get_seismic_params
 from promptbim.debug import get_logger
@@ -104,12 +102,22 @@ class PlannerAgent(BaseAgent):
         Returns a :class:`BuildingPlan`. Falls back to a simple box if
         the API call fails.
         """
-        logger.debug("Planning: land=%.1f sqm, buildable=%d pts, stories=%d", land.area_sqm, len(buildable_area), requirement.num_stories)
+        logger.debug(
+            "Planning: land=%.1f sqm, buildable=%d pts, stories=%d",
+            land.area_sqm,
+            len(buildable_area),
+            requirement.num_stories,
+        )
         user_msg = self._build_user_message(requirement, land, zoning, buildable_area)
         response = self.run(user_msg)
         plan = self._to_plan(response, land, zoning, buildable_area, requirement)
         total_walls = sum(len(s.walls) for s in plan.stories)
-        logger.debug("Plan: %d stories, footprint=%d pts, %d walls", len(plan.stories), len(plan.building_footprint), total_walls)
+        logger.debug(
+            "Plan: %d stories, footprint=%d pts, %d walls",
+            len(plan.stories),
+            len(plan.building_footprint),
+            total_walls,
+        )
         return plan
 
     def _build_user_message(
@@ -185,7 +193,9 @@ def _fallback_box(
         WallDef,
     )
 
-    buildable_poly = ShapelyPolygon(buildable_area) if buildable_area else ShapelyPolygon(land.boundary)
+    buildable_poly = (
+        ShapelyPolygon(buildable_area) if buildable_area else ShapelyPolygon(land.boundary)
+    )
     bounds = buildable_poly.bounds  # minx, miny, maxx, maxy
     minx, miny, maxx, maxy = bounds
 
@@ -221,7 +231,10 @@ def _fallback_box(
         actual_footprint_area = width * depth
 
     footprint = [
-        (bx0, by0), (bx1, by0), (bx1, by1), (bx0, by1),
+        (bx0, by0),
+        (bx1, by0),
+        (bx1, by1),
+        (bx0, by1),
     ]
 
     bcr = actual_footprint_area / land.area_sqm if land.area_sqm > 0 else 0

@@ -17,7 +17,16 @@ from promptbim.debug import get_logger
 logger = get_logger("land.image_preprocess")
 
 SUPPORTED_IMAGE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".heic", ".heif", ".pdf",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".tiff",
+    ".tif",
+    ".bmp",
+    ".webp",
+    ".heic",
+    ".heif",
+    ".pdf",
 }
 
 MAX_DIMENSION = 2048
@@ -94,7 +103,13 @@ def prepare_for_vision_api(
     img = load_image(file_path)
     original_size = img.size
     img = normalize_image(img, max_dimension=max_dimension)
-    logger.debug("Image: original=%dx%d, processed=%dx%d", original_size[0], original_size[1], img.size[0], img.size[1])
+    logger.debug(
+        "Image: original=%dx%d, processed=%dx%d",
+        original_size[0],
+        original_size[1],
+        img.size[0],
+        img.size[1],
+    )
 
     suffix = Path(file_path).suffix.lower()
     if suffix == ".png":
@@ -147,6 +162,4 @@ def _heic_to_image(path: Path) -> Image.Image:
             img = img.convert("RGB")
         return img
     except ImportError:
-        raise ImportError(
-            "HEIC support requires pillow-heif. Install: pip install pillow-heif"
-        )
+        raise ImportError("HEIC support requires pillow-heif. Install: pip install pillow-heif")

@@ -44,67 +44,77 @@ class QuantityTakeOff:
             items.extend(self._extract_walls(story))
             items.extend(self._extract_slab(story, plan))
             items.extend(self._extract_openings(story))
-            slab_area = self._polygon_area(
-                story.slab_boundary or plan.building_footprint
-            )
+            slab_area = self._polygon_area(story.slab_boundary or plan.building_footprint)
             total_floor_area += slab_area
 
         # Roof
         if plan.stories:
             roof_area = self._polygon_area(plan.building_footprint)
             if roof_area > 0:
-                items.append(QTOItem(
-                    category="roof",
-                    ifc_class="IfcRoof",
-                    name="Roof",
-                    unit="m2",
-                    quantity=roof_area,
-                    story="Roof",
-                ))
+                items.append(
+                    QTOItem(
+                        category="roof",
+                        ifc_class="IfcRoof",
+                        name="Roof",
+                        unit="m2",
+                        quantity=roof_area,
+                        story="Roof",
+                    )
+                )
 
         # MEP allowance (based on total floor area)
         if total_floor_area > 0:
-            items.append(QTOItem(
-                category="mep_hvac",
-                ifc_class="IfcSystem",
-                name="HVAC System",
-                unit="m2",
-                quantity=total_floor_area,
-            ))
-            items.append(QTOItem(
-                category="mep_plumbing",
-                ifc_class="IfcSystem",
-                name="Plumbing System",
-                unit="m2",
-                quantity=total_floor_area,
-            ))
-            items.append(QTOItem(
-                category="mep_electrical",
-                ifc_class="IfcSystem",
-                name="Electrical System",
-                unit="m2",
-                quantity=total_floor_area,
-            ))
-            items.append(QTOItem(
-                category="mep_fire",
-                ifc_class="IfcSystem",
-                name="Fire Protection",
-                unit="m2",
-                quantity=total_floor_area,
-            ))
+            items.append(
+                QTOItem(
+                    category="mep_hvac",
+                    ifc_class="IfcSystem",
+                    name="HVAC System",
+                    unit="m2",
+                    quantity=total_floor_area,
+                )
+            )
+            items.append(
+                QTOItem(
+                    category="mep_plumbing",
+                    ifc_class="IfcSystem",
+                    name="Plumbing System",
+                    unit="m2",
+                    quantity=total_floor_area,
+                )
+            )
+            items.append(
+                QTOItem(
+                    category="mep_electrical",
+                    ifc_class="IfcSystem",
+                    name="Electrical System",
+                    unit="m2",
+                    quantity=total_floor_area,
+                )
+            )
+            items.append(
+                QTOItem(
+                    category="mep_fire",
+                    ifc_class="IfcSystem",
+                    name="Fire Protection",
+                    unit="m2",
+                    quantity=total_floor_area,
+                )
+            )
 
         # Site work (based on land boundary)
         land_area = self._polygon_area(plan.land_boundary)
         footprint_area = self._polygon_area(plan.building_footprint)
         site_area = land_area - footprint_area if land_area > footprint_area else 0
         if site_area > 0:
-            items.append(QTOItem(
-                category="site_work",
-                ifc_class="IfcSite",
-                name="Site Work",
-                unit="m2",
-                quantity=site_area,
-            ))
+            items.append(
+                QTOItem(
+                    category="site_work",
+                    ifc_class="IfcSite",
+                    name="Site Work",
+                    unit="m2",
+                    quantity=site_area,
+                )
+            )
 
         for item in items:
             logger.debug("QTO: %s — %.2f %s", item.name, item.quantity, item.unit)
@@ -118,15 +128,17 @@ class QuantityTakeOff:
             area = length * story.height_m
             volume = area * w.thickness_m
             cat = "wall_exterior" if w.wall_type == "exterior" else "wall_interior"
-            items.append(QTOItem(
-                category=cat,
-                ifc_class="IfcWall",
-                name=f"Wall-{story.name}-{i}",
-                unit="m2",
-                quantity=area,
-                story=story.name,
-                extra={"length_m": length, "volume_m3": volume},
-            ))
+            items.append(
+                QTOItem(
+                    category=cat,
+                    ifc_class="IfcWall",
+                    name=f"Wall-{story.name}-{i}",
+                    unit="m2",
+                    quantity=area,
+                    story=story.name,
+                    extra={"length_m": length, "volume_m3": volume},
+                )
+            )
         return items
 
     def _extract_slab(self, story: StoryPlan, plan: BuildingPlan) -> list[QTOItem]:
@@ -134,39 +146,45 @@ class QuantityTakeOff:
         area = self._polygon_area(boundary)
         if area <= 0:
             return []
-        return [QTOItem(
-            category="slab",
-            ifc_class="IfcSlab",
-            name=f"Slab-{story.name}",
-            unit="m2",
-            quantity=area,
-            story=story.name,
-            extra={"thickness_m": story.slab_thickness_m},
-        )]
+        return [
+            QTOItem(
+                category="slab",
+                ifc_class="IfcSlab",
+                name=f"Slab-{story.name}",
+                unit="m2",
+                quantity=area,
+                story=story.name,
+                extra={"thickness_m": story.slab_thickness_m},
+            )
+        ]
 
     def _extract_openings(self, story: StoryPlan) -> list[QTOItem]:
         items: list[QTOItem] = []
         for i, o in enumerate(story.openings):
             if o.opening_type == "door":
-                items.append(QTOItem(
-                    category="door",
-                    ifc_class="IfcDoor",
-                    name=f"Door-{story.name}-{i}",
-                    unit="unit",
-                    quantity=1,
-                    story=story.name,
-                    extra={"width_m": o.width_m, "height_m": o.height_m},
-                ))
+                items.append(
+                    QTOItem(
+                        category="door",
+                        ifc_class="IfcDoor",
+                        name=f"Door-{story.name}-{i}",
+                        unit="unit",
+                        quantity=1,
+                        story=story.name,
+                        extra={"width_m": o.width_m, "height_m": o.height_m},
+                    )
+                )
             else:
                 area = o.width_m * o.height_m
-                items.append(QTOItem(
-                    category="window",
-                    ifc_class="IfcWindow",
-                    name=f"Window-{story.name}-{i}",
-                    unit="m2",
-                    quantity=area,
-                    story=story.name,
-                ))
+                items.append(
+                    QTOItem(
+                        category="window",
+                        ifc_class="IfcWindow",
+                        name=f"Window-{story.name}-{i}",
+                        unit="m2",
+                        quantity=area,
+                        story=story.name,
+                    )
+                )
         return items
 
     @staticmethod

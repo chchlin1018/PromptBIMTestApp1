@@ -2,9 +2,7 @@
 
 import json
 
-import pytest
-
-from promptbim.bim.monitoring.auto_placement import MonitorPlan, MonitorPlacement
+from promptbim.bim.monitoring.auto_placement import MonitorPlacement, MonitorPlan
 from promptbim.bim.monitoring.dashboard_data import (
     export_dashboard_json,
     generate_dashboard_json,
@@ -12,41 +10,43 @@ from promptbim.bim.monitoring.dashboard_data import (
 
 
 def _make_test_plan() -> MonitorPlan:
-    return MonitorPlan(placements=[
-        MonitorPlacement(
-            monitor_type_id="temp_sensor",
-            name="Temp_1F_0",
-            floor="1F",
-            space_name="Office",
-            position=(5.0, 5.0, 2.7),
-            ifc_class="IfcSensor",
-            predefined_type="TEMPERATURESENSOR",
-            category="environmental",
-            unit_cost_twd=3500,
-        ),
-        MonitorPlacement(
-            monitor_type_id="temp_sensor",
-            name="Temp_1F_1",
-            floor="1F",
-            space_name="Lobby",
-            position=(2.0, 3.0, 2.7),
-            ifc_class="IfcSensor",
-            predefined_type="TEMPERATURESENSOR",
-            category="environmental",
-            unit_cost_twd=3500,
-        ),
-        MonitorPlacement(
-            monitor_type_id="smoke_detector",
-            name="Smoke_2F_0",
-            floor="2F",
-            space_name="Office",
-            position=(5.0, 5.0, 6.2),
-            ifc_class="IfcSensor",
-            predefined_type="SMOKEDETECTOR",
-            category="safety",
-            unit_cost_twd=1500,
-        ),
-    ])
+    return MonitorPlan(
+        placements=[
+            MonitorPlacement(
+                monitor_type_id="temp_sensor",
+                name="Temp_1F_0",
+                floor="1F",
+                space_name="Office",
+                position=(5.0, 5.0, 2.7),
+                ifc_class="IfcSensor",
+                predefined_type="TEMPERATURESENSOR",
+                category="environmental",
+                unit_cost_twd=3500,
+            ),
+            MonitorPlacement(
+                monitor_type_id="temp_sensor",
+                name="Temp_1F_1",
+                floor="1F",
+                space_name="Lobby",
+                position=(2.0, 3.0, 2.7),
+                ifc_class="IfcSensor",
+                predefined_type="TEMPERATURESENSOR",
+                category="environmental",
+                unit_cost_twd=3500,
+            ),
+            MonitorPlacement(
+                monitor_type_id="smoke_detector",
+                name="Smoke_2F_0",
+                floor="2F",
+                space_name="Office",
+                position=(5.0, 5.0, 6.2),
+                ifc_class="IfcSensor",
+                predefined_type="SMOKEDETECTOR",
+                category="safety",
+                unit_cost_twd=1500,
+            ),
+        ]
+    )
 
 
 class TestDashboardData:

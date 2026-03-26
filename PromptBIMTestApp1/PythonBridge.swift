@@ -91,6 +91,15 @@ class PythonBridge: ObservableObject {
 
         for url in candidates {
             if let contents = try? String(contentsOf: url, encoding: .utf8) {
+                // Check file permissions — warn if world-readable
+                let fm = FileManager.default
+                if let attrs = try? fm.attributesOfItem(atPath: url.path),
+                   let posix = attrs[.posixPermissions] as? NSNumber {
+                    let mode = posix.int16Value
+                    if mode & 0o044 != 0 {
+                        NSLog("[PythonBridge] ⚠️ .env file at \(url.path) is readable by group/others. Run: chmod 600 \(url.path)")
+                    }
+                }
                 var dict = [String: String]()
                 for line in contents.components(separatedBy: .newlines) {
                     let trimmed = line.trimmingCharacters(in: .whitespaces)

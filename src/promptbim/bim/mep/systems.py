@@ -53,10 +53,10 @@ class MEPSystemTemplate:
 
 # System colour definitions (R, G, B) for visualisation
 SYSTEM_COLORS: dict[str, tuple[float, float, float]] = {
-    "plumbing": (0.2, 0.4, 0.8),       # blue
-    "electrical": (0.8, 0.2, 0.2),      # red
-    "hvac": (0.2, 0.8, 0.2),            # green
-    "fire_protection": (0.8, 0.8, 0.0), # yellow
+    "plumbing": (0.2, 0.4, 0.8),  # blue
+    "electrical": (0.8, 0.2, 0.2),  # red
+    "hvac": (0.2, 0.8, 0.2),  # green
+    "fire_protection": (0.8, 0.8, 0.0),  # yellow
 }
 
 SYSTEM_LABELS: dict[str, str] = {
@@ -68,10 +68,10 @@ SYSTEM_LABELS: dict[str, str] = {
 
 # Ceiling space allocation (from top, mm)
 CEILING_LAYER_Z_OFFSET: dict[str, float] = {
-    "hvac": -0.10,            # top layer, largest ducts
-    "fire_protection": -0.30, # middle
-    "electrical": -0.40,      # middle
-    "plumbing": -0.50,        # bottom layer
+    "hvac": -0.10,  # top layer, largest ducts
+    "fire_protection": -0.30,  # middle
+    "electrical": -0.40,  # middle
+    "plumbing": -0.50,  # bottom layer
 }
 
 

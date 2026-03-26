@@ -1,7 +1,5 @@
 """Tests for agents/base.py — JSON extraction and AgentResponse."""
 
-import pytest
-
 from promptbim.agents.base import AgentResponse, _try_extract_json
 
 

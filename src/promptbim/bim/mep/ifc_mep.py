@@ -11,9 +11,8 @@ from pathlib import Path
 import ifcopenshell
 import ifcopenshell.api
 
-from promptbim.bim.mep.planner import MEPPlan, MEPRoute
+from promptbim.bim.mep.planner import MEPPlan
 from promptbim.bim.mep.systems import SYSTEM_COLORS
-
 
 # IFC class per system
 _SYSTEM_IFC_CLASS: dict[str, str] = {
@@ -109,8 +108,12 @@ class IFCMEPGenerator:
         building = ifcopenshell.api.run(
             "root.create_entity", self._file, ifc_class="IfcBuilding", name=project_name
         )
-        ifcopenshell.api.run("aggregate.assign_object", self._file, products=[site], relating_object=project)
-        ifcopenshell.api.run("aggregate.assign_object", self._file, products=[building], relating_object=site)
+        ifcopenshell.api.run(
+            "aggregate.assign_object", self._file, products=[site], relating_object=project
+        )
+        ifcopenshell.api.run(
+            "aggregate.assign_object", self._file, products=[building], relating_object=site
+        )
 
         # Create storeys
         floors = sorted(set(r.floor for r in mep_plan.routes))
@@ -174,9 +177,7 @@ class IFCMEPGenerator:
     ) -> None:
         f = self._file
 
-        element = ifcopenshell.api.run(
-            "root.create_entity", f, ifc_class=ifc_class, name=name
-        )
+        element = ifcopenshell.api.run("root.create_entity", f, ifc_class=ifc_class, name=name)
 
         if storey is not None:
             ifcopenshell.api.run(
@@ -187,7 +188,7 @@ class IFCMEPGenerator:
         dx = end[0] - start[0]
         dy = end[1] - start[1]
         dz = end[2] - start[2]
-        length = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+        length = math.sqrt(dx**2 + dy**2 + dz**2)
         if length < 1e-6:
             return
 
@@ -210,7 +211,9 @@ class IFCMEPGenerator:
             height=radius_m * 2,
             thickness=radius_m * 2,
         )
-        ifcopenshell.api.run("geometry.assign_representation", f, product=element, representation=rep)
+        ifcopenshell.api.run(
+            "geometry.assign_representation", f, product=element, representation=rep
+        )
 
         # Style / color
         self._apply_system_style(element, system)

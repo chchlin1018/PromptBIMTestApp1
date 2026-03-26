@@ -35,7 +35,9 @@ class RoutePath:
     total_length_m: float = 0.0
 
     @classmethod
-    def from_waypoints(cls, waypoints: list[tuple[float, float, float]], grid_size: float) -> RoutePath:
+    def from_waypoints(
+        cls, waypoints: list[tuple[float, float, float]], grid_size: float
+    ) -> RoutePath:
         segments: list[PathSegment] = []
         total = 0.0
         for i in range(len(waypoints) - 1):
@@ -43,7 +45,7 @@ class RoutePath:
             dx = e[0] - s[0]
             dy = e[1] - s[1]
             dz = e[2] - s[2]
-            length = (dx ** 2 + dy ** 2 + dz ** 2) ** 0.5
+            length = (dx**2 + dy**2 + dz**2) ** 0.5
             direction = (
                 int(np.sign(dx)) if abs(dx) > 1e-6 else 0,
                 int(np.sign(dy)) if abs(dy) > 1e-6 else 0,
@@ -58,9 +60,12 @@ class MEPPathfinder:
     """3D orthogonal A* pathfinder (restricted to 90-degree turns)."""
 
     DIRECTIONS = [
-        (1, 0, 0), (-1, 0, 0),
-        (0, 1, 0), (0, -1, 0),
-        (0, 0, 1), (0, 0, -1),
+        (1, 0, 0),
+        (-1, 0, 0),
+        (0, 1, 0),
+        (0, -1, 0),
+        (0, 0, 1),
+        (0, 0, -1),
     ]
 
     def __init__(self, grid_size: float = 0.3) -> None:
@@ -100,7 +105,7 @@ class MEPPathfinder:
             ex, ey = w["end"]
             t = w.get("thickness", 0.2) / 2.0
             dx, dy = ex - sx, ey - sy
-            length = (dx ** 2 + dy ** 2) ** 0.5
+            length = (dx**2 + dy**2) ** 0.5
             if length < 1e-6:
                 continue
             nx, ny = -dy / length, dx / length
@@ -146,7 +151,13 @@ class MEPPathfinder:
         Returns a :class:`RoutePath` with world-coordinate waypoints
         (empty if no path found).
         """
-        logger.debug("find_path: grid=%.2f, obstacles=%d, start=%s, end=%s", self.grid, len(self.obstacles), start, end)
+        logger.debug(
+            "find_path: grid=%.2f, obstacles=%d, start=%s, end=%s",
+            self.grid,
+            len(self.obstacles),
+            start,
+            end,
+        )
         start_g = self._to_grid(start)
         end_g = self._to_grid(end)
 
@@ -174,7 +185,12 @@ class MEPPathfinder:
                 # Simplify: merge collinear segments
                 simplified = _simplify_path(world_pts)
                 route = RoutePath.from_waypoints(simplified, self.grid)
-                logger.debug("Path found: %d iterations, length=%.2fm, segments=%d", iterations, route.total_length_m, len(route.segments))
+                logger.debug(
+                    "Path found: %d iterations, length=%.2fm, segments=%d",
+                    iterations,
+                    route.total_length_m,
+                    len(route.segments),
+                )
                 return route
 
             for dx, dy, dz in self.DIRECTIONS:

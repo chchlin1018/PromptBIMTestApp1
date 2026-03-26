@@ -1,8 +1,6 @@
 """Tests for coordinate projection utilities."""
 
-import pytest
-
-from promptbim.land.projection import to_local_meters, reproject_coords
+from promptbim.land.projection import reproject_coords, to_local_meters
 from promptbim.schemas.land import LandParcel
 
 

@@ -6,13 +6,10 @@ Each template takes a land boundary + buildable area and returns a BuildingPlan.
 
 from __future__ import annotations
 
-from typing import Callable
-
-from promptbim.schemas.plan import BuildingPlan
-
-from promptbim.bim.templates.school import generate_school_plan
-from promptbim.bim.templates.hospital import generate_hospital_plan
 from promptbim.bim.templates.factory import generate_factory_plan
+from promptbim.bim.templates.hospital import generate_hospital_plan
+from promptbim.bim.templates.school import generate_school_plan
+from promptbim.schemas.plan import BuildingPlan
 
 # Template registry: name -> (generator_func, default_stories, description)
 BUILDING_TEMPLATES: dict[str, dict] = {

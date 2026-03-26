@@ -1,8 +1,7 @@
 """Tests for CLI check subcommand."""
 
 import json
-import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -16,19 +15,34 @@ class TestCliCheck:
         """Create a mock HealthChecker with preset results."""
         mock = MagicMock()
         mock.run_all.return_value = [
-            CheckResult(name="Python version", category="Python environment",
-                        status="pass", message="3.11.15", elapsed_ms=1.0),
-            CheckResult(name="Conda env", category="Python environment",
-                        status="pass", message="promptbim", elapsed_ms=1.0),
+            CheckResult(
+                name="Python version",
+                category="Python environment",
+                status="pass",
+                message="3.11.15",
+                elapsed_ms=1.0,
+            ),
+            CheckResult(
+                name="Conda env",
+                category="Python environment",
+                status="pass",
+                message="promptbim",
+                elapsed_ms=1.0,
+            ),
         ]
         mock.run_ai_only.return_value = [
-            CheckResult(name="API Key", category="AI services",
-                        status="pass", message="set", elapsed_ms=1.0),
+            CheckResult(
+                name="API Key", category="AI services", status="pass", message="set", elapsed_ms=1.0
+            ),
         ]
         mock.to_dict.return_value = [{"name": "test", "status": "pass"}]
         mock.summary.return_value = {
-            "total": 2, "passed": 2, "failed": 0,
-            "warned": 0, "skipped": 0, "all_passed": True,
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warned": 0,
+            "skipped": 0,
+            "all_passed": True,
         }
         return mock
 
@@ -37,6 +51,7 @@ class TestCliCheck:
         MockChecker.return_value = self._make_mock_checker()
 
         from promptbim.__main__ import _run_check
+
         args = MagicMock()
         args.json = False
         args.ai = False
@@ -51,6 +66,7 @@ class TestCliCheck:
         MockChecker.return_value = self._make_mock_checker()
 
         from promptbim.__main__ import _run_check
+
         args = MagicMock()
         args.json = True
         args.ai = False
@@ -70,6 +86,7 @@ class TestCliCheck:
         MockChecker.return_value = mock
 
         from promptbim.__main__ import _run_check
+
         args = MagicMock()
         args.json = False
         args.ai = True
@@ -84,12 +101,17 @@ class TestCliCheck:
     def test_check_exit_code_on_failure(self, MockChecker):
         mock = self._make_mock_checker()
         mock.summary.return_value = {
-            "total": 2, "passed": 1, "failed": 1,
-            "warned": 0, "skipped": 0, "all_passed": False,
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "warned": 0,
+            "skipped": 0,
+            "all_passed": False,
         }
         MockChecker.return_value = mock
 
         from promptbim.__main__ import _run_check
+
         args = MagicMock()
         args.json = False
         args.ai = False
@@ -105,6 +127,7 @@ class TestStartupCheckDisabled:
 
     def test_config_defaults(self):
         from promptbim.config import Settings
+
         s = Settings()
         assert s.startup_check_enabled is True
         assert s.startup_check_skip_ai is False

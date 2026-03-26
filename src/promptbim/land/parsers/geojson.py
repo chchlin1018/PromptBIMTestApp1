@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from shapely.geometry import shape, Polygon
+from shapely.geometry import Polygon, shape
 
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
@@ -41,7 +41,12 @@ def parse_geojson(file_path: str | Path) -> list[LandParcel]:
         ys = [c[1] for c in coords]
         logger.debug(
             "Feature %d: type=Polygon, vertices=%d, X[%.4f, %.4f] Y[%.4f, %.4f]",
-            i, len(coords), min(xs), max(xs), min(ys), max(ys),
+            i,
+            len(coords),
+            min(xs),
+            max(xs),
+            min(ys),
+            max(ys),
         )
 
         parcel = LandParcel(

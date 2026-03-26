@@ -79,8 +79,13 @@ class SitePlanView(QWidget):
             cy = sum(c[1] for c in fp) / len(fp)
             info = f"BCR: {self._plan.building_bcr:.0%}\nFAR: {self._plan.building_far:.1f}"
             self._ax.annotate(
-                info, (cx, cy), ha="center", va="center",
-                fontsize=10, fontweight="bold", color="darkred",
+                info,
+                (cx, cy),
+                ha="center",
+                va="center",
+                fontsize=10,
+                fontweight="bold",
+                color="darkred",
             )
 
             # Per-story outlines (lighter)

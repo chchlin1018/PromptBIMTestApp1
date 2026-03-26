@@ -47,9 +47,12 @@ def to_local_meters(parcel: LandParcel, target_crs: str = "EPSG:3826") -> LandPa
     logger.debug(
         "Projected %d coords: before=(%.4f,%.4f), after=(%.4f,%.4f), origin=(%.2f,%.2f)",
         len(parcel.boundary),
-        parcel.boundary[0][0], parcel.boundary[0][1],
-        local_coords[0][0], local_coords[0][1],
-        local_origin[0], local_origin[1],
+        parcel.boundary[0][0],
+        parcel.boundary[0][1],
+        local_coords[0][0],
+        local_coords[0][1],
+        local_origin[0],
+        local_origin[1],
     )
 
     return LandParcel(

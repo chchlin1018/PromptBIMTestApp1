@@ -9,13 +9,12 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from promptbim.debug import get_logger
 from promptbim.bim.monitoring.monitor_types import (
     MONITOR_TYPES,
-    MonitorType,
     get_types_for_space,
 )
 from promptbim.bim.monitoring.rules_engine import PLACEMENT_RULES, RulesEngine
+from promptbim.debug import get_logger
 from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan
 
 _logger = get_logger("monitoring.auto_placement")
@@ -90,17 +89,19 @@ class AutoMonitorPlacer:
                         continue
                     positions = self._distribute_in_space(space, story, count)
                     for i, pos in enumerate(positions):
-                        placements.append(MonitorPlacement(
-                            monitor_type_id=mt.id,
-                            name=f"{mt.name}_{story.name}_{space.name}_{i}",
-                            floor=story.name,
-                            space_name=space.name,
-                            position=pos,
-                            ifc_class=mt.ifc_class,
-                            predefined_type=mt.predefined_type,
-                            category=mt.category.value,
-                            unit_cost_twd=mt.unit_cost_twd,
-                        ))
+                        placements.append(
+                            MonitorPlacement(
+                                monitor_type_id=mt.id,
+                                name=f"{mt.name}_{story.name}_{space.name}_{i}",
+                                floor=story.name,
+                                space_name=space.name,
+                                position=pos,
+                                ifc_class=mt.ifc_class,
+                                predefined_type=mt.predefined_type,
+                                category=mt.category.value,
+                                unit_cost_twd=mt.unit_cost_twd,
+                            )
+                        )
 
             # Per-floor placements (for types with per_floor rules)
             placements.extend(self._per_floor_placements(story))
@@ -158,17 +159,19 @@ class AutoMonitorPlacer:
             z = story.elevation_m + story.height_m - 0.3
             positions = self._floor_positions(story, count)
             for i, (x, y) in enumerate(positions):
-                placements.append(MonitorPlacement(
-                    monitor_type_id=type_id,
-                    name=f"{mt.name}_{story.name}_floor_{i}",
-                    floor=story.name,
-                    space_name="floor_level",
-                    position=(round(x, 3), round(y, 3), round(z, 3)),
-                    ifc_class=mt.ifc_class,
-                    predefined_type=mt.predefined_type,
-                    category=mt.category.value,
-                    unit_cost_twd=mt.unit_cost_twd,
-                ))
+                placements.append(
+                    MonitorPlacement(
+                        monitor_type_id=type_id,
+                        name=f"{mt.name}_{story.name}_floor_{i}",
+                        floor=story.name,
+                        space_name="floor_level",
+                        position=(round(x, 3), round(y, 3), round(z, 3)),
+                        ifc_class=mt.ifc_class,
+                        predefined_type=mt.predefined_type,
+                        category=mt.category.value,
+                        unit_cost_twd=mt.unit_cost_twd,
+                    )
+                )
         return placements
 
     def _per_building_placements(self, plan: BuildingPlan) -> list[MonitorPlacement]:
@@ -202,22 +205,22 @@ class AutoMonitorPlacer:
             z = story.elevation_m + story.height_m - 0.3
             positions = self._floor_positions(story, count)
             for i, (x, y) in enumerate(positions):
-                placements.append(MonitorPlacement(
-                    monitor_type_id=type_id,
-                    name=f"{mt.name}_{story.name}_bldg_{i}",
-                    floor=story.name,
-                    space_name="building_level",
-                    position=(round(x, 3), round(y, 3), round(z, 3)),
-                    ifc_class=mt.ifc_class,
-                    predefined_type=mt.predefined_type,
-                    category=mt.category.value,
-                    unit_cost_twd=mt.unit_cost_twd,
-                ))
+                placements.append(
+                    MonitorPlacement(
+                        monitor_type_id=type_id,
+                        name=f"{mt.name}_{story.name}_bldg_{i}",
+                        floor=story.name,
+                        space_name="building_level",
+                        position=(round(x, 3), round(y, 3), round(z, 3)),
+                        ifc_class=mt.ifc_class,
+                        predefined_type=mt.predefined_type,
+                        category=mt.category.value,
+                        unit_cost_twd=mt.unit_cost_twd,
+                    )
+                )
         return placements
 
-    def _floor_positions(
-        self, story: StoryPlan, count: int
-    ) -> list[tuple[float, float]]:
+    def _floor_positions(self, story: StoryPlan, count: int) -> list[tuple[float, float]]:
         """Get *count* positions distributed on a floor's slab."""
         if story.slab_boundary:
             cx, cy = self._centroid(story.slab_boundary)

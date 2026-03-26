@@ -60,8 +60,12 @@ ENVELOPE_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="台玻", brand="台灣玻璃", country="TW",
-                price=PriceRange(min_price=8000, max_price=20000, unit="per_sqm", source="台灣市場參考價 2025"),
+                name="台玻",
+                brand="台灣玻璃",
+                country="TW",
+                price=PriceRange(
+                    min_price=8000, max_price=20000, unit="per_sqm", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["帷幕牆", "玻璃牆", "curtain wall", "glass wall", "facade"],

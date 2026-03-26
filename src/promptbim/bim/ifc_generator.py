@@ -6,8 +6,6 @@ Only ``ifcopenshell.api.run()`` is used — no low-level entity manipulation.
 from __future__ import annotations
 
 import math
-import os
-import tempfile
 from pathlib import Path
 
 import ifcopenshell
@@ -15,13 +13,13 @@ import ifcopenshell.api
 import ifcopenshell.api.owner
 import ifcopenshell.util.placement
 
-from promptbim.debug import get_logger
 from promptbim.bim.materials import (
     MaterialDef,
     roof_material,
     slab_material,
     wall_material,
 )
+from promptbim.debug import get_logger
 from promptbim.schemas.plan import BuildingPlan, StoryPlan, WallDef
 
 _logger = get_logger("bim.ifc")
@@ -46,6 +44,7 @@ class IFCGenerator:
     def generate(self, plan: BuildingPlan, output_path: str | Path) -> Path:
         """Generate an IFC file from *plan* and write it to *output_path*."""
         import time as _time
+
         _t0 = _time.time()
 
         output_path = Path(output_path)
@@ -54,7 +53,10 @@ class IFCGenerator:
         total_walls = sum(len(s.walls) for s in plan.stories)
         _logger.debug(
             "Generating IFC4: %d stories, %d walls, %d slabs, roof=%s",
-            len(plan.stories), total_walls, len(plan.stories), plan.roof.roof_type,
+            len(plan.stories),
+            total_walls,
+            len(plan.stories),
+            plan.roof.roof_type,
         )
 
         self._init_file()
@@ -67,9 +69,7 @@ class IFCGenerator:
         if plan.stories:
             top = plan.stories[-1]
             roof_z = top.elevation_m + top.height_m
-            boundary = plan.building_footprint or (
-                top.slab_boundary if top.slab_boundary else []
-            )
+            boundary = plan.building_footprint or (top.slab_boundary if top.slab_boundary else [])
             if boundary:
                 self._add_roof(plan.roof.roof_type, boundary, roof_z)
 
@@ -103,9 +103,7 @@ class IFCGenerator:
         )
 
         # Geometric context
-        self._body_context = ifcopenshell.api.run(
-            "context.add_context", f, context_type="Model"
-        )
+        self._body_context = ifcopenshell.api.run("context.add_context", f, context_type="Model")
         self._body_context = ifcopenshell.api.run(
             "context.add_context",
             f,
@@ -116,9 +114,7 @@ class IFCGenerator:
         )
 
         # Site + Building
-        self._site = ifcopenshell.api.run(
-            "root.create_entity", f, ifc_class="IfcSite", name="Site"
-        )
+        self._site = ifcopenshell.api.run("root.create_entity", f, ifc_class="IfcSite", name="Site")
         self._building = ifcopenshell.api.run(
             "root.create_entity", f, ifc_class="IfcBuilding", name=name
         )
@@ -165,13 +161,9 @@ class IFCGenerator:
     # Wall
     # ------------------------------------------------------------------
 
-    def _add_wall(
-        self, wall_def: WallDef, story: StoryPlan, ifc_storey
-    ) -> None:
+    def _add_wall(self, wall_def: WallDef, story: StoryPlan, ifc_storey) -> None:
         f = self._file
-        wall = ifcopenshell.api.run(
-            "root.create_entity", f, ifc_class="IfcWall", name="Wall"
-        )
+        wall = ifcopenshell.api.run("root.create_entity", f, ifc_class="IfcWall", name="Wall")
         ifcopenshell.api.run(
             "spatial.assign_container",
             f,
@@ -186,9 +178,7 @@ class IFCGenerator:
 
         # Placement at wall start, rotated
         matrix = _placement_matrix(sx, sy, story.elevation_m, angle)
-        ifcopenshell.api.run(
-            "geometry.edit_object_placement", f, product=wall, matrix=matrix
-        )
+        ifcopenshell.api.run("geometry.edit_object_placement", f, product=wall, matrix=matrix)
 
         # Extruded rectangle representation
         rep = ifcopenshell.api.run(
@@ -199,16 +189,12 @@ class IFCGenerator:
             height=story.height_m,
             thickness=wall_def.thickness_m,
         )
-        ifcopenshell.api.run(
-            "geometry.assign_representation", f, product=wall, representation=rep
-        )
+        ifcopenshell.api.run("geometry.assign_representation", f, product=wall, representation=rep)
 
         # Material
         mat_def = wall_material(wall_def.wall_type)
         ifc_mat = self._get_or_create_material(mat_def)
-        ifcopenshell.api.run(
-            "material.assign_material", f, products=[wall], material=ifc_mat
-        )
+        ifcopenshell.api.run("material.assign_material", f, products=[wall], material=ifc_mat)
 
     # ------------------------------------------------------------------
     # Slab
@@ -232,9 +218,7 @@ class IFCGenerator:
         )
 
         matrix = _placement_matrix(0, 0, story.elevation_m, 0)
-        ifcopenshell.api.run(
-            "geometry.edit_object_placement", f, product=slab, matrix=matrix
-        )
+        ifcopenshell.api.run("geometry.edit_object_placement", f, product=slab, matrix=matrix)
 
         thickness = story.slab_thickness_m
         rep = ifcopenshell.api.run(
@@ -244,15 +228,11 @@ class IFCGenerator:
             depth=thickness,
             polyline=list(boundary),
         )
-        ifcopenshell.api.run(
-            "geometry.assign_representation", f, product=slab, representation=rep
-        )
+        ifcopenshell.api.run("geometry.assign_representation", f, product=slab, representation=rep)
 
         mat_def = slab_material()
         ifc_mat = self._get_or_create_material(mat_def)
-        ifcopenshell.api.run(
-            "material.assign_material", f, products=[slab], material=ifc_mat
-        )
+        ifcopenshell.api.run("material.assign_material", f, products=[slab], material=ifc_mat)
 
     # ------------------------------------------------------------------
     # Roof
@@ -265,9 +245,7 @@ class IFCGenerator:
         base_z: float,
     ) -> None:
         f = self._file
-        roof = ifcopenshell.api.run(
-            "root.create_entity", f, ifc_class="IfcRoof", name="Roof"
-        )
+        roof = ifcopenshell.api.run("root.create_entity", f, ifc_class="IfcRoof", name="Roof")
         # Assign to building directly (roof spans the whole building)
         ifcopenshell.api.run(
             "spatial.assign_container",
@@ -277,9 +255,7 @@ class IFCGenerator:
         )
 
         matrix = _placement_matrix(0, 0, base_z, 0)
-        ifcopenshell.api.run(
-            "geometry.edit_object_placement", f, product=roof, matrix=matrix
-        )
+        ifcopenshell.api.run("geometry.edit_object_placement", f, product=roof, matrix=matrix)
 
         thickness = 0.15
         rep = ifcopenshell.api.run(
@@ -289,15 +265,11 @@ class IFCGenerator:
             depth=thickness,
             polyline=list(boundary),
         )
-        ifcopenshell.api.run(
-            "geometry.assign_representation", f, product=roof, representation=rep
-        )
+        ifcopenshell.api.run("geometry.assign_representation", f, product=roof, representation=rep)
 
         mat_def = roof_material(roof_type)
         ifc_mat = self._get_or_create_material(mat_def)
-        ifcopenshell.api.run(
-            "material.assign_material", f, products=[roof], material=ifc_mat
-        )
+        ifcopenshell.api.run("material.assign_material", f, products=[roof], material=ifc_mat)
 
     # ------------------------------------------------------------------
     # Material
@@ -308,9 +280,7 @@ class IFCGenerator:
             return self._material_cache[mat_def.name]
 
         f = self._file
-        ifc_mat = ifcopenshell.api.run(
-            "material.add_material", f, name=mat_def.name
-        )
+        ifc_mat = ifcopenshell.api.run("material.add_material", f, name=mat_def.name)
 
         # Add surface style (colour)
         style = ifcopenshell.api.run("style.add_style", f, name=mat_def.name)
@@ -338,9 +308,8 @@ class IFCGenerator:
 # Utilities
 # ---------------------------------------------------------------------------
 
-def _placement_matrix(
-    x: float, y: float, z: float, angle_rad: float
-) -> list[list[float]]:
+
+def _placement_matrix(x: float, y: float, z: float, angle_rad: float) -> list[list[float]]:
     """4×4 placement matrix: translate + rotate around Z."""
     c = math.cos(angle_rad)
     s = math.sin(angle_rad)

@@ -10,21 +10,19 @@ def app():
     parser = argparse.ArgumentParser(
         prog="promptbim",
         description="PromptBIM - AI-Powered BIM Building Generator",
+        epilog=(
+            "Security: Store your API key in .env (chmod 600 .env). "
+            "Never commit .env to git. Key format: sk-ant-api03-..."
+        ),
     )
-    parser.add_argument(
-        "--version", action="version", version=f"promptbim {__version__}"
-    )
-    parser.add_argument(
-        "--debug", action="store_true", help="Enable debug logging output"
-    )
+    parser.add_argument("--version", action="version", version=f"promptbim {__version__}")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
     subparsers = parser.add_subparsers(dest="command")
 
     # gui subcommand
     gui_parser = subparsers.add_parser("gui", help="Launch the desktop GUI")
-    gui_parser.add_argument(
-        "--debug", action="store_true", help="Enable debug logging output"
-    )
+    gui_parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
     # generate subcommand
     gen_parser = subparsers.add_parser("generate", help="Generate building from prompt")
@@ -32,39 +30,35 @@ def app():
     gen_parser.add_argument("--land", help="Path to land data file (GeoJSON/SHP/DXF/KML)")
     gen_parser.add_argument("--output", "-o", default="./output", help="Output directory")
     gen_parser.add_argument(
-        "--format", choices=["ifc", "usd", "both"], default="both",
-        help="Output format (default: both)"
+        "--format",
+        choices=["ifc", "usd", "both"],
+        default="both",
+        help="Output format (default: both)",
     )
     gen_parser.add_argument(
         "--city", default="Taipei", help="City for zoning rules lookup (default: Taipei)"
     )
     gen_parser.add_argument(
-        "--template", choices=["residential", "school", "hospital", "factory"],
-        help="Use a building template instead of AI planning"
+        "--template",
+        choices=["residential", "school", "hospital", "factory"],
+        help="Use a building template instead of AI planning",
     )
-    gen_parser.add_argument(
-        "--debug", action="store_true", help="Enable debug logging output"
-    )
+    gen_parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
     # check subcommand
     check_parser = subparsers.add_parser("check", help="Run system health checks")
-    check_parser.add_argument(
-        "--json", action="store_true", help="Output results as JSON"
-    )
-    check_parser.add_argument(
-        "--ai", action="store_true", help="Only run AI-related checks"
-    )
+    check_parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    check_parser.add_argument("--ai", action="store_true", help="Only run AI-related checks")
     check_parser.add_argument(
         "--fix", action="store_true", help="Attempt to auto-fix failed checks"
     )
-    check_parser.add_argument(
-        "--debug", action="store_true", help="Enable debug logging output"
-    )
+    check_parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
     args = parser.parse_args()
 
     if args.debug:
         from promptbim.debug import enable_debug
+
         enable_debug()
 
     if args.command == "gui":
@@ -197,6 +191,7 @@ def _launch_gui():
 
 def _run_check(args):
     import json
+
     from promptbim.startup.health_check import HealthChecker
 
     checker = HealthChecker()
@@ -217,6 +212,7 @@ def _run_check(args):
 
     if args.fix:
         from promptbim.startup.auto_fix import auto_fix_all
+
         failed = [r for r in results if r.status == "fail"]
         if failed:
             print("\nAttempting auto-fix...")

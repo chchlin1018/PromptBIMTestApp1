@@ -1,7 +1,5 @@
 """Tests for bim/simulation/scheduler.py."""
 
-import pytest
-
 from promptbim.bim.simulation.scheduler import (
     ConstructionSchedule,
     ScheduledPhase,
@@ -14,9 +12,15 @@ from promptbim.bim.simulation.scheduler import (
 def _sample_labels() -> list[str]:
     return [
         "ground_slab",
-        "1F_wall_0", "1F_wall_1", "1F_wall_2", "1F_wall_3",
+        "1F_wall_0",
+        "1F_wall_1",
+        "1F_wall_2",
+        "1F_wall_3",
         "1F_slab",
-        "2F_wall_0", "2F_wall_1", "2F_wall_2", "2F_wall_3",
+        "2F_wall_0",
+        "2F_wall_1",
+        "2F_wall_2",
+        "2F_wall_3",
         "2F_slab",
         "roof",
     ]

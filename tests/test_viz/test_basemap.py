@@ -1,7 +1,5 @@
 """Tests for satellite basemap overlay."""
 
-import pytest
-
 from promptbim.viz.basemap import (
     BASEMAP_STYLES,
     add_basemap,

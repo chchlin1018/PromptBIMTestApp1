@@ -1,12 +1,8 @@
 """Tests for the PromptBIM debug logging system."""
 
 import logging
-import os
-
-import pytest
 
 from promptbim.debug import (
-    DEBUG_MODE,
     disable_debug,
     enable_debug,
     get_logger,
@@ -78,7 +74,9 @@ class TestEnvironmentVariable:
         monkeypatch.setenv("PROMPTBIM_DEBUG", "1")
         # Re-import to pick up env var
         import importlib
+
         import promptbim.debug as dbg
+
         importlib.reload(dbg)
         assert dbg.DEBUG_MODE is True
 
@@ -89,7 +87,9 @@ class TestEnvironmentVariable:
     def test_env_var_default_off(self, monkeypatch):
         monkeypatch.delenv("PROMPTBIM_DEBUG", raising=False)
         import importlib
+
         import promptbim.debug as dbg
+
         importlib.reload(dbg)
         assert dbg.DEBUG_MODE is False
 
@@ -117,8 +117,9 @@ class TestCLIDebugFlag:
     """Test --debug CLI argument."""
 
     def test_cli_debug_flag_parsed(self):
-        from promptbim.__main__ import app
         import sys
+
+        from promptbim.__main__ import app
 
         # Just verify the parser accepts --debug without error
         old_argv = sys.argv

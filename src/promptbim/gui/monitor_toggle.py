@@ -20,8 +20,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from promptbim.bim.monitoring.monitor_types import MonitorCategory
-
 if TYPE_CHECKING:
     pass
 
@@ -73,7 +71,9 @@ class MonitorTogglePanel(QWidget):
 
         for cat_name, label in CATEGORY_LABELS.items():
             color = CATEGORY_COLORS.get(cat_name, (0.5, 0.5, 0.5))
-            hex_color = f"#{int(color[0]*255):02x}{int(color[1]*255):02x}{int(color[2]*255):02x}"
+            hex_color = (
+                f"#{int(color[0] * 255):02x}{int(color[1] * 255):02x}{int(color[2] * 255):02x}"
+            )
 
             cb = QCheckBox(label)
             cb.setChecked(True)

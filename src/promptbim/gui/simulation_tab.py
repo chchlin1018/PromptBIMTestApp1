@@ -9,10 +9,9 @@ Provides a complete 4D BIM simulation experience:
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QTimer, Signal, Qt
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -34,7 +33,6 @@ from promptbim.viz.gantt_chart import GanttChart
 
 if TYPE_CHECKING:
     import pyvista as pv
-    from promptbim.schemas.plan import BuildingPlan
 
 
 class SimulationTab(QWidget):
@@ -146,8 +144,7 @@ class SimulationTab(QWidget):
         self._export_btn.setEnabled(True)
         self._total_label.setText(f"/ {self._schedule.total_days} days")
         self._info.setText(
-            f"Schedule: {len(self._schedule.phases)} phases, "
-            f"{self._schedule.total_days} days total"
+            f"Schedule: {len(self._schedule.phases)} phases, {self._schedule.total_days} days total"
         )
         self._gantt.set_schedule(self._schedule)
         self._on_slider_changed(0)

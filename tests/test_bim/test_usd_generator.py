@@ -70,7 +70,8 @@ def test_usd_has_wall_meshes(simple_plan, tmp_path):
     output = gen.generate(simple_plan, tmp_path / "test.usda")
     stage = Usd.Stage.Open(str(output))
     wall_prims = [
-        p for p in stage.Traverse()
+        p
+        for p in stage.Traverse()
         if "Wall" in p.GetPath().pathString and p.GetTypeName() == "Mesh"
     ]
     assert len(wall_prims) == 4
@@ -80,10 +81,7 @@ def test_usd_has_slab(simple_plan, tmp_path):
     gen = USDGenerator()
     output = gen.generate(simple_plan, tmp_path / "test.usda")
     stage = Usd.Stage.Open(str(output))
-    slab_prims = [
-        p for p in stage.Traverse()
-        if "Slab" in p.GetPath().pathString
-    ]
+    slab_prims = [p for p in stage.Traverse() if "Slab" in p.GetPath().pathString]
     assert len(slab_prims) >= 1
 
 
@@ -99,10 +97,7 @@ def test_usd_has_materials(simple_plan, tmp_path):
     gen = USDGenerator()
     output = gen.generate(simple_plan, tmp_path / "test.usda")
     stage = Usd.Stage.Open(str(output))
-    mat_prims = [
-        p for p in stage.Traverse()
-        if "Materials" in p.GetPath().pathString
-    ]
+    mat_prims = [p for p in stage.Traverse() if "Materials" in p.GetPath().pathString]
     assert len(mat_prims) >= 1
 
 
@@ -122,7 +117,8 @@ def test_usd_mesh_has_normals(simple_plan, tmp_path):
     output = gen.generate(simple_plan, tmp_path / "test.usda")
     stage = Usd.Stage.Open(str(output))
     wall_prims = [
-        p for p in stage.Traverse()
+        p
+        for p in stage.Traverse()
         if "Wall" in p.GetPath().pathString and p.GetTypeName() == "Mesh"
     ]
     assert len(wall_prims) > 0
@@ -163,7 +159,8 @@ def test_usd_multi_storey(tmp_path):
     output = gen.generate(plan, tmp_path / "multi.usda")
     stage = Usd.Stage.Open(str(output))
     wall_prims = [
-        p for p in stage.Traverse()
+        p
+        for p in stage.Traverse()
         if "Wall" in p.GetPath().pathString and p.GetTypeName() == "Mesh"
     ]
     assert len(wall_prims) == 8

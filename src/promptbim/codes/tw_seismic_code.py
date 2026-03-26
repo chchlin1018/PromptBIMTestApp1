@@ -13,26 +13,31 @@ logger = get_logger("codes.tw_seismic_code")
 # -- Simplified seismic zone coefficients -----------------------------------
 
 SEISMIC_ZONES: dict[str, dict] = {
-    "台北市": {"Ss": 0.60, "S1": 0.30, "site_class": "第三類（台北盆地軟弱土層）",
-               "notes": "需考量盆地效應及土壤液化"},
+    "台北市": {
+        "Ss": 0.60,
+        "S1": 0.30,
+        "site_class": "第三類（台北盆地軟弱土層）",
+        "notes": "需考量盆地效應及土壤液化",
+    },
     "新北市": {"Ss": 0.60, "S1": 0.30, "site_class": "第二~三類"},
     "桃園市": {"Ss": 0.55, "S1": 0.28, "site_class": "第二類"},
-    "台中市": {"Ss": 0.65, "S1": 0.32, "site_class": "第二類",
-               "notes": "鄰近車籠埔斷層"},
+    "台中市": {"Ss": 0.65, "S1": 0.32, "site_class": "第二類", "notes": "鄰近車籠埔斷層"},
     "台南市": {"Ss": 0.70, "S1": 0.35, "site_class": "第二類"},
     "高雄市": {"Ss": 0.55, "S1": 0.28, "site_class": "第二類"},
-    "花蓮縣": {"Ss": 0.80, "S1": 0.45, "site_class": "第一~二類",
-               "notes": "高震區，鄰近多條活動斷層"},
+    "花蓮縣": {
+        "Ss": 0.80,
+        "S1": 0.45,
+        "site_class": "第一~二類",
+        "notes": "高震區，鄰近多條活動斷層",
+    },
     "宜蘭縣": {"Ss": 0.70, "S1": 0.35, "site_class": "第二類"},
-    "嘉義市": {"Ss": 0.80, "S1": 0.40, "site_class": "第二類",
-               "notes": "鄰近梅山斷層"},
+    "嘉義市": {"Ss": 0.80, "S1": 0.40, "site_class": "第二類", "notes": "鄰近梅山斷層"},
     "嘉義縣": {"Ss": 0.75, "S1": 0.38, "site_class": "第二類"},
     "新竹市": {"Ss": 0.55, "S1": 0.28, "site_class": "第二類"},
     "新竹縣": {"Ss": 0.55, "S1": 0.28, "site_class": "第二類"},
     "苗栗縣": {"Ss": 0.60, "S1": 0.30, "site_class": "第二類"},
     "彰化縣": {"Ss": 0.65, "S1": 0.32, "site_class": "第二類"},
-    "南投縣": {"Ss": 0.75, "S1": 0.40, "site_class": "第二類",
-               "notes": "鄰近車籠埔斷層"},
+    "南投縣": {"Ss": 0.75, "S1": 0.40, "site_class": "第二類", "notes": "鄰近車籠埔斷層"},
     "雲林縣": {"Ss": 0.70, "S1": 0.35, "site_class": "第二類"},
     "屏東縣": {"Ss": 0.60, "S1": 0.30, "site_class": "第二類"},
     "台東縣": {"Ss": 0.70, "S1": 0.35, "site_class": "第二類"},
@@ -74,14 +79,20 @@ def get_min_column_cm(num_stories: int) -> int:
 
 def get_seismic_params(city: str) -> dict:
     params = SEISMIC_ZONES.get(city, DEFAULT_SEISMIC)
-    logger.debug("get_seismic_params: city=%r → Ss=%.2f, S1=%.2f, site=%s",
-                  city, params["Ss"], params["S1"], params["site_class"])
+    logger.debug(
+        "get_seismic_params: city=%r → Ss=%.2f, S1=%.2f, site=%s",
+        city,
+        params["Ss"],
+        params["S1"],
+        params["site_class"],
+    )
     return params
 
 
 # ---------------------------------------------------------------------------
 # Seismic Design Rule
 # ---------------------------------------------------------------------------
+
 
 class SeismicDesignRule(BaseRule):
     rule_id = "TW-SEISMIC"
@@ -113,19 +124,23 @@ class SeismicDesignRule(BaseRule):
         # Minimum column size recommendation
         min_col = get_min_column_cm(num)
         logger.debug("SeismicDesignRule: min_column=%dcm for %d stories", min_col, num)
-        results.append(self._info(
-            f"建築 {num} 層，RC柱建議最小 {min_col}cm x {min_col}cm",
-            actual=num,
-            limit=f"{min_col}cm",
-        ))
+        results.append(
+            self._info(
+                f"建築 {num} 層，RC柱建議最小 {min_col}cm x {min_col}cm",
+                actual=num,
+                limit=f"{min_col}cm",
+            )
+        )
 
         # Shear wall recommendation for 10+ stories
         if num >= 10:
-            results.append(self._warning(
-                f"建築 {num} 層 >= 10 層，建議設置剪力牆或含斜撐構架",
-                actual=num,
-                limit=10,
-                suggestion="增設 RC 剪力牆，最小厚度 20cm",
-            ))
+            results.append(
+                self._warning(
+                    f"建築 {num} 層 >= 10 層，建議設置剪力牆或含斜撐構架",
+                    actual=num,
+                    limit=10,
+                    suggestion="增設 RC 剪力牆，最小厚度 20cm",
+                )
+            )
 
         return results

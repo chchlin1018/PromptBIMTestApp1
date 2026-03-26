@@ -25,8 +25,12 @@ STRUCTURAL_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="台灣預拌混凝土公會", brand="RC", country="TW",
-                price=PriceRange(min_price=2800, max_price=3500, unit="per_m3", source="台灣預拌混凝土公會 2025"),
+                name="台灣預拌混凝土公會",
+                brand="RC",
+                country="TW",
+                price=PriceRange(
+                    min_price=2800, max_price=3500, unit="per_m3", source="台灣預拌混凝土公會 2025"
+                ),
             ),
         ],
         ai_keywords=["基礎", "條基", "strip foundation", "footing"],
@@ -76,8 +80,12 @@ STRUCTURAL_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="台灣預拌混凝土公會", brand="RC fc'=280", country="TW",
-                price=PriceRange(min_price=2800, max_price=3500, unit="per_m3", source="台灣預拌混凝土公會 2025"),
+                name="台灣預拌混凝土公會",
+                brand="RC fc'=280",
+                country="TW",
+                price=PriceRange(
+                    min_price=2800, max_price=3500, unit="per_m3", source="台灣預拌混凝土公會 2025"
+                ),
             ),
         ],
         ai_keywords=["柱", "RC柱", "混凝土柱", "column", "RC column"],
@@ -91,13 +99,20 @@ STRUCTURAL_COMPONENTS = [
         ifc_class="IfcColumn",
         omniclass_code="21-02 10 20",
         parameters={
-            "section": {"default": "H400x200", "options": ["H300x150", "H400x200", "H500x200", "H600x200"]},
+            "section": {
+                "default": "H400x200",
+                "options": ["H300x150", "H400x200", "H500x200", "H600x200"],
+            },
             "height_m": {"default": 3.0, "min": 2.5, "max": 6.0},
         },
         suppliers=[
             SupplierInfo(
-                name="東和鋼鐵", brand="H型鋼", country="TW",
-                price=PriceRange(min_price=28000, max_price=35000, unit="per_ton", source="東和鋼鐵 2025"),
+                name="東和鋼鐵",
+                brand="H型鋼",
+                country="TW",
+                price=PriceRange(
+                    min_price=28000, max_price=35000, unit="per_ton", source="東和鋼鐵 2025"
+                ),
             ),
         ],
         ai_keywords=["鋼柱", "steel column", "H型鋼柱"],
@@ -131,8 +146,12 @@ STRUCTURAL_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="東和鋼鐵", brand="H型鋼", country="TW",
-                price=PriceRange(min_price=28000, max_price=35000, unit="per_ton", source="東和鋼鐵 2025"),
+                name="東和鋼鐵",
+                brand="H型鋼",
+                country="TW",
+                price=PriceRange(
+                    min_price=28000, max_price=35000, unit="per_ton", source="東和鋼鐵 2025"
+                ),
             ),
         ],
         ai_keywords=["鋼梁", "steel beam", "H型鋼梁"],
@@ -176,8 +195,12 @@ STRUCTURAL_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="台灣鋼鐵公會", brand="SD420", country="TW",
-                price=PriceRange(min_price=22000, max_price=28000, unit="per_ton", source="台灣鋼鐵公會 2025"),
+                name="台灣鋼鐵公會",
+                brand="SD420",
+                country="TW",
+                price=PriceRange(
+                    min_price=22000, max_price=28000, unit="per_ton", source="台灣鋼鐵公會 2025"
+                ),
             ),
         ],
         ai_keywords=["主筋", "鋼筋", "rebar", "main rebar", "reinforcement"],

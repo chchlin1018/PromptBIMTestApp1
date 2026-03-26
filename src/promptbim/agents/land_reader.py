@@ -87,6 +87,7 @@ class LandReaderAgent(BaseAgent):
 
         try:
             import time as _time
+
             logger.debug("Vision API request: model=%s, media=%s", self._model, media_type)
             _t0 = _time.time()
             message = self.client.messages.create(
@@ -118,7 +119,13 @@ class LandReaderAgent(BaseAgent):
             }
             json_data = _try_extract_json(text)
             confidence = json_data.get("confidence", 0) if json_data else 0
-            logger.debug("Vision API response: %.2fs, tokens=%d/%d, confidence=%.2f", _elapsed, usage["input_tokens"], usage["output_tokens"], confidence)
+            logger.debug(
+                "Vision API response: %.2fs, tokens=%d/%d, confidence=%.2f",
+                _elapsed,
+                usage["input_tokens"],
+                usage["output_tokens"],
+                confidence,
+            )
             return AgentResponse(text=text, json_data=json_data, usage=usage)
         except Exception as exc:
             logger.exception("LandReaderAgent Vision API call failed")

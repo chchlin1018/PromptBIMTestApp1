@@ -45,14 +45,23 @@ def _find_env_file() -> str | None:
     return None
 
 
+def validate_api_key(key: str) -> bool:
+    """Validate Anthropic API key format.
+
+    Valid formats: sk-ant-api03-... or sk-ant-...
+    Returns True if key is empty (not set) or matches expected format.
+    """
+    if not key:
+        return True
+    return key.startswith("sk-ant-") and len(key) >= 20
+
+
 class Settings(BaseSettings):
     """PromptBIM application settings, loaded from .env file."""
 
     # API
     anthropic_api_key: str = Field(default="", description="Anthropic Claude API key")
-    claude_model: str = Field(
-        default="claude-sonnet-4-20250514", description="Claude model to use"
-    )
+    claude_model: str = Field(default="claude-sonnet-4-20250514", description="Claude model to use")
 
     # Paths
     output_dir: Path = Field(default=Path("./output"), description="Output directory")
@@ -75,7 +84,28 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     env_file = _find_env_file()
     if env_file:
-        # Override model_config with discovered path
-        return Settings(_env_file=env_file)
-    # Fallback: rely on environment variables only
-    return Settings(_env_file=None)
+        # Check .env file permissions (warn if world-readable)
+        env_path = Path(env_file)
+        try:
+            mode = env_path.stat().st_mode
+            if mode & 0o044:  # group or other readable
+                logger.warning(
+                    ".env file %s is readable by group/others. "
+                    "Run: chmod 600 %s",
+                    env_file,
+                    env_file,
+                )
+        except OSError:
+            pass
+        settings = Settings(_env_file=env_file)
+    else:
+        settings = Settings(_env_file=None)
+
+    # Validate API key format
+    if settings.anthropic_api_key and not validate_api_key(settings.anthropic_api_key):
+        logger.warning(
+            "API key does not match expected Anthropic format (sk-ant-...). "
+            "Please check your ANTHROPIC_API_KEY in .env"
+        )
+
+    return settings

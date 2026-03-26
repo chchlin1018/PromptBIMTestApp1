@@ -4,22 +4,20 @@ import io
 import struct
 import wave
 
-import pytest
-
 from promptbim.voice.stt import (
+    CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
     AudioRecorder,
     Transcriber,
     VoiceInput,
     _pcm_to_wav,
-    SAMPLE_RATE,
-    CHANNELS,
-    SAMPLE_WIDTH,
 )
-
 
 # ---------------------------------------------------------------------------
 # _pcm_to_wav
 # ---------------------------------------------------------------------------
+
 
 class TestPcmToWav:
     def test_empty_frames(self):
@@ -52,6 +50,7 @@ class TestPcmToWav:
 # AudioRecorder
 # ---------------------------------------------------------------------------
 
+
 class TestAudioRecorder:
     def test_initial_state(self):
         rec = AudioRecorder()
@@ -63,10 +62,11 @@ class TestAudioRecorder:
 
     def test_start_without_sounddevice_stays_not_recording(self, monkeypatch):
         """If sounddevice is unavailable, start() gracefully fails."""
-        import promptbim.voice.stt as stt_mod
 
         # Simulate import error
-        original_import = __builtins__.__import__ if hasattr(__builtins__, '__import__') else __import__
+        original_import = (
+            __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+        )
 
         def mock_import(name, *args, **kwargs):
             if name == "sounddevice":
@@ -83,6 +83,7 @@ class TestAudioRecorder:
 # ---------------------------------------------------------------------------
 # Transcriber
 # ---------------------------------------------------------------------------
+
 
 class TestTranscriber:
     def test_empty_input(self):
@@ -110,6 +111,7 @@ class TestTranscriber:
 # VoiceInput
 # ---------------------------------------------------------------------------
 
+
 class TestVoiceInput:
     def test_initial_state(self):
         vi = VoiceInput()
@@ -126,5 +128,6 @@ class TestVoiceInput:
         vi.stop_and_transcribe(callback=lambda t: received.append(t))
         # Should callback with empty string immediately
         import time
+
         time.sleep(0.1)
         assert received == [""]

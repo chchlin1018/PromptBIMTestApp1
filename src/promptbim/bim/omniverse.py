@@ -10,12 +10,12 @@ This module is optional — Omniverse is not required for the core workflow.
 from __future__ import annotations
 
 import json
-import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
 from promptbim.debug import get_logger
+
 logger = get_logger("bim.omniverse")
 
 DEFAULT_NUCLEUS_URL = "omniverse://localhost"
@@ -116,7 +116,7 @@ class OmniverseConnector:
         return OmniverseResult(
             success=False,
             message="Omniverse Client Library not installed. "
-                    "Install via: pip install omni-client (requires Omniverse SDK)",
+            "Install via: pip install omni-client (requires Omniverse SDK)",
             method="none",
         )
 
@@ -223,13 +223,13 @@ class OmniverseConnector:
                         message=f"Nucleus reachable at {host}:{port}",
                         method="http",
                     )
-        except Exception as exc:
+        except Exception:
             pass
 
         return OmniverseResult(
             success=False,
             message=f"Omniverse Nucleus not reachable at {host}:{port}. "
-                    "Ensure Omniverse Nucleus is running or install omni-client.",
+            "Ensure Omniverse Nucleus is running or install omni-client.",
             method="http",
         )
 

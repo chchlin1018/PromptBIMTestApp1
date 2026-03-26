@@ -15,14 +15,14 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from promptbim.debug import get_logger
 from promptbim.bim.mep.pathfinder import MEPPathfinder, RoutePath
 from promptbim.bim.mep.systems import (
     CEILING_LAYER_Z_OFFSET,
     MEPSystemTemplate,
     get_template,
 )
-from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan
+from promptbim.debug import get_logger
+from promptbim.schemas.plan import BuildingPlan, StoryPlan
 
 _logger = get_logger("mep.planner")
 
@@ -114,7 +114,9 @@ class MEPPlanner:
 
         _logger.debug(
             "MEP plan: %d equipment, %d terminals, %d routes",
-            len(result.equipment), len(result.terminals), len(result.routes),
+            len(result.equipment),
+            len(result.terminals),
+            len(result.routes),
         )
         return result
 
@@ -131,33 +133,41 @@ class MEPPlanner:
         rx, ry = riser_pos
 
         # Plumbing riser
-        equip.append(MEPEquipment(
-            system="plumbing",
-            equipment_type="riser",
-            position=(rx, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["plumbing"]),
-            floor=story.name,
-        ))
+        equip.append(
+            MEPEquipment(
+                system="plumbing",
+                equipment_type="riser",
+                position=(rx, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["plumbing"]),
+                floor=story.name,
+            )
+        )
         # Electrical panel
-        equip.append(MEPEquipment(
-            system="electrical",
-            equipment_type="panel",
-            position=(rx + 0.5, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["electrical"]),
-            floor=story.name,
-        ))
+        equip.append(
+            MEPEquipment(
+                system="electrical",
+                equipment_type="panel",
+                position=(rx + 0.5, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["electrical"]),
+                floor=story.name,
+            )
+        )
         # HVAC AHU connection
-        equip.append(MEPEquipment(
-            system="hvac",
-            equipment_type="ahu_connection",
-            position=(rx, ry + 0.5, z_ceiling + CEILING_LAYER_Z_OFFSET["hvac"]),
-            floor=story.name,
-        ))
+        equip.append(
+            MEPEquipment(
+                system="hvac",
+                equipment_type="ahu_connection",
+                position=(rx, ry + 0.5, z_ceiling + CEILING_LAYER_Z_OFFSET["hvac"]),
+                floor=story.name,
+            )
+        )
         # Fire protection riser
-        equip.append(MEPEquipment(
-            system="fire_protection",
-            equipment_type="riser",
-            position=(rx - 0.3, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["fire_protection"]),
-            floor=story.name,
-        ))
+        equip.append(
+            MEPEquipment(
+                system="fire_protection",
+                equipment_type="riser",
+                position=(rx - 0.3, ry, z_ceiling + CEILING_LAYER_Z_OFFSET["fire_protection"]),
+                floor=story.name,
+            )
+        )
 
         return equip
 
@@ -179,43 +189,59 @@ class MEPPlanner:
             n_grilles = max(1, int(area / 100 * template.hvac.terminals_per_100sqm))
             grille_positions = _distribute_points(space.boundary, n_grilles)
             for pos in grille_positions:
-                terminals.append(MEPTerminal(
-                    system="hvac",
-                    terminal_type="supply_grille",
-                    position=(pos[0], pos[1], z_ceiling + CEILING_LAYER_Z_OFFSET["hvac"]),
-                    floor=story.name,
-                ))
+                terminals.append(
+                    MEPTerminal(
+                        system="hvac",
+                        terminal_type="supply_grille",
+                        position=(pos[0], pos[1], z_ceiling + CEILING_LAYER_Z_OFFSET["hvac"]),
+                        floor=story.name,
+                    )
+                )
 
             # Fire protection sprinkler heads
             n_heads = max(1, int(area * template.fire_protection.heads_per_sqm))
             head_positions = _distribute_points(space.boundary, n_heads)
             for pos in head_positions:
-                terminals.append(MEPTerminal(
-                    system="fire_protection",
-                    terminal_type="sprinkler_head",
-                    position=(pos[0], pos[1], z_ceiling + CEILING_LAYER_Z_OFFSET["fire_protection"]),
-                    floor=story.name,
-                ))
+                terminals.append(
+                    MEPTerminal(
+                        system="fire_protection",
+                        terminal_type="sprinkler_head",
+                        position=(
+                            pos[0],
+                            pos[1],
+                            z_ceiling + CEILING_LAYER_Z_OFFSET["fire_protection"],
+                        ),
+                        floor=story.name,
+                    )
+                )
 
             # Electrical outlets (distribute around perimeter — placed at ceiling for routing)
             n_outlets = max(1, int(area / 100 * template.electrical.outlets_per_100sqm))
             outlet_positions = _distribute_points(space.boundary, min(n_outlets, 4))
             for pos in outlet_positions:
-                terminals.append(MEPTerminal(
-                    system="electrical",
-                    terminal_type="outlet",
-                    position=(pos[0], pos[1], z_ceiling + CEILING_LAYER_Z_OFFSET["electrical"]),
-                    floor=story.name,
-                ))
+                terminals.append(
+                    MEPTerminal(
+                        system="electrical",
+                        terminal_type="outlet",
+                        position=(pos[0], pos[1], z_ceiling + CEILING_LAYER_Z_OFFSET["electrical"]),
+                        floor=story.name,
+                    )
+                )
 
             # Plumbing — only for bathrooms/kitchens
             if space.space_type in ("bathroom", "kitchen", "restroom"):
-                terminals.append(MEPTerminal(
-                    system="plumbing",
-                    terminal_type="fixture",
-                    position=(center[0], center[1], z_ceiling + CEILING_LAYER_Z_OFFSET["plumbing"]),
-                    floor=story.name,
-                ))
+                terminals.append(
+                    MEPTerminal(
+                        system="plumbing",
+                        terminal_type="fixture",
+                        position=(
+                            center[0],
+                            center[1],
+                            z_ceiling + CEILING_LAYER_Z_OFFSET["plumbing"],
+                        ),
+                        floor=story.name,
+                    )
+                )
 
         return terminals
 
@@ -223,10 +249,7 @@ class MEPPlanner:
 
     def _add_building_obstacles(self, pathfinder: MEPPathfinder, story: StoryPlan) -> None:
         """Add wall/slab obstacles to the pathfinder grid."""
-        walls = [
-            {"start": w.start, "end": w.end, "thickness": w.thickness_m}
-            for w in story.walls
-        ]
+        walls = [{"start": w.start, "end": w.end, "thickness": w.thickness_m} for w in story.walls]
         pathfinder.add_obstacles_from_walls(walls, story.elevation_m, story.height_m)
 
     def _route_system(
@@ -254,13 +277,15 @@ class MEPPlanner:
             for term in sys_terms:
                 path = pathfinder.find_path(origin, term.position, turn_penalty=2.0)
                 if path.waypoints:
-                    routes.append(MEPRoute(
-                        system=system_name,
-                        route_type="branch",
-                        diameter_mm=diameter,
-                        path=path,
-                        floor=story.name,
-                    ))
+                    routes.append(
+                        MEPRoute(
+                            system=system_name,
+                            route_type="branch",
+                            diameter_mm=diameter,
+                            path=path,
+                            floor=story.name,
+                        )
+                    )
 
         return routes
 
@@ -278,6 +303,7 @@ class MEPPlanner:
 
 
 # ---- geometry helpers ----
+
 
 def _polygon_centroid(boundary: list[tuple[float, float]]) -> tuple[float, float]:
     if not boundary:

@@ -6,20 +6,19 @@ error details, and action buttons.
 
 from __future__ import annotations
 
+from PySide6.QtCore import QSize, Qt, QThread, Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QProgressBar,
+    QPushButton,
     QScrollArea,
+    QVBoxLayout,
     QWidget,
-    QFrame,
-    QSizePolicy,
 )
-from PySide6.QtCore import Qt, QThread, Signal, QSize
-from PySide6.QtGui import QFont
 
 from promptbim.debug import get_logger
 
@@ -236,6 +235,7 @@ class StartupCheckView(QDialog):
             item._detail_label.setVisible(False)
 
         from promptbim.startup.health_check import HealthChecker
+
         checker = HealthChecker(settings)
         self._worker = _CheckWorker(checker)
         self._worker.check_done.connect(self._on_check_done)
@@ -280,6 +280,7 @@ class StartupCheckView(QDialog):
 
     def _on_view_log(self):
         from promptbim.debug import setup_file_logging
+
         log_file = setup_file_logging()
         logger.debug("Log file created: %s", log_file)
         self._summary_label.setText(f"Log: {log_file}")

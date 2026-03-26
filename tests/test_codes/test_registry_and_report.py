@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from promptbim.codes.base import Severity
 from promptbim.codes.registry import ALL_RULES, get_compliance_summary, run_all_checks
 from promptbim.codes.report import (
@@ -17,7 +15,7 @@ from promptbim.schemas.zoning import ZoningRules
 
 
 def _land(area: float = 500.0) -> LandParcel:
-    side = area ** 0.5
+    side = area**0.5
     return LandParcel(
         boundary=[(0, 0), (side, 0), (side, side), (0, side)],
         area_sqm=area,
@@ -38,29 +36,33 @@ def _plan(
     fp = [(0, 0), (footprint_side, 0), (footprint_side, footprint_side), (0, footprint_side)]
     stories = []
     for i in range(num_stories):
-        stories.append(StoryPlan(
-            name=f"{i+1}F",
-            elevation_m=i * story_height,
-            height_m=story_height,
-            walls=[
-                WallDef(start=(0, 0), end=(footprint_side, 0)),
-                WallDef(start=(footprint_side, 0), end=(footprint_side, footprint_side)),
-                WallDef(start=(footprint_side, footprint_side), end=(0, footprint_side)),
-                WallDef(start=(0, footprint_side), end=(0, 0)),
-            ],
-            spaces=[SpaceDef(
-                name=f"Room {i+1}F",
-                boundary=fp,
-                space_type="office",
-                area_sqm=footprint_side ** 2,
-            )],
-            slab_boundary=fp,
-        ))
+        stories.append(
+            StoryPlan(
+                name=f"{i + 1}F",
+                elevation_m=i * story_height,
+                height_m=story_height,
+                walls=[
+                    WallDef(start=(0, 0), end=(footprint_side, 0)),
+                    WallDef(start=(footprint_side, 0), end=(footprint_side, footprint_side)),
+                    WallDef(start=(footprint_side, footprint_side), end=(0, footprint_side)),
+                    WallDef(start=(0, footprint_side), end=(0, 0)),
+                ],
+                spaces=[
+                    SpaceDef(
+                        name=f"Room {i + 1}F",
+                        boundary=fp,
+                        space_type="office",
+                        area_sqm=footprint_side**2,
+                    )
+                ],
+                slab_boundary=fp,
+            )
+        )
     return BuildingPlan(
         name="Test Building",
         building_footprint=fp,
-        building_bcr=footprint_side ** 2 / 500,
-        building_far=footprint_side ** 2 * num_stories / 500,
+        building_bcr=footprint_side**2 / 500,
+        building_far=footprint_side**2 * num_stories / 500,
         stories=stories,
         roof=RoofPlan(),
     )

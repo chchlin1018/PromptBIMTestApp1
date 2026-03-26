@@ -1,29 +1,28 @@
 """Tests for agents/modifier.py — Modifier Agent + impact propagation."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from promptbim.agents.modifier import (
-    ModifierAgent,
-    compute_impacts,
-    _poly_area,
-    _scale_polygon,
-    _recalculate_metrics,
     IMPACT_MATRIX,
+    ModifierAgent,
+    _poly_area,
+    _recalculate_metrics,
+    _scale_polygon,
+    compute_impacts,
 )
 from promptbim.schemas.modification import (
-    ImpactLevel,
     ModificationHistory,
-    ModificationIntent,
     ModificationRecord,
     ModificationType,
 )
 from promptbim.schemas.plan import (
     BuildingPlan,
     RoofPlan,
+    SpaceDef,
     StoryPlan,
     WallDef,
-    SpaceDef,
 )
 from promptbim.schemas.zoning import ZoningRules
 
@@ -35,24 +34,28 @@ def sample_plan():
     land = [(0, 0), (30, 0), (30, 20), (0, 20)]
     stories = []
     for i in range(3):
-        stories.append(StoryPlan(
-            name=f"{i+1}F",
-            elevation_m=i * 3.0,
-            height_m=3.0,
-            walls=[
-                WallDef(start=(3, 3), end=(27, 3), wall_type="exterior"),
-                WallDef(start=(27, 3), end=(27, 17), wall_type="exterior"),
-                WallDef(start=(27, 17), end=(3, 17), wall_type="exterior"),
-                WallDef(start=(3, 17), end=(3, 3), wall_type="exterior"),
-            ],
-            spaces=[SpaceDef(
-                name=f"Room {i+1}F",
-                boundary=footprint,
-                space_type="office",
-                area_sqm=336.0,
-            )],
-            slab_boundary=footprint,
-        ))
+        stories.append(
+            StoryPlan(
+                name=f"{i + 1}F",
+                elevation_m=i * 3.0,
+                height_m=3.0,
+                walls=[
+                    WallDef(start=(3, 3), end=(27, 3), wall_type="exterior"),
+                    WallDef(start=(27, 3), end=(27, 17), wall_type="exterior"),
+                    WallDef(start=(27, 17), end=(3, 17), wall_type="exterior"),
+                    WallDef(start=(3, 17), end=(3, 3), wall_type="exterior"),
+                ],
+                spaces=[
+                    SpaceDef(
+                        name=f"Room {i + 1}F",
+                        boundary=footprint,
+                        space_type="office",
+                        area_sqm=336.0,
+                    )
+                ],
+                slab_boundary=footprint,
+            )
+        )
 
     return BuildingPlan(
         name="Test Building",
@@ -98,10 +101,14 @@ class TestComputeImpacts:
         new = sample_plan.model_copy(deep=True)
         # Add 3 more stories
         for i in range(3, 6):
-            new.stories.append(StoryPlan(
-                name=f"{i+1}F", elevation_m=i * 3.0, height_m=3.0,
-                slab_boundary=new.building_footprint,
-            ))
+            new.stories.append(
+                StoryPlan(
+                    name=f"{i + 1}F",
+                    elevation_m=i * 3.0,
+                    height_m=3.0,
+                    slab_boundary=new.building_footprint,
+                )
+            )
         new.building_far = 3.36
 
         impacts = compute_impacts(ModificationType.STORIES, old, new)

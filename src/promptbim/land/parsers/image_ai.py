@@ -58,12 +58,15 @@ def parse_image_ai(
 
     try:
         b64_data, media_type = prepare_for_vision_api(path)
-        logger.debug("Image preprocessed: base64_size=%d bytes, media_type=%s", len(b64_data), media_type)
+        logger.debug(
+            "Image preprocessed: base64_size=%d bytes, media_type=%s", len(b64_data), media_type
+        )
     except Exception as exc:
         return AIRecognitionResult(error=f"Image preprocessing failed: {exc}")
 
     try:
         import time as _time
+
         from promptbim.agents.land_reader import LandReaderAgent
 
         agent = LandReaderAgent()
@@ -84,7 +87,9 @@ def parse_image_ai(
         )
 
     result = _build_result(response.json_data, path)
-    logger.debug("Recognition result: confidence=%.2f, parcels=%d", result.confidence, len(result.parcels))
+    logger.debug(
+        "Recognition result: confidence=%.2f, parcels=%d", result.confidence, len(result.parcels)
+    )
     return result
 
 

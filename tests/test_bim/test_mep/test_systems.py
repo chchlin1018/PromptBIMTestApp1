@@ -1,10 +1,7 @@
 """Tests for bim/mep/systems.py — MEP system templates."""
 
-import pytest
-
 from promptbim.bim.mep.systems import (
     CEILING_LAYER_Z_OFFSET,
-    MEP_SYSTEM_TEMPLATES,
     SYSTEM_COLORS,
     SYSTEM_LABELS,
     get_template,

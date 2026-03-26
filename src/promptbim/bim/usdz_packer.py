@@ -6,8 +6,6 @@ with a fallback to manual ZIP-based packaging.
 
 from __future__ import annotations
 
-import os
-import shutil
 import tempfile
 import zipfile
 from pathlib import Path
@@ -64,11 +62,9 @@ def pack_usdz(
 
 def _pack_with_usdutils(usda_path: Path, output_path: Path) -> Path:
     """Pack using pxr.UsdUtils.CreateNewUsdzPackage."""
-    from pxr import UsdUtils
-
     # UsdUtils needs a flattened .usdc file
     # First flatten the stage
-    from pxr import Usd
+    from pxr import Usd, UsdUtils
 
     stage = Usd.Stage.Open(str(usda_path))
     if stage is None:
@@ -79,9 +75,7 @@ def _pack_with_usdutils(usda_path: Path, output_path: Path) -> Path:
         usdc_path = Path(tmp_dir) / "model.usdc"
         stage.Export(str(usdc_path))
 
-        success = UsdUtils.CreateNewUsdzPackage(
-            str(usdc_path), str(output_path)
-        )
+        success = UsdUtils.CreateNewUsdzPackage(str(usdc_path), str(output_path))
         if not success:
             raise RuntimeError("UsdUtils.CreateNewUsdzPackage failed")
 

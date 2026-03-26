@@ -10,9 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from promptbim.agents.base import BaseAgent
-from promptbim.codes.base import Severity
 from promptbim.codes.base import CheckResult as CodeCheckResult
-from promptbim.codes.registry import run_all_checks, get_compliance_summary
+from promptbim.codes.base import Severity
+from promptbim.codes.registry import get_compliance_summary, run_all_checks
 from promptbim.codes.report import generate_report_table
 from promptbim.debug import get_logger
 from promptbim.schemas.land import LandParcel
@@ -129,17 +129,21 @@ class CheckerAgent(BaseAgent):
         violations: list[CheckViolation] = []
         for cr in code_results:
             if cr.severity == Severity.FAIL:
-                violations.append(CheckViolation(
-                    rule=cr.rule_id,
-                    message=cr.message_zh,
-                    severity="error",
-                ))
+                violations.append(
+                    CheckViolation(
+                        rule=cr.rule_id,
+                        message=cr.message_zh,
+                        severity="error",
+                    )
+                )
             elif cr.severity == Severity.WARNING:
-                violations.append(CheckViolation(
-                    rule=cr.rule_id,
-                    message=cr.message_zh,
-                    severity="warning",
-                ))
+                violations.append(
+                    CheckViolation(
+                        rule=cr.rule_id,
+                        message=cr.message_zh,
+                        severity="warning",
+                    )
+                )
         return violations
 
     def _check_legacy_rules(
@@ -175,9 +179,7 @@ class CheckerAgent(BaseAgent):
     ) -> list[str]:
         """Ask Claude for fix suggestions (best-effort)."""
         # Build context from code results for richer suggestions
-        violations_text = "\n".join(
-            f"- [{v.severity}] {v.rule}: {v.message}" for v in violations
-        )
+        violations_text = "\n".join(f"- [{v.severity}] {v.rule}: {v.message}" for v in violations)
 
         # Include suggestions from code engine
         code_suggestions = []
@@ -189,7 +191,7 @@ class CheckerAgent(BaseAgent):
         try:
             prompt = f"Violations found:\n{violations_text}"
             if code_suggestions:
-                prompt += f"\n\nCode engine suggestions:\n" + "\n".join(
+                prompt += "\n\nCode engine suggestions:\n" + "\n".join(
                     f"- {s}" for s in code_suggestions
                 )
             response = self.run(prompt)

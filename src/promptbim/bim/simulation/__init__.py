@@ -1,5 +1,6 @@
 """Construction Simulation (4D BIM): Phasing + Animation"""
 
+from promptbim.bim.simulation.animator import ConstructionAnimator
 from promptbim.bim.simulation.construction_phases import (
     STANDARD_PHASES,
     ConstructionPhase,
@@ -13,7 +14,6 @@ from promptbim.bim.simulation.scheduler import (
     get_active_phase,
     get_visible_components,
 )
-from promptbim.bim.simulation.animator import ConstructionAnimator
 
 __all__ = [
     "STANDARD_PHASES",

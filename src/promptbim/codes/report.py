@@ -28,9 +28,7 @@ def generate_report_json(
         "passed": len(passes),
         "warnings": len(warnings),
         "failed": len(fails),
-        "compliance_rate": round(
-            len(passes) / max(1, len(passes) + len(fails)) * 100, 1
-        ),
+        "compliance_rate": round(len(passes) / max(1, len(passes) + len(fails)) * 100, 1),
         "results": [
             {
                 "rule_id": r.rule_id,

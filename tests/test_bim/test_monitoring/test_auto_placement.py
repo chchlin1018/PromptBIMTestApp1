@@ -1,11 +1,8 @@
 """Tests for bim/monitoring/auto_placement.py — auto placement algorithm."""
 
-import pytest
-
 from promptbim.bim.monitoring.auto_placement import (
     AutoMonitorPlacer,
     MonitorPlan,
-    MonitorPlacement,
 )
 from promptbim.schemas.plan import BuildingPlan, SpaceDef, StoryPlan
 

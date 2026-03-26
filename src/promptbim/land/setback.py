@@ -115,11 +115,12 @@ def compute_setback_per_side(
 
 
 def _line_intersection(
-    p1: "np.ndarray", p2: "np.ndarray",
-    p3: "np.ndarray", p4: "np.ndarray",
+    p1: "np.ndarray",
+    p2: "np.ndarray",
+    p3: "np.ndarray",
+    p4: "np.ndarray",
 ) -> "np.ndarray | None":
     """Find intersection point of two lines (p1-p2) and (p3-p4)."""
-    import numpy as np
 
     d1 = p2 - p1
     d2 = p4 - p3

@@ -1,6 +1,5 @@
 """Tests for gui/simulation_tab.py — 4D Simulation GUI."""
 
-import pytest
 import pyvista as pv
 
 from promptbim.bim.simulation.scheduler import generate_schedule
@@ -19,6 +18,7 @@ def _make_meshes():
 class TestSimulationTabImport:
     def test_import(self):
         from promptbim.gui.simulation_tab import SimulationTab
+
         assert SimulationTab is not None
 
     def test_schedule_from_meshes(self):
@@ -31,6 +31,7 @@ class TestSimulationTabImport:
     def test_animator_from_meshes(self):
         """Verify animator can be created with mesh data."""
         from promptbim.bim.simulation.animator import ConstructionAnimator
+
         meshes = _make_meshes()
         sched = generate_schedule(list(meshes.keys()))
         animator = ConstructionAnimator(meshes, sched)

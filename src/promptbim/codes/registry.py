@@ -6,6 +6,7 @@ from promptbim.codes.base import BaseRule, CheckResult, Severity
 from promptbim.debug import get_logger
 
 logger = get_logger("codes.registry")
+from promptbim.codes.tw_accessibility_code import AccessibilityRule
 from promptbim.codes.tw_building_code import (
     BCRRule,
     CeilingHeightRule,
@@ -24,8 +25,6 @@ from promptbim.codes.tw_fire_code import (
     TwoStairsRule,
 )
 from promptbim.codes.tw_seismic_code import SeismicDesignRule
-from promptbim.codes.tw_accessibility_code import AccessibilityRule
-
 
 # All rules in priority order
 ALL_RULES: list[BaseRule] = [
@@ -63,13 +62,15 @@ def run_all_checks(plan, land, zoning) -> list[CheckResult]:
             logger.debug("rule %s: returned %d result(s)", rule.rule_id, len(rule_results))
         except Exception as exc:
             logger.debug("rule %s: ERROR during check — %s", rule.rule_id, exc)
-            results.append(CheckResult(
-                rule_id=rule.rule_id,
-                rule_name_zh=rule.rule_name_zh,
-                law_reference=rule.law_reference,
-                severity=Severity.WARNING,
-                message_zh=f"規則 {rule.rule_id} 檢查時發生錯誤",
-            ))
+            results.append(
+                CheckResult(
+                    rule_id=rule.rule_id,
+                    rule_name_zh=rule.rule_name_zh,
+                    law_reference=rule.law_reference,
+                    severity=Severity.WARNING,
+                    message_zh=f"規則 {rule.rule_id} 檢查時發生錯誤",
+                )
+            )
     return results
 
 
@@ -83,7 +84,11 @@ def get_compliance_summary(results: list[CheckResult]) -> dict:
 
     logger.debug(
         "get_compliance_summary: total=%d pass=%d warn=%d fail=%d info=%d",
-        total, len(passes), len(warnings), len(fails), len(infos),
+        total,
+        len(passes),
+        len(warnings),
+        len(fails),
+        len(infos),
     )
 
     return {
@@ -94,11 +99,21 @@ def get_compliance_summary(results: list[CheckResult]) -> dict:
         "info": len(infos),
         "compliance_rate": round(len(passes) / max(1, len(passes) + len(fails)) * 100, 1),
         "fail_details": [
-            {"rule": f.rule_id, "law": f.law_reference, "issue": f.message_zh, "suggestion": f.suggestion}
+            {
+                "rule": f.rule_id,
+                "law": f.law_reference,
+                "issue": f.message_zh,
+                "suggestion": f.suggestion,
+            }
             for f in fails
         ],
         "warning_details": [
-            {"rule": w.rule_id, "law": w.law_reference, "issue": w.message_zh, "suggestion": w.suggestion}
+            {
+                "rule": w.rule_id,
+                "law": w.law_reference,
+                "issue": w.message_zh,
+                "suggestion": w.suggestion,
+            }
             for w in warnings
         ],
     }

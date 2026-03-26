@@ -73,7 +73,10 @@ def auto_fix(result: CheckResult) -> FixResult:
 
     try:
         proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=120,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         success = proc.returncode == 0
         output = proc.stdout if success else proc.stderr

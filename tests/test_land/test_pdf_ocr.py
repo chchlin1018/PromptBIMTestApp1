@@ -1,11 +1,9 @@
 """Tests for PDF cadastral document parser."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-
-from promptbim.land.parsers.pdf_ocr import PDFLandParser, _shoelace_area, CADASTRAL_KEYWORDS
+from promptbim.land.parsers.pdf_ocr import PDFLandParser, _shoelace_area
 
 
 class TestShoelaceArea:

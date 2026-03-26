@@ -23,16 +23,28 @@ FIXTURE_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="TOTO", brand="TOTO", country="JP",
-                price=PriceRange(min_price=8000, max_price=25000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="TOTO",
+                brand="TOTO",
+                country="JP",
+                price=PriceRange(
+                    min_price=8000, max_price=25000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
             SupplierInfo(
-                name="和成HCG", brand="HCG", country="TW",
-                price=PriceRange(min_price=5000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="和成HCG",
+                brand="HCG",
+                country="TW",
+                price=PriceRange(
+                    min_price=5000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
             SupplierInfo(
-                name="凱撒", brand="CAESAR", country="TW",
-                price=PriceRange(min_price=5000, max_price=18000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="凱撒",
+                brand="CAESAR",
+                country="TW",
+                price=PriceRange(
+                    min_price=5000, max_price=18000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["馬桶", "toilet", "便器", "坐式馬桶"],
@@ -79,8 +91,12 @@ FIXTURE_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="TOTO", brand="TOTO", country="JP",
-                price=PriceRange(min_price=3000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"),
+                name="TOTO",
+                brand="TOTO",
+                country="JP",
+                price=PriceRange(
+                    min_price=3000, max_price=15000, unit="per_unit", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["洗手台", "洗臉盆", "sink", "wash basin", "pedestal sink"],
@@ -129,8 +145,12 @@ FIXTURE_COMPONENTS = [
         },
         suppliers=[
             SupplierInfo(
-                name="GROHE", brand="GROHE", country="DE",
-                price=PriceRange(min_price=2000, max_price=12000, unit="per_set", source="台灣市場參考價 2025"),
+                name="GROHE",
+                brand="GROHE",
+                country="DE",
+                price=PriceRange(
+                    min_price=2000, max_price=12000, unit="per_set", source="台灣市場參考價 2025"
+                ),
             ),
         ],
         ai_keywords=["淋浴", "shower", "淋浴間", "淋浴拉門"],

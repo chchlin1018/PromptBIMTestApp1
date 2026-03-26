@@ -49,7 +49,9 @@ class MEPTogglePanel(QWidget):
 
         for system_name, label in SYSTEM_LABELS.items():
             color = SYSTEM_COLORS.get(system_name, (0.5, 0.5, 0.5))
-            hex_color = f"#{int(color[0]*255):02x}{int(color[1]*255):02x}{int(color[2]*255):02x}"
+            hex_color = (
+                f"#{int(color[0] * 255):02x}{int(color[1] * 255):02x}{int(color[2] * 255):02x}"
+            )
 
             cb = QCheckBox(label)
             cb.setChecked(True)

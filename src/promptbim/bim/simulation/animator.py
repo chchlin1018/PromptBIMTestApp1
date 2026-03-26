@@ -11,14 +11,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import numpy as np
 import pyvista as pv
 
-from promptbim.debug import get_logger
 from promptbim.bim.simulation.scheduler import (
     ConstructionSchedule,
     get_visible_components,
 )
+from promptbim.debug import get_logger
 
 if TYPE_CHECKING:
     pass

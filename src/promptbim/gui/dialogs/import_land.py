@@ -7,6 +7,7 @@ Supports GIS formats (GeoJSON, Shapefile, DXF) and AI image recognition
 from __future__ import annotations
 
 from promptbim.debug import get_logger
+
 logger = get_logger("gui.import_land")
 
 from pathlib import Path
@@ -29,7 +30,15 @@ from promptbim.schemas.land import LandParcel
 SUPPORTED_EXTENSIONS = {".geojson", ".json", ".shp", ".dxf", ".kml", ".kmz"}
 PDF_EXTENSIONS = {".pdf"}
 IMAGE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".heic", ".heif",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".tiff",
+    ".tif",
+    ".bmp",
+    ".webp",
+    ".heic",
+    ".heif",
 }
 ALL_EXTENSIONS = SUPPORTED_EXTENSIONS | IMAGE_EXTENSIONS | PDF_EXTENSIONS
 
@@ -222,8 +231,8 @@ class ImportLandDialog(QDialog):
     def _show_confirmation(self, parcel: LandParcel, result, file_path: str):
         """Show the boundary confirmation dialog."""
         try:
-            from promptbim.land.boundary_confirm import BoundaryConfirmation
             from promptbim.gui.dialogs.confirm_boundary import ConfirmBoundaryDialog
+            from promptbim.land.boundary_confirm import BoundaryConfirmation
 
             confirmation = BoundaryConfirmation()
             confirmation.add_candidate(
@@ -232,9 +241,7 @@ class ImportLandDialog(QDialog):
                 notes=result.notes,
             )
 
-            dialog = ConfirmBoundaryDialog(
-                confirmation, image_path=file_path, parent=self
-            )
+            dialog = ConfirmBoundaryDialog(confirmation, image_path=file_path, parent=self)
             dialog.boundary_confirmed.connect(self._on_boundary_confirmed)
             dialog.exec()
         except Exception:
@@ -272,15 +279,19 @@ def _parse_file(path: Path, suffix: str) -> list[LandParcel]:
     logger.debug("_parse_file: %s (suffix=%s)", path, suffix)
     if suffix in (".geojson", ".json"):
         from promptbim.land.parsers.geojson import parse_geojson
+
         return parse_geojson(path)
     elif suffix == ".shp":
         from promptbim.land.parsers.shapefile import parse_shapefile
+
         return parse_shapefile(path)
     elif suffix == ".dxf":
         from promptbim.land.parsers.dxf import parse_dxf
+
         return parse_dxf(path)
     elif suffix in (".kml", ".kmz"):
         from promptbim.land.parsers.kml import parse_kml
+
         return parse_kml(path)
     else:
         raise ValueError(f"Unsupported file format: {suffix}")

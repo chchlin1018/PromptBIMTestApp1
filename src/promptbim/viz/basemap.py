@@ -7,11 +7,11 @@ Uses contextily when available, with a lightweight fallback.
 
 from __future__ import annotations
 
-from promptbim.debug import get_logger as _get_logger
-import math
 from typing import TYPE_CHECKING
 
 import numpy as np
+
+from promptbim.debug import get_logger as _get_logger
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -21,8 +21,7 @@ logger = _get_logger("viz.basemap")
 # Tile provider URLs (free, no API key required)
 OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 ESRI_SATELLITE_URL = (
-    "https://server.arcgisonline.com/ArcGIS/rest/services/"
-    "World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
 )
 
 # Available basemap styles

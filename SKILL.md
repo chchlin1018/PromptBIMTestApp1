@@ -1,7 +1,7 @@
-# PromptBIMTestApp1 — SKILL.md v3.0
+# PromptBIMTestApp1 — SKILL.md v3.1
 
 > Claude Code SSOT — 開發前必讀
-> 最後更新: 2026-03-25
+> 最後更新: 2026-03-26
 
 ---
 
@@ -585,7 +585,70 @@ python -c "import anthropic; print('Anthropic SDK OK')"
 
 ---
 
-*SKILL.md v3.0 | 2026-03-25 | 100% 開源 + 桌面 App + GIS 土地輸入 + IFC/USD 雙輸出*
+---
+
+## 11. P11-P14 新增功能
+
+### P11: Xcode <-> PySide6 GUI 整合
+- `PythonBridge.swift` — findCondaPython(), loadDotEnv(), launchPySide6GUI(), terminateGUI()
+- `ContentView.swift` — Splash screen + Python 環境檢查
+- `AppDelegate` — applicationWillTerminate 確保 Python process 清理
+- 23 個 E2E 整合測試
+
+### P12: 品質修復
+- PythonBridge 單實例注入（@EnvironmentObject）
+- App 關閉終止 Python Process
+- NSSupportsSuddenTermination 正確管理
+- Pipeline 效能基準 < 5s
+
+### P13: CLI + PDF OCR
+- `generate` CLI 命令 — 完整 pipeline 從命令列執行
+- `pdf_ocr.py` — PDFLandParser (pdfplumber text + PyMuPDF images + Claude Vision)
+- 共用測試 fixtures (conftest.py)
+- `poly_area()` 統一實作在 geometry.py
+
+### P14: CI/CD + 安全 + 文件
+- GitHub Actions CI: lint (ruff) + test (pytest) + build (xcodebuild) + security (pip-audit)
+- Dependabot 自動依賴更新
+- API Key 格式驗證 + .env 權限檢查
+- `py.typed` marker + `__all__` exports
+- `docs/API.md` API 文件
+- Coverage > 70% 目標
+
+### CLI 使用範例
+
+```bash
+python -m promptbim --version
+python -m promptbim gui [--debug]
+python -m promptbim generate "3-story villa" -o ./output [--land site.geojson] [--city Taipei]
+python -m promptbim check [--ai] [--fix] [--json]
+```
+
+### PDF OCR 流程
+
+```
+PDF 輸入 → pdfplumber 文字萃取 → PyMuPDF 圖片萃取 → Claude Vision AI 邊界辨識 → LandParcel
+         ↓                        ↓
+    面積/地號/地址            座標點辨識
+         ↓
+    面積方形近似 fallback
+```
+
+### CI/CD 流程
+
+```
+git push → GitHub Actions:
+  1. Setup conda + Python 3.11
+  2. pip install -e ".[dev]"
+  3. ruff check src/ tests/
+  4. pytest -m "not api and not slow" --cov --cov-fail-under=70
+  5. xcodebuild build (macOS runner)
+  6. pip-audit security scan
+```
+
+---
+
+*SKILL.md v3.1 | 2026-03-26 | 100% 開源 + 桌面 App + GIS 土地輸入 + IFC/USD 雙輸出 + CI/CD*
 
 ---
 
