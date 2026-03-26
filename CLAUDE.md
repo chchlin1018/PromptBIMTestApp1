@@ -1,19 +1,8 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.20.0 | **更新:** 2026-03-26
+> **版本:** v1.21.0 | **更新:** 2026-03-26
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 標記 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
-
----
-
-## 開發前必讀順序
-
-```
-1. sprints/PROMPT_P{X}.md ← 當前 Sprint 執行指令（最重要）
-2. SKILL.md                ← 專案 SSOT
-3. TODO.md                 ← Sprint 狀態
-4. CLAUDE.md               ← 本文件（行為規範）
-```
 
 ---
 
@@ -25,20 +14,22 @@
 | 🔴 P22 | notify 不存在 | `-p` 不載入 .zshrc | **PROMPT 最前面顯式定義所有函數** |
 | 🔴 P22.1 | 完成但沒 commit | 忘記 git push | **每個 Part 結束必須 commit+push** |
 | 🔴 P24a | OOM 靜默中斷 | 16GB RAM 耗盡 | **check_mem + <1GB 暫停** |
-| 🔴 P24b | 殭屍 Python 26GB | pytest GUI 建立 QApplication | **★ QT_QPA_PLATFORM=offscreen + pkill 清理 ★** |
+| 🔴 P24b | 殭屍 Python 26GB | pytest GUI 建立 QApplication | **QT_QPA_PLATFORM=offscreen + pkill** |
+| 🔴 P24d | **Task 通知全被跳過** | Claude Code 只發 Part 通知 | **★ task_start()/task_done() 封裝函數 ★** |
 | 🟧 P24c | Git 遠端分歧 | Claude.ai 同時推 commit | **Sprint 前 git pull** |
-| 🟧 P23 | iMessage 要授權 | 第一次需按「允許」 | Sprint 前測試 iMessage |
 
 ---
 
-## [MANDATORY] Sprint 啟動函數 + 環境設定 — 絕對第一步
+## [MANDATORY] Sprint 啟動函數 — 絕對第一步
 
-> ⚠️ 每個 PROMPT 最前面必須包含：函數定義 + 殭屍清理 + 環境變數
+> ⚠️ 每個 PROMPT 最前面必須包含以下完整定義
+> ⚠️ **★ v1.21.0: 新增 task_start/task_done/part_start/part_done 封裝函數 ★**
+> ⚠️ **★ PROMPT 中每個 Task 必須用 `task_start N "描述"` 和 `task_done` 包夾 ★**
 
 ```bash
-# ===== ★★★ Sprint 絕對第一步 ★★★ =====
+# ===== ★★★ Sprint 絕對第一步：完整函數定義 ★★★ =====
 
-# --- 1. notify 函數 ---
+# --- notify ---
 notify() {
     local msg="$1"
     osascript -e "
@@ -59,257 +50,185 @@ notify() {
     echo "[NOTIFY FALLBACK] $msg"
 }
 
-# --- 2. 記憶體監控 ---
+# --- 記憶體 ---
 get_mem() {
-    local page_size=$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)
-    local total_bytes=$(sysctl -n hw.memsize 2>/dev/null || echo 0)
-    local total_gb=$(echo "scale=1; $total_bytes / 1073741824" | bc 2>/dev/null || echo "?")
-    local free_pages=$(vm_stat 2>/dev/null | awk '/Pages free/ {gsub(/\./,"",$3); print $3}')
-    local inactive_pages=$(vm_stat 2>/dev/null | awk '/Pages inactive/ {gsub(/\./,"",$3); print $3}')
-    local free_bytes=$(( (${free_pages:-0} + ${inactive_pages:-0}) * page_size ))
-    local free_gb=$(echo "scale=1; $free_bytes / 1073741824" | bc 2>/dev/null || echo "?")
-    local used_gb=$(echo "scale=1; ($total_bytes - $free_bytes) / 1073741824" | bc 2>/dev/null || echo "?")
-    local pressure=$(memory_pressure 2>/dev/null | grep "System-wide" | awk '{print $NF}' || echo "unknown")
-    echo "${used_gb}/${total_gb}GB (free:${free_gb}GB) pressure:${pressure}"
+    local ps=$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)
+    local tb=$(sysctl -n hw.memsize 2>/dev/null || echo 0)
+    local tg=$(echo "scale=1;$tb/1073741824"|bc 2>/dev/null||echo "?")
+    local fp=$(vm_stat 2>/dev/null|awk '/Pages free/{gsub(/\./,"",$3);print $3}')
+    local ip=$(vm_stat 2>/dev/null|awk '/Pages inactive/{gsub(/\./,"",$3);print $3}')
+    local fb=$(((${fp:-0}+${ip:-0})*ps))
+    local fg=$(echo "scale=1;$fb/1073741824"|bc 2>/dev/null||echo "?")
+    local ug=$(echo "scale=1;($tb-$fb)/1073741824"|bc 2>/dev/null||echo "?")
+    echo "${ug}/${tg}GB(free:${fg}GB)"
 }
-
 check_mem() {
-    local MEM_INFO=$(get_mem)
-    local free_gb=$(echo "$MEM_INFO" | grep -oE 'free:[0-9.]+' | grep -oE '[0-9.]+')
-    if [ "$(echo "${free_gb:-0} < 1.0" | bc 2>/dev/null)" = "1" ]; then
-        MSG="⛔ 記憶體不足！💾 ${MEM_INFO} — Sprint 暫停
-📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
-        echo "$MSG" && notify "$MSG"; return 1
-    elif [ "$(echo "${free_gb:-0} < 2.0" | bc 2>/dev/null)" = "1" ]; then
-        MSG="⚠️ 記憶體偏低 💾 ${MEM_INFO}
-📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
-        echo "$MSG" && notify "$MSG"
-    fi; return 0
+    local m=$(get_mem); local f=$(echo "$m"|grep -oE 'free:[0-9.]+'|grep -oE '[0-9.]+')
+    [ "$(echo "${f:-0}<1.0"|bc 2>/dev/null)" = "1" ] && { notify "⛔ OOM! 💾$m"; return 1; }
+    [ "$(echo "${f:-0}<2.0"|bc 2>/dev/null)" = "1" ] && notify "⚠️ 記憶體偏低 💾$m"
+    return 0
 }
 
-# --- 3. ★★★ 殭屍 Python 清理 (v1.20.0) ★★★ ---
-# P24b: pytest GUI 測試產生殭屍進程吃 26GB
+# --- ★★★ Task/Part 封裝函數 (v1.21.0 新增) ★★★ ---
+# P24d 教訓: Claude Code 跳過 Task 通知，只發 Part 通知
+# 解法: 用封裝函數強制每個 Task 前後都發 iMessage
+task_start() {
+    local num=$1; local desc="$2"
+    TASK_NUM=$num; TASK_DESC="$desc"
+    PCT=$((TASK_DONE * 100 / TASK_TOTAL))
+    local m=$(get_mem)
+    MSG="🏗️ P${SPRINT} ▶️ Task ${num}/${TASK_TOTAL}: ${desc}
+📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+💾 ${m} | $(hostname -s) $(date '+%m/%d %H:%M')"
+    echo "$MSG" && notify "$MSG"
+}
+task_done() {
+    TASK_DONE=$((TASK_DONE + 1))
+    PCT=$((TASK_DONE * 100 / TASK_TOTAL))
+    MSG="🏗️ P${SPRINT} ✅ Task ${TASK_NUM}/${TASK_TOTAL}: ${TASK_DESC}
+📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+$(hostname -s) $(date '+%m/%d %H:%M')"
+    echo "$MSG" && notify "$MSG"
+}
+part_start() {
+    local id="$1"; local desc="$2"; local count=$3
+    PART_ID="$id"; PART_DESC="$desc"; PART_TASKS=$count
+    check_mem || { notify "⛔ P${SPRINT} OOM at Part ${id} 💾$(get_mem)"; exit 1; }
+    local m=$(get_mem)
+    MSG="🏗️ P${SPRINT} ▶️ Part ${id}: ${desc} (${count} tasks)
+📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+💾 ${m} | $(hostname -s) $(date '+%m/%d %H:%M')"
+    echo "$MSG" && notify "$MSG"
+}
+part_done() {
+    PART_DONE=$((PART_DONE + 1))
+    PCT=$((TASK_DONE * 100 / TASK_TOTAL))
+    local next="$1"
+    git add -A && git commit -m "[P${SPRINT}] Part ${PART_ID}: ${PART_DESC}" 2>/dev/null && git push origin main 2>/dev/null
+    MSG="🏗️ P${SPRINT} Part ${PART_ID} ✅ ${PART_DESC}
+📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
+⏭️ ${next} | $(hostname -s) $(date '+%m/%d %H:%M')"
+    echo "$MSG" && notify "$MSG"
+}
+
+# --- 殭屍清理 + 環境 ---
 echo "🧹 清理殭屍 Python..."
 pkill -f "python.*pytest" 2>/dev/null
 pkill -f "python.*promptbim" 2>/dev/null
 pkill -f "python.*PySide6" 2>/dev/null
 sleep 1
-echo "✅ 殭屍清理完成"
-
-# --- 4. ★★★ pytest 安全環境變數 (v1.20.0) ★★★ ---
-# 禁止 PySide6 建立真正的 QApplication/OpenGL — 省數 GB 記憶體
 export QT_QPA_PLATFORM=offscreen
-echo "✅ QT_QPA_PLATFORM=offscreen"
-
-echo "✅ 全部函數 + 環境已就緒"
+echo "✅ 全部函數+環境已就緒"
 ```
 
-### iMessage 收件人
+### PROMPT 中的使用方式（MANDATORY）
+
+> ⚠️ **每個 Task 必須用 task_start / task_done 包夾，不可省略**
+
+```bash
+# ===== 正確寫法（MANDATORY）=====
+task_start 1 "Generate Demo IFC"
+# ... 實際執行 Task 1 的代碼 ...
+task_done
+
+task_start 2 "Generate Demo USDA"
+# ... 實際執行 Task 2 的代碼 ...
+task_done
 ```
-★ 主要: +886972535899 | 備用: chchlin1018@icloud.com
+
+```bash
+# ===== 錯誤寫法（違規！）=====
+# 直接執行 Task 沒有呼叫 task_start/task_done → 沒有通知
+echo "Task 1..."
+# ... 代碼 ...
 ```
 
 ---
 
-## [MANDATORY] Sprint 啟動順序（不可調換）
+## [MANDATORY] Sprint 啟動順序
 
 ```
 1. 讀 PROMPT
-2. ★ 定義函數 + 殭屍清理 + export QT_QPA_PLATFORM=offscreen
-3. ★ check_mem（<1GB 中止）
-4. ★ git pull origin main（防遠端分歧）
-5. 啟動 notify（含 💾）
-6. 關鍵文件檢查（CLAUDE ≥5000B, SKILL ≥20000B）
-7. 環境檢查（ANTHROPIC_API_KEY 衝突）
-8. 讀 SKILL.md, TODO.md
-9. 開始 Task 1
+2. ★ 定義函數(notify+get_mem+check_mem+task_start+task_done+part_start+part_done)
+3. ★ 殭屍清理 + QT_QPA_PLATFORM=offscreen
+4. ★ check_mem（<1GB 中止）
+5. ★ git pull origin main
+6. 啟動 notify（含 💾）
+7. 文件檢查（CLAUDE ≥5000B, SKILL ≥20000B）
+8. 環境檢查（ANTHROPIC_API_KEY）
+9. 開始 Part A → Task 1
 ```
 
 ---
 
-## [MANDATORY] pytest 安全規則 (v1.20.0 新增)
-
-> ⚠️ **P24b 根因: pytest 啟動 PySide6 QApplication → 每個 GUI 測試建立 OpenGL context → 殭屍進程吃 26GB**
-> ⚠️ **此規則從 v1.20.0 起對所有 Sprint 強制執行**
-
-### pytest 執行命令（MANDATORY — 所有 Sprint 必須使用此格式）
-
-```bash
-# ★★★ 標準 pytest 命令 — 所有 Sprint 統一使用 ★★★
-export QT_QPA_PLATFORM=offscreen
-python -m pytest tests/ \
-    --timeout=10 \
-    --ignore=tests/test_gui \
-    --ignore=tests/test_mcp \
-    -x \
-    -m "not api and not slow and not gui" \
-    --tb=short -q
-```
-
-### 參數說明
-
-| 參數 | 用途 | 為何必要 |
-|------|------|---------|
-| `QT_QPA_PLATFORM=offscreen` | 禁止真正的 GUI 視窗 | **P24b: 省數 GB 記憶體** |
-| `--timeout=10` | 每個 test 最多 10 秒 | 防止 GUI test 卡住 |
-| `--ignore=tests/test_gui` | 跳過 GUI 測試 | GUI 測試需要真正的 display |
-| `--ignore=tests/test_mcp` | 跳過 MCP 測試 | 需要外部服務 |
-| `-x` | 第一個失敗就停 | 防止累積殭屍進程 |
-| `-m "not api and not slow"` | 跳過需要 API 的測試 | 不消耗 API 額度 |
-
-### Sprint 結束前的完整測試
+## [MANDATORY] pytest 安全規則
 
 ```bash
 export QT_QPA_PLATFORM=offscreen
-# 先清理殭屍
 pkill -f "python.*pytest" 2>/dev/null; sleep 1
-# 執行測試
 python -m pytest tests/ --timeout=10 --ignore=tests/test_gui --ignore=tests/test_mcp -x -m "not api and not slow" --tb=short -q
-# 測試後再次清理
 pkill -f "python.*pytest" 2>/dev/null
 ```
 
 ---
 
-## [MANDATORY] 記憶體監控規則
+## [MANDATORY] 記憶體 / Git / 文件保護
 
-| Free RAM | 狀態 | 動作 |
-|----------|------|------|
-| ≥ 2 GB | 🟢 正常 | 繼續 |
-| 1~2 GB | 🟡 偏低 | 警告 |
-| < 1 GB | 🔴 危險 | **暫停 Sprint + 通知** |
-
-### Sprint 期間只保留
-```
-✅ Claude Code (~2.2 GB) | Terminal/tmux (~50 MB) | Messages (~100 MB) | Tailscale (~43 MB)
-❌ Chrome / Notion / AnyDesk / 系統設定 / 活動監視器 → 關閉
-```
-
----
-
-## [MANDATORY] Git 安全規則
-
-| # | 時機 | 動作 |
-|---|------|------|
-| 1 | Sprint 啟動 | `git pull origin main` |
-| 2 | **每個 Part 結束** | `git add -A && git commit && git push` |
-| 3 | Sprint 結束 | `git tag v{X} && git push --tags` |
-| 4 | Task 失敗 3 次 | `git commit -m "wip: partial"` |
-
----
-
-## [MANDATORY] 通知規則
-
-| # | 時機 | 內容 |
-|---|------|------|
-| 1 | Sprint 啟動 | 總覽 + 💾 |
-| 2 | Task ▶️ 啟動 | 描述 + 進度% + 💾 |
-| 3 | Task ✅ 結束 | 描述 + 進度% |
-| 4 | Part ▶️ 啟動 | check_mem + 描述 + 💾 |
-| 5 | Part ✅ 結束 | 進度 + ⏭️ + git push |
-| 6 | 失敗/中斷 | 錯誤 + 💾 |
-| 7 | Sprint 完成 | 100% + tests + 💾 |
-
-### 通知模板
-
-#### Task ▶️（含💾）
-```bash
-PCT=$((TASK_DONE * 100 / TASK_TOTAL)); MEM_INFO=$(get_mem)
-MSG="🏗️ P${SPRINT} ▶️ Task ${TASK_NUM}/${TASK_TOTAL}: ${TASK_DESCRIPTION}
-📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
-💾 ${MEM_INFO} | $(hostname -s) $(date '+%m/%d %H:%M')"
-echo "$MSG" && notify "$MSG"
-```
-
-#### Task ✅
-```bash
-TASK_DONE=$((TASK_DONE + 1)); PCT=$((TASK_DONE * 100 / TASK_TOTAL))
-MSG="🏗️ P${SPRINT} ✅ Task ${TASK_NUM}/${TASK_TOTAL}: ${TASK_DESCRIPTION}
-📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
-$(hostname -s) $(date '+%m/%d %H:%M')"
-echo "$MSG" && notify "$MSG"
-```
-
-#### Part ▶️（check_mem + 💾）
-```bash
-check_mem || { notify "⛔ P${SPRINT} OOM at Part ${PART} 💾 $(get_mem)"; exit 1; }
-MEM_INFO=$(get_mem)
-MSG="🏗️ P${SPRINT} ▶️ Part ${PART}: ${PART_DESCRIPTION} (${PART_TASK_COUNT} tasks)
-📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
-💾 ${MEM_INFO} | $(hostname -s) $(date '+%m/%d %H:%M')"
-echo "$MSG" && notify "$MSG"
-```
-
-#### Part ✅（git commit + push）
-```bash
-PART_DONE=$((PART_DONE + 1)); PCT=$((TASK_DONE * 100 / TASK_TOTAL))
-git add -A && git commit -m "[P${SPRINT}] Part ${PART}: ${PART_DESCRIPTION}" && git push origin main 2>/dev/null
-MSG="🏗️ P${SPRINT} Part ${PART} ✅ ${PART_DESCRIPTION}
-📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
-⏭️ ${NEXT_PART} | $(hostname -s) $(date '+%m/%d %H:%M')"
-echo "$MSG" && notify "$MSG"
-```
-
----
-
-## [MANDATORY] 關鍵文件保護
-
-```bash
-CLAUDE_SIZE=$(wc -c < CLAUDE.md 2>/dev/null | tr -d ' ')
-SKILL_SIZE=$(wc -c < SKILL.md 2>/dev/null | tr -d ' ')
-[ "$CLAUDE_SIZE" -lt 5000 ] 2>/dev/null || [ "$SKILL_SIZE" -lt 20000 ] 2>/dev/null && {
-    notify "⛔ 文件損壞！CLAUDE=${CLAUDE_SIZE}B SKILL=${SKILL_SIZE}B"; exit 1; }
-```
+| 規則 | 說明 |
+|------|------|
+| 記憶體 ≥2GB | 🟢 繼續 |
+| 記憶體 1~2GB | 🟡 警告 |
+| 記憶體 <1GB | 🔴 **暫停 Sprint** |
+| Sprint 啟動 | `git pull origin main` |
+| Part 結束 | `git add -A && git commit && git push` |
+| Sprint 結束 | `git tag v{X} && git push --tags` |
+| CLAUDE.md | ≥5000B，不可修改 |
+| SKILL.md | ≥20000B，不可修改 |
 
 ---
 
 ## [MANDATORY] PROMPT 合規性檢查
 
 ```
-☐ notify + get_mem + check_mem 函數定義
-☐ ★ 殭屍 Python 清理 (pkill) ★
-☐ ★ export QT_QPA_PLATFORM=offscreen ★
-☐ check_mem → git pull → 啟動通知(💾) → 文件檢查 → 環境檢查
-☐ 每 Task: ▶️(💾) + ✅ notify
-☐ 每 Part: check_mem + ▶️(💾) + ✅(git commit+push + ⏭️) notify
-☐ pytest: --timeout=10 --ignore=test_gui -x + QT_QPA_PLATFORM=offscreen
-☐ 失敗/中斷 notify 含 💾
-☐ Sprint 結束產生下一個 PROMPT（合規 v1.20.0）
+☐ notify + get_mem + check_mem + task_start + task_done + part_start + part_done 函數定義
+☐ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
+☐ 啟動順序: 函數→清理→check_mem→git pull→notify→文件檢查→環境檢查
+☐ ★ 每個 Task 用 task_start N "描述" 和 task_done 包夾（不可省略）★
+☐ ★ 每個 Part 用 part_start ID "描述" N 和 part_done "下一步" 包夾 ★
+☐ pytest: QT_QPA_PLATFORM=offscreen + --timeout=10 + --ignore=test_gui + -x
+☐ Sprint 結束產生下一個 PROMPT（合規 v1.21.0）
 ☐ 不修改 CLAUDE.md / SKILL.md
 ```
 
 ---
 
-## [MANDATORY] Sprint 執行流程（26 步）
+## [MANDATORY] 執行流程（26 步）
 
 ```
- 1. 讀 PROMPT → 2. 定義函數 + pkill 殭屍 + QT_QPA_PLATFORM=offscreen
- 3. check_mem(<1GB 中止) → 4. git pull origin main
- 5. 啟動 notify(💾) → 6. 文件檢查 → 7. 環境檢查 → 8. 讀 SKILL/TODO
- 9. Part ▶️ notify(check_mem+💾)
-10. Task ▶️ notify(get_mem+💾) → 11. 執行 Task → 12. Task ✅ notify
-13. 重複 10-12 → 14. Part git commit+push → 15. Part ✅ notify(⏭️)
+ 1. 讀 PROMPT → 2. 定義函數 → 3. pkill + offscreen
+ 4. check_mem → 5. git pull → 6. 啟動 notify(💾)
+ 7. 文件檢查 → 8. 環境檢查
+ 9. part_start → 10. task_start → 11. 執行 → 12. task_done
+13. 重複 10-12 → 14. Part git commit+push → 15. part_done
 16. 重複 9-15 → 17. 錯誤 notify(💾)
-18. xcodebuild → 19. pytest(offscreen+timeout+ignore_gui+-x) → 20. pbxproj
+18. xcodebuild → 19. pytest(安全模式) → 20. pbxproj
 21. 文件同步 → 22. 審計報告 → 23. git push+tag
-24. 產生下一個 PROMPT → 25. Sprint ✅ notify(100%+💾) → 26. pkill 清理
+24. 產生下一個 PROMPT → 25. Sprint ✅ notify → 26. pkill 清理
 ```
 
 ---
 
-## 版本演進歷史
+## 版本歷史
 
-| 版本 | 關鍵變更 |
-|------|----------|
-| v1.14.0 | 🔴 P18: 文件截斷 → 寫保護 |
-| v1.16.0~v1.16.2 | notify 顯式定義 + 文件保護 + 進度 |
+| 版本 | 變更 |
+|------|------|
 | v1.17.0 | 雙向通知 + +886972535899 |
-| v1.18.0 | 🔴 P24a OOM → get_mem + check_mem |
-| v1.19.0 | 歷史教訓 + Git 安全 + 26 步 |
-| **v1.20.0** | **🔴 P24b 殭屍 Python → pkill 清理 + QT_QPA_PLATFORM=offscreen + pytest 安全規則** |
+| v1.18.0 | P24a OOM → get_mem + check_mem |
+| v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
+| **v1.21.0** | **★ P24d Task 通知被跳過 → task_start/task_done 封裝函數強制執行 ★** |
 
 ---
 
-*CLAUDE.md v1.20.0 | 2026-03-26*
-*★ v1.20.0: pkill 殭屍 + QT_QPA_PLATFORM=offscreen + pytest --timeout=10 --ignore=test_gui -x*
+*CLAUDE.md v1.21.0 | 2026-03-26*
+*★ 核心: task_start()/task_done() 封裝函數 — 每個 Task 必須呼叫，不可省略*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
