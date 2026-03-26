@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-windows-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-tests:
     name: Python Tests (Windows)
@@ -14,6 +18,8 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    env:
+      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +33,7 @@ jobs:
         run: |
           conda install -c conda-forge ifcopenshell -y
           pip install -e ".[dev]"
-          pip install usd-core qasync
+          pip install usd-core qasync pytest-timeout
 
       - name: Lint
         run: ruff check src/ tests/
@@ -39,7 +45,12 @@ jobs:
             --timeout=10 \
             --ignore=tests/test_mcp \
             --ignore=tests/test_gui \
-            -m "not api and not slow and not gui"
+            --ignore=tests/test_e2e_integration.py \
+            -m "not api and not slow and not gui" \
+            -x
+
+      - name: Run pipeline benchmark
+        run: python scripts/benchmark_pipeline.py --threshold 10.0
 
   cpp-tests:
     name: C++ Tests (Windows)

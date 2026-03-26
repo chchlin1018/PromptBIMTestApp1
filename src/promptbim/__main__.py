@@ -157,7 +157,8 @@ def _run_generate(args):
                 indent=2,
                 ensure_ascii=False,
                 default=str,
-            )
+            ),
+            encoding="utf-8",
         )
         print(f"   Summary: {summary_path}")
     else:

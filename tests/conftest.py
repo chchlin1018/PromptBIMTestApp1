@@ -8,7 +8,14 @@ os.environ.setdefault("DISPLAY", ":99")
 
 from __future__ import annotations
 
+import sys
+
 import pytest
+
+# Cross-platform skip markers
+macos_only = pytest.mark.skipif(sys.platform != "darwin", reason="macOS only")
+windows_only = pytest.mark.skipif(sys.platform != "win32", reason="Windows only")
+unix_only = pytest.mark.skipif(sys.platform == "win32", reason="Unix only")
 
 from promptbim.bim.components.registry import ComponentRegistry
 from promptbim.schemas.land import LandParcel

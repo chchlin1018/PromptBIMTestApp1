@@ -13,6 +13,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from promptbim.debug import get_logger
@@ -365,13 +366,13 @@ class HealthChecker:
     def _check_filesystem(self) -> CheckResult:
         start = time.monotonic()
         issues = []
-        env_ok = os.path.isfile(".env")
+        env_ok = Path(".env").is_file()
         if not env_ok:
             issues.append(".env missing")
 
         output_dir = self._settings.output_dir
         try:
-            os.makedirs(output_dir, exist_ok=True)
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
             test_file = output_dir / ".write_test"
             test_file.write_text("test")
             test_file.unlink()

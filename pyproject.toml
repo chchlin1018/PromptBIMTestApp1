@@ -133,4 +133,7 @@ markers = [
     "api: requires Claude API key",
     "benchmark: performance benchmarks",
     "slow: tests taking > 10 seconds",
+    "macos_only: tests that only run on macOS",
+    "windows_only: tests that only run on Windows",
+    "unix_only: tests that only run on Unix-like systems",
 ]
