@@ -1,7 +1,7 @@
-# PromptBIMTestApp1 — SKILL.md v3.3
+# PromptBIMTestApp1 — SKILL.md v3.4
 
 > Claude Code SSOT — 開發前必讀
-> 最後更新: 2026-03-26 (v3.3 notify rules)
+> 最後更新: 2026-03-26 (v3.4 memory monitoring)
 
 ---
 
@@ -56,7 +56,14 @@ notify() {
 ☐ 包含失敗 + 中斷通知模板
 ☐ Sprint 結束必須產生下一個 PROMPT
 
-> 完整範本見 CLAUDE.md v1.17.0
+> 完整範本見 CLAUDE.md v1.18.0
+
+### 記憶體監控規則（v1.18.0 新增 — MANDATORY）
+- **★ 每個 PROMPT 最前面必須定義 get_mem + check_mem 函數**
+- **★ Sprint 啟動時 check_mem — <1GB 中止**
+- **★ 每個 Task ▶️ 啟動 notify 必須含 💾 get_mem 結果**
+- **★ 每個 Part ▶️ 啟動前 check_mem — <1GB 暫停**
+- P24 教訓: Mac Mini 16GB RAM 耗盡 → Claude Code 被暫停 → Sprint 靜默中斷
 
 ---
 
@@ -678,7 +685,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.3 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
+*SKILL.md v3.4 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
