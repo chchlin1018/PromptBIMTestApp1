@@ -6,6 +6,58 @@
 
 ---
 
+## [2.9.0] - 2026-03-26
+
+### Fixed (Sprint P22: Senior Audit Full Remediation)
+
+#### C++ Critical Fixes
+- IFC-01: Replaced `gmtime()` with `gmtime_r()` for thread safety
+- IFC-02: Added `std::mutex` to IFCGenerator for concurrent access protection
+- IFC-03: Integer overflow protection on entity ID counter
+- IFC-04: NaN/infinity coordinate input validation
+- GIS-01: Edge-based parallel offset setback algorithm (handles non-convex polygons)
+
+#### C++ Build Hardening
+- CMAKE-01: Compiler hardening flags (`-fstack-protector-strong`, `-D_FORTIFY_SOURCE=2`)
+- CMAKE-02: Symbol visibility control (hidden by default)
+- CMAKE-03: Optional sanitizer support (ASan/UBSan)
+
+#### Python Critical/High Fixes
+- CACHE-01: File locking (`fcntl.LOCK_EX`) on cache store writes
+- PY-01: Dependency injection for Orchestrator agents
+- PY-02: `asyncio.to_thread()` for builder in async pipeline
+- PY-03: Constraint deduplication in refinement loop
+- PY-04: Early API key validation in BaseAgent.__init__()
+- MEP-01: Adaptive pathfinding grid (0.3–0.5m based on building span)
+- MEP-02: MEP system registry for pluggable system types
+- COST-01: Warning log for unmapped QTO price categories
+
+#### Swift Fixes
+- SW-01: Subprocess timeout (60s) in PythonBridge
+- SW-02: Paired enableSuddenTermination in process handler
+- SW-05: Safe dlsym null check via safeBind() helper
+- SW-06: C++ library version check on load
+
+#### Subsystem Fixes
+- SIM-01: Enum-based ComponentType classification
+- MON-01: Sensor-space type validation logging
+- PLG-01: Plugin system integrated with code rule registry
+- CFG-01: `validate_api_key()` returns False for empty key
+
+### Added
+- XCTest suite (15+ tests: PBResult, BIMSceneBuilder, NativeBIMBridge, PythonBridge)
+- PBResult.swift structured error type for cross-layer error propagation
+- `.pyi` type stubs for pybind11 C++ bindings
+- Thread safety GoogleTest (concurrent IFC + GIS)
+- `docs/audit-reports/Sprint22_AuditReport.md`
+
+### Changed
+- Reorganized: PROMPT files → `sprints/`, AuditReports → `docs/audit-reports/`
+- Version: 2.8.0 → 2.9.0 (pyproject.toml, __init__.py, Info.plist, CMakeLists.txt)
+- Test count: 957 → 974+
+
+---
+
 ## [2.8.0] - 2026-03-26
 
 ### Added (Sprint P21: V2 Migration Phase 4 — GIS Engine C++ + macOS SwiftUI 3D)
