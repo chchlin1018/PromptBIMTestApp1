@@ -6,6 +6,55 @@
 
 ---
 
+## [2.5.0] - 2026-03-26
+
+### Added (Sprint P18: V2 Migration Phase 0-1 — C++ Core Library Bootstrap)
+
+#### libpromptbim/ — C++ Core Library Skeleton (Phase 0)
+- `libpromptbim/CMakeLists.txt` — CMake 4.x project, C++17, FetchContent for deps
+- `libpromptbim/vcpkg.json` — vcpkg manifest (nlohmann-json, gtest, future: gdal/geos)
+- `libpromptbim/include/promptbim/promptbim.h` — Stable C ABI public header (all engines)
+- `libpromptbim/include/promptbim/compliance_engine.hpp` — C++ compliance engine interface
+- `libpromptbim/include/promptbim/cost_engine.hpp` — C++ cost engine interface
+- `.github/workflows/ci.yml` — Added `cpp-tests` CI matrix job (macOS-14 + ubuntu-22.04)
+
+#### Compliance Engine C++ (Phase 1)
+- `libpromptbim/src/compliance/compliance_engine.cpp` — 15 Taiwan building code rules in C++17
+  - BCR (Art.25), FAR (Art.161), Height (Art.24-1), Stairs (Art.33), Corridor (Art.92)
+  - CeilingHeight (Art.26), Elevator (Art.55-1), Parking
+  - FireConstruction, FireCompartment, FireEscape, TwoStairs, SafetyStair
+  - Seismic Design, Accessibility
+- Shoelace polygon area formula, JSON parse/emit via nlohmann/json
+- C ABI: `pb_check_compliance()`, `pb_version()`, `pb_free_string()`
+
+#### Cost Engine C++ (Phase 1)
+- `libpromptbim/src/cost/cost_engine.cpp` — QTO + unit prices + breakdown in C++17
+  - 13 price categories (structure, envelope, interior, MEP, door/window, roof, site)
+  - Interior finish allowance (ceiling + floor tile per slab)
+  - C ABI: `pb_estimate_cost()`
+
+#### pybind11 Bindings (Phase 1)
+- `libpromptbim/bindings/python/bindings.cpp` — pybind11 module `_native`
+  - `ComplianceEngine`, `CostEngine` classes + `check_compliance()`, `estimate_cost()` free fns
+- `src/promptbim/codes/_native_bridge.py` — Auto-select native C++ vs Python fallback
+
+#### GoogleTest Suite (24 tests)
+- `libpromptbim/tests/test_compliance_engine.cpp` — 10 compliance + 2 C ABI tests
+- `libpromptbim/tests/test_cost_engine.cpp` — 8 cost + 2 C ABI tests
+- `libpromptbim/tests/test_version.cpp` — 4 basic sanity tests
+
+#### Python Consistency Tests (+21 tests)
+- `tests/test_cpp_consistency.py` — 21 tests verifying C++ matches Python behavior
+  - 9 compliance consistency tests (BCR/FAR values, rule structure, fail scenarios)
+  - 8 cost consistency tests (floor area, ratios, ranges)
+  - 3 native bridge integration tests
+
+#### Test Count
+- Python: 799 → 820 passed (+21 C++ consistency tests)
+- GoogleTest: 24/24 passed ✅
+
+---
+
 ## [2.4.1] - 2026-03-26
 
 ### Fixed (Sprint P17.1: 審計修復 + 文檔一致性)
@@ -817,3 +866,4 @@
 | 2.1.0 | P16 完成 | 品質修復 (retry, timeout, constants) |
 | 2.4.0 | P17 完成 | 架構強化 + Async + Cache + CI 修復 |
 | 2.4.1 | P17.1 完成 | 文檔一致性修復（測試數、CLAUDE.md 版本、啟動通知）|
+| 2.5.0 | P18 完成 | V2 Migration Phase 0-1：C++ Core 骨架 + Compliance/Cost C++ + pybind11 + 24 GoogleTests |

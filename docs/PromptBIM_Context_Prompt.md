@@ -12,8 +12,8 @@
 - **GitHub：** https://github.com/chchlin1018/PromptBIMTestApp1 (private, owner: chchlin1018)
 - **組織：** Reality Matrix Inc. / Michael Lin (林志錚)
 - **性質：** POC (Proof of Concept)
-- **版本：** v2.4.1（P17.1 完成）
-- **測試：** 792 passed, 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
+- **版本：** v2.5.0（P18 完成）
+- **測試：** 820 passed (+ 24 GoogleTests), 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -63,6 +63,8 @@ python -m promptbim check [--ai]        # 健康檢查
 | P14 | CI/CD + 安全強化 + 文件最終化 | ✅ | 705+ |
 | P16 | 全面品質修整 (Quality Remediation) | ✅ | 725 |
 | P17 | 最終打磨 + 架構強化 (async/await, plan cache, plugin, rate limiter, schema versioning) | ✅ | 792 |
+| P17.1 | 審計修復 + 文檔一致性 | ✅ | 799 |
+| P18 | V2 Migration Phase 0-1：C++ Core 骨架 + Compliance/Cost C++ + pybind11 + 24 GoogleTests | ✅ | 820 |
 
 ---
 

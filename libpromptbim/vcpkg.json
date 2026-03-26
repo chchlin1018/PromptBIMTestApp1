@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "promptbim",
+  "version": "2.5.0",
+  "description": "PromptBIM C++ Core Library — BIM, GIS, Compliance, Cost, MEP, Simulation engines",
+  "homepage": "https://github.com/realitymatrix/PromptBIMTestApp1",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "nlohmann-json",
+      "version>=": "3.11.3"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.14.0"
+    }
+  ],
+  "features": {
+    "python": {
+      "description": "pybind11 Python bindings for V1 backward compatibility",
+      "dependencies": [
+        "pybind11"
+      ]
+    },
+    "bim": {
+      "description": "BIM engine — IFC + USD generation (Phase 3)",
+      "dependencies": []
+    },
+    "gis": {
+      "description": "GIS engine — GDAL/OGR + GEOS + PROJ (Phase 4)",
+      "dependencies": [
+        "gdal",
+        "geos",
+        "proj"
+      ]
+    }
+  }
+}
