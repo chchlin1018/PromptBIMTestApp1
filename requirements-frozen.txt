@@ -46,7 +46,7 @@ mdurl==0.1.2
 munkres==1.1.4
 narwhals==2.18.1
 pandas==2.3.3
-pdfminer.six==20251230
+pdfminer.six==20260107
 pdfplumber==0.11.9
 platformdirs==4.9.4
 pluggy==1.6.0
