@@ -1,7 +1,7 @@
-# PromptBIMTestApp1 — SKILL.md v3.7
+# PromptBIMTestApp1 — SKILL.md v3.8
 
 > Claude Code SSOT — 開發前必讀
-> 最後更新: 2026-03-26 (v3.5 lessons learned + memory + git safety)
+> 最後更新: 2026-03-27 (v3.8 — P24e pytest OOM root cause + PROJECT_STATUS tracking)
 
 ---
 
@@ -86,26 +86,10 @@ notify() {
 - P22.1 教訓: Sprint 完成但沒 commit → 工作遺失
 - P24 教訓: Claude.ai 推 commit 造成本地分歧 → push 失敗
 
-### 記憶體監控規則（v1.18.0 新增 — MANDATORY）
-- **★ 每個 PROMPT 最前面必須定義 get_mem + check_mem 函數**
-- **★ Sprint 啟動時 check_mem — <1GB 中止**
-- **★ 每個 Task ▶️ 啟動 notify 必須含 💾 get_mem 結果**
-- **★ 每個 Part ▶️ 啟動前 check_mem — <1GB 暫停**
-- P24 教訓: Mac Mini 16GB RAM 耗盡 → Claude Code 被暫停 → Sprint 靜默中斷
-
-### pytest 安全規則（v1.20.0 新增 — MANDATORY）
-- **★ Sprint 啟動時清理殭屍 Python: pkill -f "python.*pytest"**
-- **★ export QT_QPA_PLATFORM=offscreen（禁止真正 GUI 視窗）**
-- **★ pytest 必須加: --timeout=10 --ignore=tests/test_gui -x**
-- P24b 教訓: pytest GUI 測試產生殭屍 Python 進程吃 26GB
-
-### pytest OOM 根因（P24e — 4次事故總結）
-- **★ conftest.py 最頂部必須設定 os.environ["QT_QPA_PLATFORM"] = "offscreen"**
-- **★ 禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
-- **★ pytest 必須加 --ignore=tests/test_e2e_integration.py（20KB 觸發 PySide6）**
-- **★ 每次 pytest 前後都 pkill -f "python.*pytest"**
-- 根因: pytest 收集 test 檔案時 import PySide6 → 建立 QApplication → 每個進程吃數 GB
-- Claude Code 同時啟動多個 pytest 進程 → 記憶體倍增 → swap 10.77GB → OOM
+### PROJECT_STATUS.md 追蹤規則（v1.22.0 MANDATORY）
+- **★ Sprint 啟動時必須先讀取 docs/PROJECT_STATUS.md**
+- **★ Sprint 結束時（成功/失敗/中斷）必須更新 docs/PROJECT_STATUS.md**
+- **★ 錯誤、OOM 等異常也必須記錄到 PROJECT_STATUS.md**
 
 ---
 
@@ -290,7 +274,7 @@ Step 5: 匯出
 PromptBIMTestApp1/
 ├── README.md
 ├── SKILL.md
-├── CLAUDE.md                       # Claude Code 行為規範 (v1.13.0)
+├── CLAUDE.md                       # Claude Code 行為規範 (v1.22.0)
 ├── LICENSE                         # MIT
 ├── pyproject.toml
 ├── .env.example
@@ -394,6 +378,7 @@ PromptBIMTestApp1/
 │   ├── API.md
 │   ├── DesignDocForV2.md
 │   ├── V2_Migration_Tasks.md        # V2 遷移任務拆解 (P17)
+│   ├── PROJECT_STATUS.md            # 專案狀態追蹤 (v1.22.0)
 │   ├── PromptBIM_Context_Prompt.md
 │   ├── reports/
 │   │   ├── Sprint17_AuditReport.md
@@ -727,7 +712,7 @@ git push → GitHub Actions:
 
 ---
 
-*SKILL.md v3.7 | 2026-03-26 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
+*SKILL.md v3.8 | 2026-03-27 | 100% 開源 + 桌面 App + GIS + IFC/USD + Async + Cache + Plugins + CI/CD*
 
 ---
 
