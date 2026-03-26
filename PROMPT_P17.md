@@ -1,25 +1,27 @@
-# PROMPT_P17.md — Sprint P17: 全面修整 + 架構強化 + CI 修復 (Final Polish & Architecture Hardening)
+# PROMPT_P17.md — Sprint P17: 全面修整 + 架構強化 + Async + 快取 (Complete Hardening Sprint)
 
-> 版本: v1.1 | 建立時間: 2026-03-26 | 更新: 加入接續 Sprint 提醒
+> 版本: v2.0 | 建立時間: 2026-03-26
 > 前置 Sprint: P16 ✅ 完成（品質修整, 725 tests, v2.1.0）
 > 前置 Sprint: P15 ⬜ 未執行（併入本 Sprint）
-> 依賴: AuditReport.md, CLAUDE.md v1.8.0, SKILL.md, docs/DesignDocForV2.md
-> 品質分析: P14 + P16 品質分析報告（Claude Opus 4.6）
-> 目標版本: v2.2.0
-> ⬇️ 接續: PROMPT_P17.1.md（async/await）→ PROMPT_P17.2.md（Plan 快取）
+> 依賴: AuditReport.md, CLAUDE.md v1.9.0, SKILL.md, docs/DesignDocForV2.md
+> 目標版本: v2.4.0
+> 本 Sprint 合併了原 P17 + P17.1 + P17.2 的所有工作
 
 ---
 
 ## Sprint 目標
 
-整合 **5 個來源** 的所有殘留工作，一次性收尾：
-1. AuditReport.md 未修復項目（M-2, M-4, L-1~L-5 + 架構風險 + 測試缺口）
-2. P14/P16 品質分析發現的問題
-3. P15 的 V2 架構工作（lazy import, plugin system, test refactor）
-4. CI/CD 關鍵修復（requirements-frozen.txt 損壞、假 CVE ID）
-5. ContentView.swift 版本號動態化
+**一次性收尾所有殘留工作**，共 **8 個 Part、34 個 Task**：
+- Part A: CI/CD 緊急修復（3 Tasks）
+- Part B: AuditReport 殘留修復（7 Tasks）
+- Part C: V2 架構強化 — Lazy Import + Plugin（3 Tasks）
+- Part D: 測試缺口填補（3 Tasks）
+- Part E: Swift 修復 + 文件歸檔（3 Tasks）
+- Part F: Async/Await Agent 層重構（6 Tasks）
+- Part G: Plan 快取機制（6 Tasks）
+- Part H: 最終文件同步 + 驗收（3 Tasks）
 
-共 **20 個 Task**，分 5 個 Part。
+⚠️ **每完成一個 Part，必須發送 iMessage 通知（CLAUDE.md v1.9.0 規則）。**
 
 ---
 
@@ -31,230 +33,236 @@
 ## 必讀文件
 
 1. **SKILL.md** — 專案 SSOT
-2. **CLAUDE.md v1.8.0** — 行為規範（所有 [MANDATORY] 規則）
-3. **AuditReport.md** — 代碼審核報告（未修復項目是本 Sprint 主要來源）
+2. **CLAUDE.md v1.9.0** — 行為規範（特別注意 Part 完成通知新規則）
+3. **AuditReport.md** — 代碼審核報告
 4. **TODO.md** — 確認當前 Sprint 狀態
 5. **pyproject.toml** — 依賴與版本
 6. **docs/DesignDocForV2.md** — V2 架構設計（Part C 依賴）
-7. **src/promptbim/constants.py** — P16 新增的常數檔（確認不重複）
+7. **src/promptbim/constants.py** — P16 新增的常數檔
 
 ---
 
-## Task 清單
+## Part A: CI/CD 緊急修復（最高優先）
 
-### Part A: CI/CD 緊急修復（最高優先）
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part A 完成：CI/CD 修復」
 
-#### Task 1: 修復 requirements-frozen.txt [CI 損壞]
-- **問題:** `pip freeze` 在 conda 環境下產出的 frozen 檔案含有 `@ file:///System/Volumes/Data/home/conda/feedstock_root/...` 本地路徑，導致 `pip-audit` 和 GitHub Actions 都無法使用
-- **修復:**
-  - 安裝 `pip-tools`：`pip install pip-tools`
-  - 用 `pip-compile` 從 pyproject.toml 生成乾淨的 frozen 檔：
-    ```bash
-    pip-compile pyproject.toml -o requirements-frozen.txt --strip-extras
-    ```
-  - 如果 `pip-compile` 不適用（conda 專有套件），則用：
-    ```bash
-    pip freeze | grep -v '@ file://' | grep -v '^#' > requirements-frozen.txt
-    ```
-  - 驗證生成的檔案不含任何 `@ file://` 路徑
-- **測試:** `pip-audit -r requirements-frozen.txt` 在 promptbim 環境下成功執行
+#### Task 1: 修復 requirements-frozen.txt
+- `pip freeze` 產出含 `@ file:///System/Volumes/...` 本地路徑，pip-audit 和 GitHub Actions 無法使用
+- 用 `pip freeze | grep -v '@ file://' | grep -v '^#' > requirements-frozen.txt` 生成乾淨版本
+- 或安裝 `pip-tools` 用 `pip-compile pyproject.toml -o requirements-frozen.txt --strip-extras`
+- 驗證無任何 `@ file://` 路徑
+- 測試：`pip-audit -r requirements-frozen.txt` 成功執行
 
-#### Task 2: 移除假 CVE ID [CI 誤導]
-- **位置:** `.github/workflows/ci.yml`
-- **問題:** `--ignore-vuln CVE-2026-4539` 是 Claude Code 自行編造的 CVE ID
-- **修復:**
-  - 先執行 Task 1 修復 frozen 檔
-  - 執行 `pip-audit -r requirements-frozen.txt` 確認結果
-  - 如果結果乾淨（0 vulnerabilities）：移除整個 `--ignore-vuln` 參數
-  - 如果有真正 CVE：用實際的 CVE ID 替換
-  - 最終 ci.yml security job 應為：
-    ```yaml
-    - name: Security audit
-      run: pip-audit -r requirements-frozen.txt
-    ```
-- **測試:** 本地 `pip-audit` 通過且無假 CVE
+#### Task 2: 移除假 CVE ID
+- `.github/workflows/ci.yml` 中 `--ignore-vuln CVE-2026-4539` 是 Claude Code 編造的
+- 執行 Task 1 後跑 `pip-audit`，結果乾淨則移除整個 `--ignore-vuln`，有真 CVE 則用真 ID
+- 最終：`pip-audit -r requirements-frozen.txt`（無 ignore）
 
-#### Task 3: 驗證 CI 在 GitHub Actions 可執行 [CI 驗證]
-- **修復:**
-  - 確認 `.github/workflows/ci.yml` 的 security job 能在 `ubuntu-latest` 上用修復後的 `requirements-frozen.txt` 正常運行
-  - 如果 frozen 檔含 conda 專有套件（如 `ifcopenshell`、`usd-core`）在 PyPI 上不存在，security job 需改為：
-    ```yaml
-    - name: Security audit
-      run: |
-        pip install -e ".[dev]" 2>/dev/null || true
-        pip-audit --desc 2>/dev/null || echo "⚠️ Some packages not auditable in CI"
-    ```
-  - 或改為只審計 PyPI 可取得的套件
-- **測試:** ci.yml 語法正確（`actionlint` 或手動檢查）
+#### Task 3: 驗證 CI 可執行
+- 確認 security job 在 `ubuntu-latest` 上可用修復後的 frozen 檔運行
+- 如 conda 專有套件（ifcopenshell, usd-core）在 PyPI 不存在，security job 改為容錯模式
 
-### Part B: AuditReport 殘留修復（Medium + Low）
+---
 
-#### Task 4: 退縮計算改進 [AuditReport M-2]
-- **位置:** `land/setback.py`
-- **問題:** 非矩形地塊使用均勻退縮（shapely buffer）而非逐邊計算
-- **修復:**
-  - 現有 `uniform_setback()` 保留（作為 fallback）
-  - 新增 `per_side_setback(polygon, setbacks: dict)` 支持逐邊退縮
-  - setbacks dict 格式：`{"front": 5.0, "rear": 3.0, "left": 2.0, "right": 2.0}`
-  - 使用 shapely `parallel_offset` 或逐邊平移計算
-  - 如果地塊邊數 > 4，fallback 到 uniform
-- **測試:** 新增矩形 + L 形 + 三角形退縮測試
+## Part B: AuditReport 殘留修復
 
-#### Task 5: API Rate Limiter [AuditReport 架構風險]
-- **位置:** `agents/base.py` 或新建 `agents/rate_limiter.py`
-- **問題:** 無 API 呼叫速率限制，可能觸發 Anthropic 限額
-- **修復:**
-  - 使用 `tenacity` 的 rate limiter 或簡單的 token bucket
-  - 預設：每分鐘最多 50 次 API 呼叫（Anthropic 預設限額）
-  - 在 `config.py` 加入 `api_rate_limit_rpm: int = 50`
-  - 在 `BaseAgent._call_api_with_retry()` 前加入 rate limit check
-- **測試:** 新增速率限制觸發測試（mock time）
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part B 完成：AuditReport 修復」
 
-#### Task 6: Schema 版本控制 [AuditReport L-1]
-- **位置:** `schemas/plan.py`, `schemas/land.py`, `schemas/result.py` 等
-- **問題:** 新增欄位可能破壞舊版序列化資料
-- **修復:**
-  - 在主要 schema 加入 `schema_version: str = "2.2.0"` 欄位
-  - 加入 `model_validator` 在載入時檢查版本相容性
-  - 舊版資料（無 schema_version）自動視為 v1.0.0 並嘗試遷移
-- **測試:** 新增版本遷移測試（v1 → v2 資料載入）
+#### Task 4: 退縮計算改進 [M-2]
+- `land/setback.py` 新增 `per_side_setback(polygon, setbacks: dict)` 逐邊退縮
+- 現有 `uniform_setback()` 保留為 fallback，邊數 > 4 自動 fallback
+- 測試：矩形 + L 形 + 三角形
 
-#### Task 7: 輸入大小限制 [AuditReport L-3]
-- **位置:** `land/parsers/geojson.py`, `land/parsers/manual.py` 等
-- **問題:** `json.load()` 無檔案大小限制
-- **修復:**
-  - 在所有土地解析器入口加入檔案大小檢查
-  - 預設上限：`MAX_LAND_FILE_SIZE_MB = 50`（加入 constants.py）
-  - 超過上限時拋出 `ValueError("File size exceeds 50MB limit")`
-- **測試:** 新增大檔案拒絕測試（mock 大檔案）
+#### Task 5: API Rate Limiter [架構風險]
+- `agents/base.py` 或新建 `agents/rate_limiter.py`
+- token bucket，預設每分鐘 50 次，`config.py` 加入 `api_rate_limit_rpm: int = 50`
+- 測試：速率限制觸發測試（mock time）
 
-#### Task 8: lxml 安裝 [AuditReport L-5]
-- **問題:** fastkml 缺少 lxml，產生 pytest warning
-- **修復:**
-  - 在 pyproject.toml dependencies 加入 `lxml>=5.0`
-  - 更新 requirements-frozen.txt
-- **測試:** pytest 執行時不再有 lxml warning
+#### Task 6: Schema 版本控制 [L-1]
+- 主要 schema 加入 `schema_version: str = "2.4.0"`，載入時檢查相容性
+- 測試：v1 → v2 資料遷移
 
-#### Task 9: ComponentRegistry 效能改善 [AuditReport L-2]
-- **位置:** `bim/components/registry.py`
-- **問題:** `_components` 線性搜尋 O(n)
-- **修復:**
-  - 加入 `_by_category: dict[str, list]` 倒排索引
-  - `search()` 改用索引查詢
-  - `register()` 同時更新主列表和索引
-- **測試:** 現有測試通過 + 新增效能基準測試
+#### Task 7: 輸入大小限制 [L-3]
+- 所有土地解析器加入檔案大小檢查，`MAX_LAND_FILE_SIZE_MB = 50`（constants.py）
+- 測試：大檔案拒絕
 
-#### Task 10: PythonBridge conda 路徑改善 [AuditReport L-4]
-- **位置:** `PromptBIMTestApp1/PythonBridge.swift`
-- **問題:** 硬編碼 `/opt/homebrew/Caskroom/miniforge/` 是 Apple Silicon 專用
-- **修復:**
-  - 加入 Intel Mac 路徑：`/usr/local/Caskroom/miniforge/base/envs/promptbim/bin/python`
-  - 加入通用 `which python3` fallback
-  - 加入 `PROMPTBIM_PYTHON` 環境變數覆蓋（最高優先）
-- **測試:** xcodebuild BUILD SUCCEEDED
+#### Task 8: lxml 安裝 [L-5]
+- pyproject.toml 加入 `lxml>=5.0`，消除 fastkml pytest warning
 
-### Part C: V2 架構強化（原 P15 工作）
+#### Task 9: ComponentRegistry 效能 [L-2]
+- 加入 `_by_category` 倒排索引，search() 改用索引查詢
+- 測試：效能基準
 
-#### Task 11: Lazy Import 優化 [P15 目標 2]
-- **位置:** `agents/orchestrator.py`, `__main__.py`
-- **問題:** Orchestrator init 時 eager import 所有 Agent，影響 CLI 啟動速度
-- **修復:**
-  - Orchestrator 改為 lazy import：在 `generate()` / `modify()` 時才 import 對應 Agent
-  - `__main__.py --version` 路徑不觸發任何 agent/bim import
-  - 目標：`python -m promptbim --version` < 0.5s
-- **測試:** 新增啟動速度測試（`--version` < 0.5s, `check` < 2s）
+#### Task 10: PythonBridge conda 路徑 [L-4]
+- 加入 Intel Mac 路徑 + `which python3` fallback + `PROMPTBIM_PYTHON` 環境變數覆蓋
 
-#### Task 12: Plugin 架構基礎 [P15 目標 3]
-- **位置:** 新建 `plugins/` 目錄
-- **問題:** Agent / Parser / Code Rule 目前硬編碼，無法外部擴展
-- **修復:**
-  - 建立 `plugins/base.py`：`PluginRegistry` + `@register_plugin` decorator
-  - 三種 plugin 類型：`agent`, `parser`, `code_rule`
-  - 土地解析器改用 plugin 註冊模式（GeoJSON/KML/DXF/SHP/PDF 各自註冊）
-  - 法規引擎改用 plugin 註冊模式（15+ 規則各自註冊）
-  - 保持向後相容：現有代碼不需修改即可運行
-- **測試:** 新增 plugin 註冊/發現/執行測試
+---
 
-#### Task 13: V2 架構文件拆解 [P15 目標 1]
-- **位置:** `docs/DesignDocForV2.md` → `docs/V2_Migration_Tasks.md`
-- **修復:**
-  - 讀取 DesignDocForV2.md
-  - 產出 `docs/V2_Migration_Tasks.md`：將方案 D（混合架構）拆為可執行 task 列表
-  - 標記每個 task 的預估工時、依賴關係、優先級
-  - 這是文件工作，不涉及程式碼修改
-- **測試:** 文件存在且格式正確
+## Part C: V2 架構強化
 
-### Part D: 測試缺口填補 + 韌性
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part C 完成：V2 架構」
 
-#### Task 14: 網路故障模擬測試 [AuditReport 測試缺口]
-- **位置:** `tests/test_agents/test_network_failure.py`（新建）
-- **修復:**
-  - Mock `httpx.TimeoutException` → 驗證 fallback 觸發
-  - Mock `httpx.ConnectError` → 驗證重試 + fallback
-  - Mock `anthropic.APIStatusError(503)` → 驗證 tenacity retry 3 次
-  - Mock `anthropic.APIStatusError(429)` → 驗證不重試（4xx）
-- **測試:** 新增 ~8 個網路故障場景測試
+#### Task 11: Lazy Import 優化
+- Orchestrator 改為 lazy import，`--version` 路徑不觸發 agent/bim import
+- 目標：`python -m promptbim --version` < 0.5s
+- 測試：啟動速度基準
 
-#### Task 15: 惡意輸入測試 [AuditReport 測試缺口]
-- **位置:** `tests/test_land/test_fuzzing.py`（新建）
-- **修復:**
-  - 測試超大 GeoJSON（>1000 個 features）
-  - 測試畸形 JSON（缺 type, 缺 coordinates）
-  - 測試自交叉多邊形
-  - 測試座標極端值（>180 經度, >90 緯度）
-  - 測試空檔案、二進位檔案
-- **測試:** 新增 ~10 個 fuzzing 測試
+#### Task 12: Plugin 架構基礎
+- 新建 `plugins/base.py`：PluginRegistry + @register_plugin
+- 三種 plugin 類型：agent, parser, code_rule
+- 土地解析器 + 法規引擎改用 plugin 註冊，保持向後相容
+- 測試：plugin 註冊/發現/執行
 
-#### Task 16: 檔案權限錯誤測試 [AuditReport 測試缺口]
-- **位置:** `tests/test_integration/test_permissions.py`（新建）
-- **修復:**
-  - Mock `PermissionError` 在 IFC/USD 寫入時 → 驗證錯誤訊息
-  - Mock `PermissionError` 在 .env 讀取時 → 驗證 fallback
-  - Mock `IsADirectoryError` 在輸出路徑時
-- **測試:** 新增 ~5 個權限錯誤測試
+#### Task 13: V2 架構文件拆解
+- 讀取 DesignDocForV2.md，產出 `docs/V2_Migration_Tasks.md`
+- 拆為可執行 task 列表（工時、依賴、優先級）
+- 純文件工作
 
-### Part E: Swift 修復 + 文件同步
+---
 
-#### Task 17: ContentView 版本號動態化 [P16 遺留 N1]
-- **位置:** `PromptBIMTestApp1/ContentView.swift`
-- **問題:** 版本號仍為硬編碼 `"v2.1.0"`，每次升版都要手動改
-- **修復:**
-  - PythonBridge 新增 `@Published var version: String = ""` 屬性
-  - 在 `checkPython()` 成功後解析 `--version` 輸出存入 `version`
-  - ContentView 改為 `Text("v\(bridge.version)")` 動態顯示
-  - Fallback：版本未取得時顯示 "v?.?.?"
-- **測試:** xcodebuild BUILD SUCCEEDED + 無 warning
+## Part D: 測試缺口填補
 
-#### Task 18: AuditReport 更新 [文件維護]
-- **位置:** `AuditReport.md`
-- **修復:**
-  - 在「發現的問題清單」中標記 P16 已修復項目（C-1~C-3, H-1~H-5, M-1/M-3/M-5/M-6）
-  - 在「發現的問題清單」中標記 P17 已修復項目
-  - 更新「關鍵數據」表格（測試數、覆蓋率等）
-  - 更新「審核結論」評級
-- **測試:** 文件內容與實際狀態一致
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part D 完成：測試補強」
 
-#### Task 19: P14/P16 品質分析報告歸檔 [文件維護]
-- **位置:** `docs/reports/P14_Quality_Analysis_Report.md`（新建）, `docs/reports/P16_Quality_Analysis_Report.md`（新建）
-- **修復:**
-  - 將 P14 品質分析結果整理為正式報告（評分 8.2, CI/CD 審查, 版本同步）
-  - 將 P16 品質分析結果整理為正式報告（評分 9.0, 逐項驗證表）
-- **測試:** 報告文件存在且格式與 P11 報告一致
+#### Task 14: 網路故障模擬
+- 新建 `tests/test_agents/test_network_failure.py`
+- Mock timeout / connect error / 503 retry / 429 不重試
+- ~8 個測試
 
-#### Task 20: 全量文件同步 + 驗收
-- 依照 CLAUDE.md v1.7.0 [MANDATORY] 規則，更新以下 8 項：
-  1. `TODO.md` — P17 所有 task 標記 ✅，版本 v2.2.0
-  2. `CHANGELOG.md` — 新增 [2.2.0] 條目 + 版本對照表
-  3. `README.md` — 更新測試數、版本號、功能狀態
-  4. `docs/PromptBIM_Context_Prompt.md` — 反映 P17 完成，v2.2.0
-  5. `pyproject.toml` — version = "2.2.0"
-  6. `src/promptbim/__init__.py` — fallback = "2.2.0"
-  7. `SKILL.md` — 更新架構變更（plugins/, constants 擴充）— 如果 PROMPT 允許
-  8. `AuditReport.md` — Task 18 已處理
-- Xcode pbxproj 完整性檢查（CLAUDE.md v1.8.0 規則）
-  - Info.plist: CFBundleVersion = 17, CFBundleShortVersionString = 2.2.0
-- 建立 `PROMPT_P18.md`（通過合規性檢查）
-- git tag v2.2.0
+#### Task 15: 惡意輸入測試
+- 新建 `tests/test_land/test_fuzzing.py`
+- 超大 GeoJSON / 畸形 JSON / 自交叉 / 極端座標 / 空檔案 / 二進位
+- ~10 個測試
+
+#### Task 16: 檔案權限錯誤
+- 新建 `tests/test_integration/test_permissions.py`
+- Mock PermissionError / IsADirectoryError
+- ~5 個測試
+
+---
+
+## Part E: Swift 修復 + 文件歸檔
+
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part E 完成：Swift + 文件」
+
+#### Task 17: ContentView 版本號動態化
+- PythonBridge 新增 `@Published var version: String`
+- `checkPython()` 成功後解析 `--version` 輸出存入 version
+- ContentView 改為 `Text("v\(bridge.version)")` 動態顯示
+
+#### Task 18: AuditReport 更新
+- 標記 P16 + P17 已修復項目，更新關鍵數據表格和評級
+
+#### Task 19: P14/P16 品質分析報告歸檔
+- 新建 `docs/reports/P14_Quality_Analysis_Report.md` + `P16_Quality_Analysis_Report.md`
+
+---
+
+## Part F: Async/Await Agent 層重構 [原 P17.1]
+
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part F 完成：Async/Await」
+
+#### Task 20: BaseAgent async 化
+- 新增 `async def arun()` + `anthropic.AsyncAnthropic` client（lazy init）
+- 保留現有 `run()` 同步方法（向後相容）
+- tenacity retry + timeout 同樣套用
+- 測試：mock async API
+
+#### Task 21: 各 Agent async 支援
+- enhancer/planner/checker/modifier 新增 `async def arun()` 覆寫
+- BuilderAgent 保持同步（純 Python，不呼叫 API）
+- 測試：async 版本測試
+
+#### Task 22: Orchestrator async pipeline
+- 新增 `async def agenerate()` / `async def amodify()`
+- Pipeline: `await enhancer.arun()` → `await planner.arun()` → `builder.run()` → `await checker.arun()`
+- 保留同步 `generate()` / `modify()`（向後相容）
+- 測試：async orchestrator 全流程
+
+#### Task 23: ChatPanel + CLI async 整合
+- GUI: QThread worker 改用 `asyncio.run(orchestrator.agenerate())`
+- CLI: `generate` 命令改用 `asyncio.run()`
+- 如需要加入 `qasync` 到 dependencies
+- 測試：GUI + CLI 測試通過
+
+#### Task 24: MCP Server async
+- FastMCP tools 改用 `await orchestrator.agenerate()`
+- Streamlit Web 保持同步（原生不支援 async）
+
+#### Task 25: 並行 Agent 執行（進階）
+- 生成完成後，並行執行成本估算 + MEP 規劃 + 監控點配置
+- `asyncio.gather(cost_task, mep_task, monitor_task)`
+- 只並行無相依賴的 Agent
+- 測試：並行結果與順序執行一致
+
+---
+
+## Part G: Plan 快取機制 [原 P17.2]
+
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — Part G 完成：Plan 快取」
+
+#### Task 26: 快取 Key + Store
+- 新建 `cache/cache_key.py`：SHA-256(normalized_prompt + land_json + zoning_json)
+- 新建 `cache/store.py`：本地 `~/.promptbim/cache/` JSON 存儲
+- 介面：get / put / invalidate / clear_all / list_entries
+- `CACHE_MAX_ENTRIES = 100`（constants.py），LRU 淘汰
+- 測試：put/get round-trip, LRU, invalidate
+
+#### Task 27: 快取過期策略
+- TTL 預設 7 天（`CACHE_TTL_DAYS = 7`）
+- `config.py` 加入 `cache_ttl_days: int = 7` + `cache_enabled: bool = True`
+- 版本不匹配自動失效（快取記錄 app_version）
+- 測試：TTL 過期 + 版本不匹配
+
+#### Task 28: Orchestrator 快取整合
+- `generate()` / `agenerate()` 開頭查詢快取
+- 命中直接回傳，未命中走 Pipeline 後存入
+- `use_cache: bool = True` 參數
+- Status callback 顯示 Cache hit / Generating
+- 測試：hit / miss / force regenerate
+
+#### Task 29: CLI 快取支援
+- `generate --no-cache` + `generate --clear-cache`
+- 新增 `cache` 子命令：`list` / `clear` / `stats`
+- 測試：CLI cache 命令
+
+#### Task 30: GUI 快取指示
+- Cache hit 時 ChatPanel 顯示「⚙️ 從快取載入（原生成於 {date}）」
+- 「重新生成」按鈕（use_cache=False）
+
+#### Task 31: Streamlit + MCP 快取整合
+- Web UI + MCP Server 也走快取路徑
+- 測試：快取在所有介面一致運作
+
+---
+
+## Part H: 最終文件同步 + 驗收
+
+> ⚠️ 完成後發送 iMessage：「Sprint P17 — 全部完成（8/8 Parts）」
+
+#### Task 32: 全量文件同步
+- 依照 CLAUDE.md v1.9.0 [MANDATORY] 更新 8 項文件
+- pyproject.toml version = "2.4.0"
+- Info.plist: CFBundleVersion = 17, CFBundleShortVersionString = 2.4.0
+- AuditReport.md：所有修復項目已標記
+- SKILL.md：更新架構變更（plugins/, cache/, async）
+- Xcode pbxproj 完整性檢查
+
+#### Task 33: 建立 PROMPT_P18.md
+- 通過 CLAUDE.md v1.9.0 合規性檢查
+- 建議方向：V2 Migration Phase 0-1
+
+#### Task 34: git tag v2.4.0
+
+---
+
+## 新增依賴
+
+| 套件 | 用途 | 位置 |
+|------|------|------|
+| `lxml>=5.0` | fastkml XML（消除 warning）| dependencies |
+| `pip-tools>=7.0` | 乾淨 frozen requirements | [dev] |
+| `qasync>=0.27` | Qt + asyncio 整合（如採用）| dependencies |
 
 ---
 
@@ -262,33 +270,23 @@
 
 ```
 ☐ xcodebuild BUILD SUCCEEDED（無 warning）
-☐ pytest >= 760 passed（新增 ~35+ 測試）
+☐ pytest >= 830 passed（新增 ~105 測試）
 ☐ ruff check: All checks passed
 ☐ coverage >= 85%
-☐ pip-audit -r requirements-frozen.txt 成功執行且無假 CVE
-☐ requirements-frozen.txt 不含任何 @ file:// 路徑
-☐ python -m promptbim --version < 0.5s（lazy import 生效）
-☐ AuditReport M-2, M-4（partial）, L-1~L-5 修復
-☐ Plugin 架構基礎建立（plugins/base.py + 土地解析器 + 法規引擎）
-☐ 網路故障 + fuzzing + 權限測試新增
+☐ pip-audit 成功執行且無假 CVE
+☐ requirements-frozen.txt 不含 @ file://
+☐ python -m promptbim --version < 0.5s
+☐ BaseAgent.arun() + Orchestrator.agenerate() 可運作
+☐ 同步 API 仍可用（向後相容）
+☐ 快取 hit/miss/force-regenerate 正常
+☐ cache list/clear/stats CLI 命令可用
+☐ Plugin 架構建立
 ☐ ContentView 版本號動態顯示
-☐ 全量文件同步完成（8 項）
-☐ Xcode pbxproj 完整性檢查通過
-☐ AuditReport 已更新修復狀態
-☐ P14/P16 品質報告已歸檔
-☐ git tag v2.2.0 已建立並推送
-☐ PROMPT_P18.md 已建立（通過合規性檢查）
-☐ iMessage 通知已發送（啟動 + 完成）
+☐ 所有 8 個 Part 各自發送了 iMessage
+☐ 全量文件同步完成
+☐ git tag v2.4.0
+☐ PROMPT_P18.md 已建立
 ```
-
----
-
-## 新增依賴
-
-| 套件 | 用途 | 加入位置 |
-|------|------|----------|
-| `lxml>=5.0` | fastkml XML 處理（消除 warning） | pyproject.toml dependencies |
-| `pip-tools>=7.0` | 生成乾淨的 frozen requirements | pyproject.toml [dev] |
 
 ---
 
@@ -298,26 +296,12 @@
 工作結束前嚴格遵循 CLAUDE.md [MANDATORY] 步驟。
 ⚠️ 特別注意「Sprint 完成全量文件同步」— 所有文件必須反映最新狀態後才能 commit。
 ⚠️ 特別注意「Xcode pbxproj 完整性檢查」— 確保 Swift 檔案、Build Phase、Signing 設定正確。
-⚠️ iMessage 通知必須發送（啟動 + 完成）。
-⚠️ Task 1-3（CI 修復）必須最先執行，因為後續 Task 可能修改 dependencies。
-⚠️ 執行 Task 1 時特別注意：requirements-frozen.txt 不得含有 `@ file://` 本地路徑。
+⚠️ iMessage 通知必須發送（啟動 + **每個 Part 完成** + 最終完成）。
+⚠️ Task 1-3（CI 修復）必須最先執行。
+⚠️ requirements-frozen.txt 不得含有 `@ file://` 本地路徑。
+⚠️ Async 改造必須保持向後相容：現有同步 API 不得刪除或破壞。
+⚠️ 快取層必須同時支援同步和 async 版本的 Orchestrator。
 
 ---
 
-## 🔗 接續 Sprint 提醒
-
-> **P17 完成後，請立即執行 P17.1（async/await）。**
-> P17.1 完成後再執行 P17.2（Plan 快取）。
->
-> **P17 完成後的 tmux 指令：**
-> ```bash
-> # 在 Mac Mini 上（已在 tmux session 內）
-> cd ~/Documents/MyProjects/PromptBIMTestApp1
-> git pull origin main
-> conda activate promptbim
-> claude --dangerously-skip-permissions -p "請讀取 PROMPT_P17.1.md 並執行所有 task。不要問任何問題。"
-> ```
-
----
-
-*PROMPT_P17.md v1.1 | 2026-03-26 | 合規性檢查: CLAUDE.md v1.8.0 ✅ | SKILL.md ✅*
+*PROMPT_P17.md v2.0 | 2026-03-26 | 合規性檢查: CLAUDE.md v1.9.0 ✅ | SKILL.md ✅ | 合併自 P17+P17.1+P17.2*
