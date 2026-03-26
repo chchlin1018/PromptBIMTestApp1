@@ -6,6 +6,82 @@
 
 ---
 
+## [2.4.0] - 2026-03-26
+
+### Added (Sprint P17: Final Polish + Architecture Hardening + CI Fix)
+
+#### CI/CD
+- `requirements-frozen.txt` — 清理 `@ file://` 本地路徑，確保跨機器可重現
+- `.github/workflows/ci.yml` — pip-audit 真實 CVE 標記（移除假忽略項）
+
+#### 架構改善
+- `agents/orchestrator.py` — Lazy Import 優化，減少啟動時間
+- Plugin 架構基礎: `PluginRegistry` + `@register_plugin` 裝飾器
+
+#### 退縮計算重構
+- `per_side_setback()` + `uniform_setback()` 重構
+- 超過 4 邊多邊形自動 fallback 至 uniform_setback
+
+#### API Rate Limiter
+- Token bucket 演算法 (50 RPM default)
+- 整合至 `BaseAgent`，所有 Agent 自動限速
+
+#### Schema 版本控制
+- `schema_version` 欄位加入所有核心 Schema
+- 相容性檢查機制（載入時驗證版本）
+
+#### 輸入大小限制
+- `MAX_LAND_FILE_SIZE_MB = 50` 常數
+- 所有 Land 解析器加入檔案大小檢查
+
+#### ComponentRegistry 效能
+- `_by_category` 倒排索引，查詢效能提升
+
+#### PythonBridge 改善
+- Intel Mac 路徑支援
+- `which python3` fallback 機制
+- `PROMPTBIM_PYTHON` 環境變數覆蓋
+
+#### ContentView
+- 版本號動態顯示 (`bridge.version`)
+
+#### Async/Await
+- `BaseAgent.arun()` 非同步執行方法
+- `Orchestrator.agenerate()` 非同步生成
+- 各 Agent 加入 async 方法
+
+#### Plan 快取
+- SHA-256 cache key 計算
+- JSON file store 本地快取
+- LRU eviction + TTL 7 天過期策略
+
+#### CLI 快取管理
+- `cache list` / `cache clear` / `cache stats` 子命令
+- `--no-cache` / `--clear-cache` 旗標
+
+#### 測試
+- +51 新測試 (network failure, fuzzing, permissions, async, cache)
+
+#### 文件
+- `V2_Migration_Tasks.md` 遷移指南
+- P14/P16 品質分析報告歸檔
+
+### Changed
+- `pyproject.toml` — Version bumped to 2.4.0
+- `__init__.py` — Fallback version updated to 2.4.0
+
+### Dependencies
+- Added `lxml>=5.0`
+- Added `pip-tools>=7.0`
+
+### Stats
+- Tests: 776 passed (+51 new)
+- xcodebuild: BUILD SUCCEEDED
+- ruff check: All checks passed
+- git tag: v2.4.0
+
+---
+
 ## [2.1.0] - 2026-03-26
 
 ### Fixed (Sprint P16: Comprehensive Quality Remediation)
@@ -721,3 +797,5 @@
 | 1.4.0 | P12 完成 | 品質修復 + 效能優化 + Demo |
 | 1.5.0 | P13 完成 | CLI + 依賴修復 + PDF OCR |
 | 2.0.0 | P14 完成 | CI/CD + 安全 + 文件 v2.0 |
+| 2.1.0 | P16 完成 | 品質修復 (retry, timeout, constants) |
+| 2.4.0 | P17 完成 | 架構強化 + Async + Cache + CI 修復 |

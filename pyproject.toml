@@ -1,6 +1,6 @@
 [project]
 name = "promptbim"
-version = "2.1.0"
+version = "2.4.0"
 description = "Prompt to BIM — AI-powered building generation on real land parcels with IFC + OpenUSD dual output"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -24,6 +24,7 @@ dependencies = [
     "pyproj>=3.6",
     "ezdxf>=1.1",
     "fastkml>=1.0",
+    "lxml>=5.0",
     # Geometry & Viz
     "mapbox-earcut>=2.0",
     "numpy>=1.26",
@@ -43,7 +44,7 @@ pdf = ["pdfplumber>=0.10", "PyMuPDF>=1.23"]
 voice = ["faster-whisper>=1.0", "sounddevice>=0.4"]
 mcp = ["mcp>=1.0"]
 web = ["streamlit>=1.30"]
-dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0", "pip-audit>=2.7"]
+dev = ["pytest>=8.0", "ruff>=0.4", "pytest-qt>=4.3", "pytest-cov>=5.0", "pip-audit>=2.7", "pip-tools>=7.0"]
 
 [project.scripts]
 promptbim = "promptbim.__main__:app"

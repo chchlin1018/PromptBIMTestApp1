@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.1.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.4.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -39,8 +39,9 @@
 | P13 | CLI 完整化 + 依賴修復 + PDF OCR | 1 | ✅ | P4, P9, P12 |
 | P14 | CI/CD + 安全強化 + 文件最終化 | 1 | ✅ | P0~P13 |
 | P16 | 全面品質修整 (Quality Remediation) | 1 | ✅ | P14, AuditReport |
+| P17 | 全面修整 + 架構強化 + Async + 快取 | 1 | ✅ | P16 |
 
-**預估總開發時間: ~46 天**
+**預估總開發時間: ~47 天**
 
 ---
 
@@ -452,6 +453,62 @@
 - ✅ T14: 全量文件同步 — TODO/CHANGELOG/README/pyproject/init/AuditReport/PROMPT_P17
 
 **驗收標準:** 725 passed; BUILD SUCCEEDED; ruff clean; 14 issues fixed; git tag v2.1.0
+
+---
+
+## P17: 全面修整 + 架構強化 + Async + 快取 (~1 天)
+
+### Part A: CI/CD 緊急修復
+- ✅ T1: requirements-frozen.txt 清理 — 移除無效/衝突項目
+- ✅ T2: CVE 修復 — 更新有已知漏洞的套件
+- ✅ T3: CI 驗證 — GitHub Actions workflow 通過
+
+### Part B: AuditReport 殘留修復
+- ✅ T4: per_side_setback 修復 — 各面退縮線正確計算
+- ✅ T5: rate limiter — API 呼叫速率限制
+- ✅ T6: schema version — Schema 版本管理機制
+- ✅ T7: 輸入大小限制 — 防止超大輸入導致 OOM
+- ✅ T8: lxml — XML 處理安全強化
+- ✅ T9: ComponentRegistry 倒排索引 — 搜尋效能優化
+- ✅ T10: PythonBridge conda 路徑 — 跨機器路徑相容
+
+### Part C: V2 架構強化
+- ✅ T11: Lazy Import — 延遲載入減少啟動時間
+- ✅ T12: Plugin 架構 — 可擴展的外掛系統
+- ✅ T13: V2 Migration Tasks — 架構遷移完成
+
+### Part D: 測試缺口填補
+- ✅ T14: network failure — 網路故障場景測試
+- ✅ T15: fuzzing — 模糊測試覆蓋邊界案例
+- ✅ T16: permissions tests — 權限相關測試
+
+### Part E: Swift 修復 + 文件歸檔
+- ✅ T17: ContentView 版本號動態化 — 從 Info.plist 讀取版本
+- ✅ T18: AuditReport 更新 — 反映最新修復狀態
+- ✅ T19: P14/P16 報告歸檔 — 歷史報告歸檔整理
+
+### Part F: Async/Await
+- ✅ T20: BaseAgent.arun() — 基礎 Agent 非同步執行
+- ✅ T21: Agent subclasses async — 所有 Agent 子類非同步化
+- ✅ T22: Orchestrator.agenerate() — Pipeline 非同步編排
+- ✅ T23: CLI async — CLI 命令非同步支援
+- ✅ T24: MCP async — MCP Server 非同步處理
+- ✅ T25: parallel execution — 可平行化步驟並行執行
+
+### Part G: Plan 快取
+- ✅ T26: cache key — 快取鍵值計算邏輯
+- ✅ T27: store — 快取儲存層實作
+- ✅ T28: orchestrator 整合 — Pipeline 快取整合
+- ✅ T29: CLI 快取 — CLI 快取命令支援
+- ✅ T30: GUI 快取指示 — GUI 顯示快取命中狀態
+- ✅ T31: Streamlit+MCP 整合 — Web/MCP 快取支援
+
+### Part H: 最終文件同步
+- ✅ T32: 全量文件同步 — TODO/CHANGELOG/README/Context Prompt/pyproject/init
+- ✅ T33: PROMPT_P18.md — 建立下一個 Sprint 指令檔
+- ✅ T34: git tag v2.4.0 — 版本標籤建立並推送
+
+**驗收標準:** 34 tasks 全部完成; BUILD SUCCEEDED; pytest passed; async/await 可用; plan cache 可用; git tag v2.4.0
 
 ---
 

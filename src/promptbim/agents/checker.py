@@ -122,6 +122,50 @@ class CheckerAgent(BaseAgent):
 
         return result
 
+    async def acheck(
+        self,
+        plan: BuildingPlan,
+        land: LandParcel,
+        zoning: ZoningRules,
+    ) -> CheckResult:
+        """Async version of :meth:`check`. Code checks are sync; suggestions are async."""
+        code_results = run_all_checks(plan, land, zoning)
+        compliance = get_compliance_summary(code_results)
+        report_text = generate_report_table(code_results)
+
+        violations = self._code_results_to_violations(code_results)
+        result = CheckResult(
+            violations=violations,
+            code_results=code_results,
+            compliance_summary=compliance,
+            report_text=report_text,
+        )
+
+        legacy_violations = self._check_legacy_rules(plan, land, zoning)
+        result.violations.extend(legacy_violations)
+
+        if result.violations:
+            suggestions = await self._aget_suggestions(result.violations, code_results)
+            result.suggestions = suggestions
+
+        return result
+
+    async def _aget_suggestions(self, violations, code_results) -> list[str]:
+        """Async version of _get_suggestions."""
+        violation_text = "\n".join(f"- [{v.severity}] {v.rule}: {v.message}" for v in violations)
+        user_msg = (
+            f"The following building code violations were found:\n{violation_text}\n\n"
+            f"Provide concise fix suggestions (one per violation). Return a JSON array of strings."
+        )
+        response = await self.arun(user_msg)
+        if response.ok and response.json_data:
+            data = response.json_data
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict) and "suggestions" in data:
+                return data["suggestions"]
+        return [f"Fix violation: {v.rule}" for v in violations]
+
     def _code_results_to_violations(
         self, code_results: list[CodeCheckResult]
     ) -> list[CheckViolation]:

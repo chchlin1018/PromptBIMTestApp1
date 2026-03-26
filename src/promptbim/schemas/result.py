@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class GenerationResult(BaseModel):
     """Result of a building generation pipeline run."""
 
+    schema_version: str = Field(default="2.4.0", description="Schema version for compatibility checks")
     success: bool = Field(default=False)
     building_name: str = Field(default="")
     ifc_path: Path | None = Field(default=None, description="Path to generated .ifc file")

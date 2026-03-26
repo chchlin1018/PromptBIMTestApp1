@@ -16,7 +16,7 @@ struct ContentView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("v2.1.0")
+                Text("v\(bridge.version)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

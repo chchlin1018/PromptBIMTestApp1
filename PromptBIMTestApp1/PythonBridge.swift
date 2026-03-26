@@ -7,6 +7,7 @@ class PythonBridge: ObservableObject {
     @Published var pythonAvailable: Bool = false
     @Published var statusMessage: String = "Checking Python environment..."
     @Published var guiLaunched: Bool = false
+    @Published var version: String = "..."
 
     private let pythonPath: String
     private var guiProcess: Process?
@@ -22,17 +23,53 @@ class PythonBridge: ObservableObject {
     // MARK: - Python Environment Detection
 
     /// Auto-detect conda promptbim environment Python path.
-    /// Priority: miniforge3 > miniconda3 > system python
+    /// Priority: PROMPTBIM_PYTHON env var > miniforge3 > miniconda3 > which python3 > system python
     static func findCondaPython() -> String {
+        // 1. Environment variable override
+        if let envPython = ProcessInfo.processInfo.environment["PROMPTBIM_PYTHON"],
+           FileManager.default.fileExists(atPath: envPython) {
+            NSLog("[PythonBridge] Using PROMPTBIM_PYTHON override: \(envPython)")
+            return envPython
+        }
+
         let home = NSHomeDirectory()
         let candidates = [
+            // Apple Silicon paths
             "\(home)/miniforge3/envs/promptbim/bin/python",
             "\(home)/miniconda3/envs/promptbim/bin/python",
             "/opt/homebrew/Caskroom/miniforge/base/envs/promptbim/bin/python",
             "\(home)/anaconda3/envs/promptbim/bin/python",
+            // Intel Mac paths
+            "/usr/local/Caskroom/miniforge/base/envs/promptbim/bin/python",
+            "/usr/local/miniconda3/envs/promptbim/bin/python",
+            "\(home)/opt/miniconda3/envs/promptbim/bin/python",
+            "\(home)/opt/anaconda3/envs/promptbim/bin/python",
         ]
-        return candidates.first { FileManager.default.fileExists(atPath: $0) }
-            ?? "/usr/bin/python3"
+        if let found = candidates.first(where: { FileManager.default.fileExists(atPath: $0) }) {
+            return found
+        }
+
+        // Fallback: which python3
+        let whichProcess = Process()
+        whichProcess.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        whichProcess.arguments = ["python3"]
+        let pipe = Pipe()
+        whichProcess.standardOutput = pipe
+        do {
+            try whichProcess.run()
+            whichProcess.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !path.isEmpty,
+               FileManager.default.fileExists(atPath: path) {
+                NSLog("[PythonBridge] Using which python3 fallback: \(path)")
+                return path
+            }
+        } catch {
+            NSLog("[PythonBridge] which python3 failed: \(error)")
+        }
+
+        return "/usr/bin/python3"
     }
 
     /// Find the project root directory from Bundle or working directory.
@@ -129,9 +166,18 @@ class PythonBridge: ObservableObject {
             DispatchQueue.main.async {
                 if let output = result, !output.isEmpty {
                     self?.pythonAvailable = true
-                    self?.statusMessage = "Python backend ready: \(output.trimmingCharacters(in: .whitespacesAndNewlines))"
+                    let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                    self?.statusMessage = "Python backend ready: \(trimmed)"
+                    // Parse version from output like "promptbim 2.4.0"
+                    let parts = trimmed.components(separatedBy: " ")
+                    if parts.count >= 2 {
+                        self?.version = parts.last ?? trimmed
+                    } else {
+                        self?.version = trimmed
+                    }
                 } else {
                     self?.pythonAvailable = false
+                    self?.version = "N/A"
                     self?.statusMessage = "Python backend not available. Run: conda activate promptbim && pip install -e ."
                 }
             }

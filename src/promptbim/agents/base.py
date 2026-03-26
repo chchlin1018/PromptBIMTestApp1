@@ -94,6 +94,13 @@ class BaseAgent:
         settings = get_settings()
         timeout = settings.api_timeout_seconds
 
+        # Rate limiting
+        from promptbim.agents.rate_limiter import get_rate_limiter
+
+        limiter = get_rate_limiter()
+        if not limiter.acquire(timeout=timeout):
+            raise RuntimeError("API rate limit exceeded — request timed out waiting for token")
+
         logger.debug("API request: model=%s, max_tokens=%d, timeout=%s", self._model, self._max_tokens, timeout)
         t0 = time.time()
         message = self.client.messages.create(
@@ -118,6 +125,71 @@ class BaseAgent:
         resp = self._parse_response(text, usage)
         logger.debug("JSON parse: %s", "OK" if resp.json_data else "no JSON")
         return resp
+
+    # --- Async support ---
+
+    _async_client = None
+
+    @property
+    def async_client(self):
+        """Lazy-init AsyncAnthropic client."""
+        if self._async_client is None:
+            import anthropic
+
+            api_key = self._settings.anthropic_api_key
+            if not api_key:
+                raise RuntimeError("ANTHROPIC_API_KEY not set. Add it to .env or environment.")
+            self._async_client = anthropic.AsyncAnthropic(api_key=api_key)
+        return self._async_client
+
+    async def arun(self, user_message: str) -> AgentResponse:
+        """Async version of :meth:`run`."""
+        try:
+            return await self._async_call_api(user_message)
+        except Exception as exc:
+            logger.exception("Async agent API call failed")
+            return AgentResponse(error=str(exc))
+
+    async def _async_call_api(self, user_message: str, attempt: int = 0) -> AgentResponse:
+        """Async API call with manual retry for 5xx errors."""
+        settings = get_settings()
+        timeout = settings.api_timeout_seconds
+
+        # Rate limiting
+        from promptbim.agents.rate_limiter import get_rate_limiter
+
+        limiter = get_rate_limiter()
+        if not limiter.acquire(timeout=timeout):
+            raise RuntimeError("API rate limit exceeded — request timed out waiting for token")
+
+        logger.debug("Async API request: model=%s, max_tokens=%d", self._model, self._max_tokens)
+        t0 = time.time()
+        try:
+            message = await self.async_client.messages.create(
+                model=self._model,
+                max_tokens=self._max_tokens,
+                system=self.SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_message}],
+                timeout=timeout,
+            )
+        except Exception as exc:
+            if _is_retryable_api_error(exc) and attempt < 2:
+                import asyncio
+
+                wait_time = min(10, 2**attempt)
+                logger.warning("Async retry attempt %d after %.1fs", attempt + 1, wait_time)
+                await asyncio.sleep(wait_time)
+                return await self._async_call_api(user_message, attempt + 1)
+            raise
+
+        elapsed = time.time() - t0
+        text = message.content[0].text
+        usage = {
+            "input_tokens": message.usage.input_tokens,
+            "output_tokens": message.usage.output_tokens,
+        }
+        logger.debug("Async API response: %.2fs, tokens=%d/%d", elapsed, usage["input_tokens"], usage["output_tokens"])
+        return self._parse_response(text, usage)
 
     def _parse_response(self, text: str, usage: dict) -> AgentResponse:
         """Parse raw text into an :class:`AgentResponse`.

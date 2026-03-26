@@ -18,6 +18,10 @@ def parse_dxf(file_path: str | Path) -> list[LandParcel]:
 
     file_path = Path(file_path)
     logger.debug("Loading DXF: %s", file_path)
+
+    from promptbim.land.parsers.utils import check_file_size
+
+    check_file_size(file_path)
     doc = ezdxf.readfile(str(file_path))
     msp = doc.modelspace()
     parcels: list[LandParcel] = []

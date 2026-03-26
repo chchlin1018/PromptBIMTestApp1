@@ -127,6 +127,25 @@ class PlannerAgent(BaseAgent):
         )
         user_msg = self._build_user_message(requirement, land, zoning, buildable_area)
         response = self.run(user_msg)
+        return self._finish_plan(response, land, zoning, buildable_area, requirement)
+
+    async def aplan(
+        self,
+        requirement: BuildingRequirement,
+        land: LandParcel,
+        zoning: ZoningRules,
+        buildable_area: list[tuple[float, float]],
+    ) -> BuildingPlan:
+        """Async version of :meth:`plan`."""
+        if not buildable_area or len(buildable_area) < 3:
+            raise ValueError(
+                f"buildable_area must have >= 3 vertices, got {len(buildable_area) if buildable_area else 0}"
+            )
+        user_msg = self._build_user_message(requirement, land, zoning, buildable_area)
+        response = await self.arun(user_msg)
+        return self._finish_plan(response, land, zoning, buildable_area, requirement)
+
+    def _finish_plan(self, response, land, zoning, buildable_area, requirement):
         plan = self._to_plan(response, land, zoning, buildable_area, requirement)
         total_walls = sum(len(s.walls) for s in plan.stories)
         logger.debug(

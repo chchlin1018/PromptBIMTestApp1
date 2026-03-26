@@ -12,8 +12,8 @@
 - **GitHub：** https://github.com/chchlin1018/PromptBIMTestApp1 (private, owner: chchlin1018)
 - **組織：** Reality Matrix Inc. / Michael Lin (林志錚)
 - **性質：** POC (Proof of Concept)
-- **版本：** v2.1.0（P16 完成）
-- **測試：** 725 passed, 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
+- **版本：** v2.4.0（P17 完成）
+- **測試：** 776 passed, 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
 
 ---
 
@@ -62,6 +62,7 @@ python -m promptbim check [--ai]        # 健康檢查
 | P13 | CLI 完整化 + 依賴修復 + PDF OCR | ✅ | 705 |
 | P14 | CI/CD + 安全強化 + 文件最終化 | ✅ | 705+ |
 | P16 | 全面品質修整 (Quality Remediation) | ✅ | 725 |
+| P17 | 最終打磨 + 架構強化 (async/await, plan cache, plugin, rate limiter, schema versioning) | ✅ | 776 |
 
 ---
 
@@ -78,17 +79,19 @@ python -m promptbim check [--ai]        # 健康檢查
 
 ## 5. 下一步
 
-### POC v2.1 完成
+### POC v2.4 完成
 
-P16 完成品質修整：
-- 3 Critical + 5 High + 6 Medium 問題全部修復
-- API 重試（tenacity）+ timeout + 統一 Shoelace + 輸入驗證 + 修改歷史持久化
-- 魔術數字提取為常數、IFC/USD 備份、CI pip-audit 修正
-- Coverage 85%+, 725 tests
+P17 完成最終打磨 + 架構強化：
+- async/await 支援（非同步 Agent 執行）
+- Plan cache（建築方案快取機制）
+- Plugin architecture（插件架構）
+- Rate limiter（API 限流器）
+- Schema versioning（資料結構版本控制）
+- Coverage 85%+, 776 tests
 
-### V2 架構設計
+### V2 Migration — 下一步
 
-`docs/DesignDocForV2.md` 已建立，待審閱後拆為 Sprint Tasks。
+Sprint P18: V2 Migration Phase 0-1，基於 `docs/DesignDocForV2.md` 開始遷移。
 
 ---
 
@@ -96,7 +99,7 @@ P16 完成品質修整：
 
 | 文件 | 用途 |
 |------|------|
-| `CLAUDE.md` v1.8.0 | Claude Code 行為規範 |
+| `CLAUDE.md` v1.9.0 | Claude Code 行為規範 |
 | `SKILL.md` v3.1 | 專案 SSOT |
 | `docs/API.md` | API 文件 |
 | `docs/DesignDocForV2.md` | V2 混合架構設計 |

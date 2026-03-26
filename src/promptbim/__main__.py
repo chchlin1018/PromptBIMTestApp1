@@ -1,9 +1,15 @@
 """PromptBIMTestApp1 CLI entry point."""
 
+from __future__ import annotations
+
 import argparse
 import sys
 
-from promptbim import __version__
+
+def _get_version() -> str:
+    from promptbim import __version__
+
+    return __version__
 
 
 def app():
@@ -15,7 +21,7 @@ def app():
             "Never commit .env to git. Key format: sk-ant-api03-..."
         ),
     )
-    parser.add_argument("--version", action="version", version=f"promptbim {__version__}")
+    parser.add_argument("--version", action="version", version=f"promptbim {_get_version()}")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
     subparsers = parser.add_subparsers(dest="command")
@@ -43,7 +49,16 @@ def app():
         choices=["residential", "school", "hospital", "factory"],
         help="Use a building template instead of AI planning",
     )
+    gen_parser.add_argument("--no-cache", action="store_true", help="Disable cache for this generation")
+    gen_parser.add_argument("--clear-cache", action="store_true", help="Clear cache before generation")
     gen_parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
+
+    # cache subcommand
+    cache_parser = subparsers.add_parser("cache", help="Manage plan cache")
+    cache_sub = cache_parser.add_subparsers(dest="cache_action")
+    cache_sub.add_parser("list", help="List cached entries")
+    cache_sub.add_parser("clear", help="Clear all cached entries")
+    cache_sub.add_parser("stats", help="Show cache statistics")
 
     # check subcommand
     check_parser = subparsers.add_parser("check", help="Run system health checks")
@@ -65,6 +80,8 @@ def app():
         _launch_gui()
     elif args.command == "generate":
         _run_generate(args)
+    elif args.command == "cache":
+        _run_cache(args)
     elif args.command == "check":
         _run_check(args)
     else:
@@ -103,9 +120,20 @@ def _run_generate(args):
     city = getattr(args, "city", None) or settings.default_city
     zoning = ZoningRules(city=city)
 
+    # Cache handling
+    use_cache = not getattr(args, "no_cache", False)
+    if getattr(args, "clear_cache", False):
+        try:
+            from promptbim.cache.store import CacheStore
+
+            CacheStore().clear_all()
+            print("Cache cleared.")
+        except Exception:
+            pass
+
     # Generate
     orch = Orchestrator(output_dir=output_dir, on_status=_cli_status)
-    result = orch.generate(args.prompt, land, zoning)
+    result = orch.generate(args.prompt, land, zoning, use_cache=use_cache)
 
     if result.success:
         print(f"Generated: {result.building_name}")
@@ -171,6 +199,32 @@ def _load_land_file(path_str: str):
 
     logger.info("Loaded %d parcel(s) from %s", len(parcels), path.name)
     return parcels[0]
+
+
+def _run_cache(args):
+    """Handle cache subcommands."""
+    from promptbim.cache.store import CacheStore
+
+    store = CacheStore()
+    action = getattr(args, "cache_action", None)
+
+    if action == "list":
+        entries = store.list_entries()
+        if not entries:
+            print("Cache is empty.")
+        else:
+            print(f"Cached entries ({len(entries)}):")
+            for e in entries:
+                print(f"  {e['key'][:12]}... created={e.get('created', '?')}")
+    elif action == "clear":
+        store.clear_all()
+        print("Cache cleared.")
+    elif action == "stats":
+        entries = store.list_entries()
+        print(f"Cache entries: {len(entries)}")
+        print(f"Cache dir: {store._cache_dir}")
+    else:
+        print("Usage: promptbim cache [list|clear|stats]")
 
 
 def _cli_status(status):

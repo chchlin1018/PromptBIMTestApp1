@@ -25,6 +25,10 @@ def parse_kml(file_path: str | Path) -> list[LandParcel]:
     """
     file_path = Path(file_path)
 
+    from promptbim.land.parsers.utils import check_file_size
+
+    check_file_size(file_path)
+
     if file_path.suffix.lower() == ".kmz":
         return _parse_kmz(file_path)
 

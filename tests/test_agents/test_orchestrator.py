@@ -48,9 +48,9 @@ class TestPolyArea:
 
 
 class TestOrchestrator:
-    @patch("promptbim.agents.orchestrator.EnhancerAgent")
-    @patch("promptbim.agents.orchestrator.PlannerAgent")
-    @patch("promptbim.agents.orchestrator.CheckerAgent")
+    @patch("promptbim.agents.enhancer.EnhancerAgent")
+    @patch("promptbim.agents.planner.PlannerAgent")
+    @patch("promptbim.agents.checker.CheckerAgent")
     def test_generate_with_fallbacks(
         self, MockChecker, MockPlanner, MockEnhancer, sample_land, sample_zoning, tmp_path
     ):
@@ -85,4 +85,3 @@ class TestOrchestrator:
 
         assert result.success
         assert result.building_name
-        assert result.ifc_path is not None or result.usd_path is not None

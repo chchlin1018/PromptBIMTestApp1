@@ -18,6 +18,10 @@ def parse_shapefile(file_path: str | Path) -> list[LandParcel]:
 
     file_path = Path(file_path)
     logger.debug("Loading Shapefile: %s", file_path)
+
+    from promptbim.land.parsers.utils import check_file_size
+
+    check_file_size(file_path)
     parcels: list[LandParcel] = []
 
     with fiona.open(file_path) as src:

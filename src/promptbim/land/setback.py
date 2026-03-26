@@ -16,29 +16,31 @@ def compute_setback(
     parcel: LandParcel,
     zoning: ZoningRules,
 ) -> list[tuple[float, float]]:
-    """Compute the buildable area after applying setback rules.
+    """Compute the buildable area after applying uniform setback rules.
 
-    Uses a uniform setback (average of all four sides) as a simplified
-    inward buffer. For precise per-side setbacks, a more advanced approach
-    with oriented edges would be needed.
+    Uses the average of all four sides as a simplified inward buffer.
 
     Returns:
         List of (x, y) coordinates for the buildable polygon boundary.
         Returns empty list if the setback eliminates the buildable area.
     """
-    poly = Polygon(parcel.boundary)
-    poly = orient(poly, sign=1.0)  # ensure counter-clockwise
+    return uniform_setback(parcel.boundary, _avg_setback(zoning))
 
-    avg_setback = (
-        zoning.setback_front_m
-        + zoning.setback_back_m
-        + zoning.setback_left_m
-        + zoning.setback_right_m
-    ) / 4.0
 
-    logger.debug("Uniform setback=%.1fm, original area=%.1f sqm", avg_setback, poly.area)
+def uniform_setback(
+    boundary: list[tuple[float, float]],
+    distance: float,
+) -> list[tuple[float, float]]:
+    """Apply a uniform inward setback to a polygon boundary.
 
-    buffered = poly.buffer(-avg_setback, join_style="mitre")
+    Returns empty list if the setback eliminates the buildable area.
+    """
+    poly = Polygon(boundary)
+    poly = orient(poly, sign=1.0)
+
+    logger.debug("Uniform setback=%.1fm, original area=%.1f sqm", distance, poly.area)
+
+    buffered = poly.buffer(-distance, join_style="mitre")
 
     if buffered.is_empty or not isinstance(buffered, Polygon):
         logger.debug("Setback eliminated all buildable area")
@@ -49,35 +51,42 @@ def compute_setback(
     return result
 
 
-def compute_setback_per_side(
-    parcel: LandParcel,
-    zoning: ZoningRules,
+def per_side_setback(
+    polygon: list[tuple[float, float]],
+    setbacks: dict,
 ) -> list[tuple[float, float]]:
     """Compute buildable area with per-side setback distances.
 
-    Assumes the boundary edges are ordered: front, right, back, left
-    (starting from the south-facing edge for a typical rectangular parcel).
-    For non-rectangular parcels, falls back to uniform setback.
-    """
-    coords = parcel.boundary
-    if len(coords) != 4:
-        return compute_setback(parcel, zoning)
+    Args:
+        polygon: Boundary coordinates [(x,y), ...].
+        setbacks: Dict with keys 'front', 'right', 'back', 'left' (float metres).
+            For polygons with > 4 edges, falls back to uniform setback using the
+            average of all provided values.
 
-    poly = Polygon(coords)
+    Returns:
+        List of (x, y) coordinates for the buildable polygon, or empty list.
+    """
+    import numpy as np
+
+    front = setbacks.get("front", 0.0)
+    right = setbacks.get("right", 0.0)
+    back = setbacks.get("back", 0.0)
+    left = setbacks.get("left", 0.0)
+
+    # Fallback for non-quad polygons
+    if len(polygon) > 4:
+        avg = (front + right + back + left) / 4.0
+        logger.debug("Polygon has %d sides (> 4), falling back to uniform %.1fm", len(polygon), avg)
+        return uniform_setback(polygon, avg)
+
+    poly = Polygon(polygon)
     poly = orient(poly, sign=1.0)
     ordered = list(poly.exterior.coords[:-1])
 
-    setbacks = [
-        zoning.setback_front_m,
-        zoning.setback_right_m,
-        zoning.setback_back_m,
-        zoning.setback_left_m,
-    ]
-
-    import numpy as np
+    side_distances = [front, right, back, left]
 
     # Inward offset each edge
-    inward_points = []
+    inward_lines = []
     n = len(ordered)
     for i in range(n):
         p1 = np.array(ordered[i])
@@ -88,30 +97,63 @@ def compute_setback_per_side(
         if norm == 0:
             continue
         normal = normal / norm
-        offset = normal * setbacks[i % len(setbacks)]
-        inward_points.append((p1 + offset, p2 + offset))
+        offset = normal * side_distances[i % len(side_distances)]
+        inward_lines.append((p1 + offset, p2 + offset))
 
-    if len(inward_points) < 3:
-        return compute_setback(parcel, zoning)
+    if len(inward_lines) < 3:
+        avg = (front + right + back + left) / 4.0
+        return uniform_setback(polygon, avg)
 
     # Find intersections of consecutive offset edges
     buildable_coords = []
-    n = len(inward_points)
+    n = len(inward_lines)
     for i in range(n):
-        line1 = inward_points[i]
-        line2 = inward_points[(i + 1) % n]
+        line1 = inward_lines[i]
+        line2 = inward_lines[(i + 1) % n]
         pt = _line_intersection(line1[0], line1[1], line2[0], line2[1])
         if pt is not None:
             buildable_coords.append(tuple(pt))
 
     if len(buildable_coords) < 3:
-        return compute_setback(parcel, zoning)
+        avg = (front + right + back + left) / 4.0
+        return uniform_setback(polygon, avg)
 
     result_poly = Polygon(buildable_coords)
     if result_poly.is_empty or not result_poly.is_valid:
-        return compute_setback(parcel, zoning)
+        avg = (front + right + back + left) / 4.0
+        return uniform_setback(polygon, avg)
 
     return buildable_coords
+
+
+def compute_setback_per_side(
+    parcel: LandParcel,
+    zoning: ZoningRules,
+) -> list[tuple[float, float]]:
+    """Compute buildable area with per-side setback distances (legacy API).
+
+    Assumes the boundary edges are ordered: front, right, back, left.
+    For non-rectangular parcels, falls back to uniform setback.
+    """
+    return per_side_setback(
+        parcel.boundary,
+        {
+            "front": zoning.setback_front_m,
+            "right": zoning.setback_right_m,
+            "back": zoning.setback_back_m,
+            "left": zoning.setback_left_m,
+        },
+    )
+
+
+def _avg_setback(zoning: ZoningRules) -> float:
+    """Return the average setback distance from a ZoningRules instance."""
+    return (
+        zoning.setback_front_m
+        + zoning.setback_back_m
+        + zoning.setback_left_m
+        + zoning.setback_right_m
+    ) / 4.0
 
 
 def _line_intersection(

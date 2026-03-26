@@ -354,7 +354,7 @@ class TestE2EModifyUndo:
             from promptbim.agents.checker import CheckResult
 
             mock_check.return_value = CheckResult()
-            result = orch.generate("3-story villa", land, zoning)
+            result = orch.generate("3-story villa", land, zoning, use_cache=False)
 
         assert result.success
         assert orch.plan is not None

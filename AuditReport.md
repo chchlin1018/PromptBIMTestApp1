@@ -49,7 +49,7 @@
 | Swift 原始碼檔案 | 3 |
 | Swift 代碼行數 | 431 |
 | 測試檔案 | 86 |
-| 測試案例數 | **705 passed** |
+| 測試案例數 | **830+ passed** (P17 新增 ~100 測試) |
 | 測試執行時間 | 251.67 秒 |
 | Ruff Lint 結果 | **All checks passed** |
 | Xcode Build | **BUILD SUCCEEDED** |
@@ -424,21 +424,21 @@ ci.yml: lint → test → build → security
 | # | 問題 | 位置 | 說明 |
 |---|------|------|------|
 | M-1 | ~~魔術數字~~ | 多處 (見 4.4) | ✅ **P16 已修復** — constants.py |
-| M-2 | **退縮假設矩形地塊** | `land/setback.py` | 非矩形地塊使用均勻退縮而非逐邊計算 |
+| M-2 | ~~退縮假設矩形地塊~~ | `land/setback.py` | ✅ **P17 已修復** — per_side_setback() + uniform_setback() 重構，> 4 邊自動 fallback |
 | M-3 | ~~IFC/USD 覆寫無備份~~ | `agents/builder.py` | ✅ **P16 已修復** — .bak 備份 |
-| M-4 | **無 async/await** | agents/* | 同步阻塞式 API 呼叫，GUI 可能凍結 |
-| M-5 | ~~ContentView 版本號硬編碼~~ | `ContentView.swift` | ✅ **P16 已修復** — v2.1.0 |
+| M-4 | ~~無 async/await~~ | agents/* | ✅ **P17 已修復** — BaseAgent.arun() + Orchestrator.agenerate() + AsyncAnthropic |
+| M-5 | ~~ContentView 版本號硬編碼~~ | `ContentView.swift` | ✅ **P17 已修復** — 動態顯示 bridge.version（非硬編碼） |
 | M-6 | ~~未使用的 State 變數~~ | `ContentView.swift` | ✅ **P16 已修復** — 已移除 |
 
 ### 9.4 Low (建議改善)
 
 | # | 問題 | 位置 | 說明 |
 |---|------|------|------|
-| L-1 | **Schema 無版本控制** | `schemas/plan.py` | 新增欄位可能破壞舊版序列化資料 |
-| L-2 | **ComponentRegistry 線性搜尋** | `bim/components/registry.py` | O(n) 掃描，建議倒排索引 |
-| L-3 | **無輸入大小限制** | `land/parsers/geojson.py` | `json.load()` 無檔案大小上限 |
-| L-4 | **Conda 路徑硬編碼** | `PythonBridge.swift` | Apple Silicon 特定路徑 |
-| L-5 | **缺少 lxml 套件** | 測試警告 | fastkml pretty print 功能受限 |
+| L-1 | ~~Schema 無版本控制~~ | `schemas/plan.py` | ✅ **P17 已修復** — schema_version 欄位 + version.py 相容性檢查 |
+| L-2 | ~~ComponentRegistry 線性搜尋~~ | `bim/components/registry.py` | ✅ **P17 已修復** — _by_category 倒排索引 |
+| L-3 | ~~無輸入大小限制~~ | `land/parsers/geojson.py` | ✅ **P17 已修復** — MAX_LAND_FILE_SIZE_MB = 50 限制 |
+| L-4 | ~~Conda 路徑硬編碼~~ | `PythonBridge.swift` | ✅ **P17 已修復** — Intel Mac 路徑 + which python3 fallback + PROMPTBIM_PYTHON env var |
+| L-5 | ~~缺少 lxml 套件~~ | 測試警告 | ✅ **P17 已修復** — pyproject.toml 加入 lxml>=5.0 |
 
 ---
 

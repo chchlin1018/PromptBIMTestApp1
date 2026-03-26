@@ -21,6 +21,10 @@ def parse_geojson(file_path: str | Path) -> list[LandParcel]:
     file_path = Path(file_path)
     logger.debug("Loading GeoJSON: %s", file_path)
 
+    from promptbim.land.parsers.utils import check_file_size
+
+    check_file_size(file_path)
+
     with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
 

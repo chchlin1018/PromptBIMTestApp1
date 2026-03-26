@@ -72,6 +72,13 @@ class Settings(BaseSettings):
     # API
     api_timeout_seconds: float = Field(default=30.0, description="Anthropic API call timeout in seconds")
 
+    # Rate limiting
+    api_rate_limit_rpm: int = Field(default=50, description="API rate limit (requests per minute)")
+
+    # Cache
+    cache_enabled: bool = Field(default=True, description="Enable plan cache")
+    cache_ttl_days: int = Field(default=7, description="Cache TTL in days")
+
     # Debug
     debug_mode: bool = Field(default=False, description="Enable debug logging")
 

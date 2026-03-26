@@ -56,6 +56,7 @@ class StoryPlan(BaseModel):
 class BuildingPlan(BaseModel):
     """Complete building plan placed on a land parcel."""
 
+    schema_version: str = Field(default="2.4.0", description="Schema version for compatibility checks")
     name: str
     land_boundary: list[tuple[float, float]] = Field(default_factory=list)
     buildable_area: list[tuple[float, float]] = Field(default_factory=list)

@@ -79,6 +79,32 @@ class EnhancerAgent(BaseAgent):
 
         logger.debug("Enhancing prompt: '%s'", raw_prompt[:100])
         response = self.run(user_msg)
+        return self._finish_enhance(raw_prompt, response, land_area, zoning)
+
+    async def aenhance(
+        self,
+        raw_prompt: str,
+        land: LandParcel | None = None,
+        zoning: ZoningRules | None = None,
+    ) -> BuildingRequirement:
+        """Async version of :meth:`enhance`."""
+        land_area = land.area_sqm if land else 500.0
+        if zoning is None:
+            zoning = ZoningRules()
+
+        user_msg = (
+            f"User prompt: {raw_prompt}\n\n"
+            f"Land area: {land_area:.1f} m²\n"
+            f"Zoning: FAR limit={zoning.far_limit}, BCR limit={zoning.bcr_limit}, "
+            f"height limit={zoning.height_limit_m}m, "
+            f"setbacks: front={zoning.setback_front_m}m, back={zoning.setback_back_m}m, "
+            f"left={zoning.setback_left_m}m, right={zoning.setback_right_m}m"
+        )
+
+        response = await self.arun(user_msg)
+        return self._finish_enhance(raw_prompt, response, land_area, zoning)
+
+    def _finish_enhance(self, raw_prompt, response, land_area, zoning):
         req = self._to_requirement(raw_prompt, response, land_area, zoning)
         logger.debug(
             "Enhanced: type=%s, stories=%d, features=%s",
