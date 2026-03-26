@@ -9,7 +9,7 @@
 TEST(Version, VersionString) {
     const char* v = pb_version();
     ASSERT_NE(v, nullptr);
-    EXPECT_STREQ(v, "2.7.0");
+    EXPECT_STREQ(v, "2.8.0");
 }
 
 TEST(Memory, FreeNullIsNoop) {

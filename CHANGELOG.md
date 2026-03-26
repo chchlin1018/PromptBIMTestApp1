@@ -6,6 +6,48 @@
 
 ---
 
+## [2.8.0] - 2026-03-26
+
+### Added (Sprint P21: V2 Migration Phase 4 — GIS Engine C++ + macOS SwiftUI 3D)
+
+#### GIS Engine C++ (Phase 4)
+- `libpromptbim/src/gis/gis_engine.cpp` — Pure C++ GIS engine (no external GIS library dependencies)
+- `libpromptbim/include/promptbim/gis_engine.hpp` — GIS engine C++ interface
+- GeoJSON parsing (FeatureCollection, Feature, Polygon, MultiPolygon)
+- Shapefile (.shp) binary parsing (first polygon from SHP main file)
+- DXF parsing (LWPOLYLINE entities, largest polygon extraction)
+- Geometry operations: area (Shoelace), centroid, perimeter, setback, buffer
+- WGS84 ↔ TWD97 TM2 coordinate projection (Transverse Mercator, GRS80 ellipsoid)
+- C ABI: `pb_land_from_geojson()`, `pb_land_from_shapefile()`, `pb_land_from_dxf()`, `pb_land_to_json()`, `pb_land_from_geojson_string()`
+
+#### macOS SwiftUI 3D Preview (Phase 4)
+- `PromptBIMTestApp1/SceneKitView.swift` — SceneKit embedded in SwiftUI with camera, lighting, floor
+- `PromptBIMTestApp1/NativeBIMBridge.swift` — Swift ↔ libpromptbim C ABI bridge via dlopen/dlsym
+- BIMSceneBuilder: builds SceneKit scenes from plan JSON (extruded floor slabs per story)
+- USDA file loading into SceneKit
+- ContentView: Dashboard + 3D Preview tab with Generate/Load/Clear controls
+- Native C++ engine indicator in status bar
+
+#### GoogleTest Additions (+27 tests, total 137)
+- `tests/test_gis_engine.cpp` — 27 GIS tests (GeoJSON parsing, DXF parsing, geometry ops, TWD97 projection, C ABI)
+
+#### pybind11 Enhancements
+- `bindings.cpp` — Added GISEngine, LandParcel classes, `parse_land_geojson()`, `parse_land_file()`
+- `_native_bridge.py` — Added `parse_land_json()` with Python GIS fallback
+
+#### Internal
+- Phase 4 GIS stubs removed from `future_stubs.cpp` (file deleted — all stubs replaced by real implementations)
+- `future_stubs.cpp` completely removed from build
+
+### Changed
+- Version: v2.7.0 → v2.8.0 across all files
+- CMakeLists.txt: added `src/gis/gis_engine.cpp`, removed `src/stubs/future_stubs.cpp`
+- pbxproj: added SceneKitView.swift, NativeBIMBridge.swift to Compile Sources
+- ContentView.swift: refactored to tabbed layout (Dashboard + 3D Preview)
+- Info.plist: CFBundleShortVersionString 2.8.0, CFBundleVersion 21
+
+---
+
 ## [2.7.0] - 2026-03-26
 
 ### Added (Sprint P20: V2 Migration Phase 3 — BIM Core IFC + USD C++)

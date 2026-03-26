@@ -2,7 +2,7 @@
 
 > 用途：在新對話中貼入此 Prompt，讓 Claude 接續 PromptBIM 專案的開發工作
 > 更新日期：2026-03-26
-> 基於：完整開發 Session（20 Sprint + 品質分析 + V2 架構設計）
+> 基於：完整開發 Session（21 Sprint + 品質分析 + V2 架構設計）
 
 ---
 
@@ -12,8 +12,8 @@
 - **GitHub：** https://github.com/chchlin1018/PromptBIMTestApp1 (private, owner: chchlin1018)
 - **組織：** Reality Matrix Inc. / Michael Lin (林志錚)
 - **性質：** POC (Proof of Concept)
-- **版本：** v2.7.0（P20 完成）
-- **測試：** 820 passed (+ 110 GoogleTests = 930 total), 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
+- **版本：** v2.8.0（P21 完成）
+- **測試：** 820 passed (+ 137 GoogleTests = 957 total), 7 deselected (slow/api markers), coverage 85%+, xcodebuild BUILD SUCCEEDED
 
 ---
 

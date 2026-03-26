@@ -12,6 +12,7 @@ Supported engines:
   - IFC Generator (generate_ifc) — v2.7.0+
   - USD Generator (generate_usd) — v2.7.0+
   - USDZ Packer (package_usdz) — v2.7.0+
+  - GIS Engine (parse_land_json) — v2.8.0+
 
 Usage (internal):
     from promptbim.codes._native_bridge import (
@@ -283,3 +284,81 @@ def _python_usdz_fallback(usd_path: str, output_path: str) -> int:
     except Exception as exc:
         logger.error("USDZ packaging failed: %s", exc)
         return -1
+
+
+# ---------------------------------------------------------------------------
+# GIS Engine (v2.8.0+)
+# ---------------------------------------------------------------------------
+
+def parse_land_json(source: str, is_file: bool = True) -> str:
+    """Parse land data from GeoJSON/Shapefile/DXF. Returns JSON string.
+
+    Args:
+        source: File path (if is_file=True) or GeoJSON string (if is_file=False)
+        is_file: Whether source is a file path or a raw GeoJSON string
+
+    Automatically uses C++ native engine when available; falls back to Python.
+    """
+    if _USING_NATIVE and _NATIVE_MODULE is not None:
+        if is_file:
+            return _NATIVE_MODULE.parse_land_file(source)
+        return _NATIVE_MODULE.parse_land_geojson(source)
+
+    return _python_gis_fallback(source, is_file)
+
+
+def _python_gis_fallback(source: str, is_file: bool = True) -> str:
+    """Python GIS engine — fallback when C++ is unavailable."""
+    try:
+        if not is_file:
+            # Parse GeoJSON string
+            import json as _json
+
+            geojson = _json.loads(source)
+            # Extract first polygon from GeoJSON
+            geom = None
+            props = {}
+            gtype = geojson.get("type", "")
+            if gtype == "FeatureCollection":
+                feat = geojson.get("features", [{}])[0]
+                geom = feat.get("geometry", {})
+                props = feat.get("properties", {})
+            elif gtype == "Feature":
+                geom = geojson.get("geometry", {})
+                props = geojson.get("properties", {})
+            else:
+                geom = geojson
+
+            coords = []
+            if geom and geom.get("type") == "Polygon":
+                ring = geom["coordinates"][0]
+                coords = [[c[0], c[1]] for c in ring]
+                # Remove closing point
+                if len(coords) > 1 and coords[0] == coords[-1]:
+                    coords = coords[:-1]
+
+            # Compute area (Shoelace)
+            area = 0.0
+            n = len(coords)
+            for i in range(n):
+                j = (i + 1) % n
+                area += coords[i][0] * coords[j][1] - coords[j][0] * coords[i][1]
+            area = abs(area) / 2.0
+
+            result = {
+                "name": props.get("name", ""),
+                "boundary": coords,
+                "area_sqm": area,
+                "crs": "EPSG:4326",
+                "properties": props,
+            }
+            return _json.dumps(result)
+
+        # File-based parsing — use geopandas if available
+        from promptbim.gis.parser import LandParser
+
+        parser = LandParser()
+        land = parser.parse(source)
+        return json.dumps(land.model_dump())
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})

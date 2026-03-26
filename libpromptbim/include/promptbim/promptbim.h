@@ -11,7 +11,7 @@
  * Caller must free strings returned by pb_*() functions using pb_free_string().
  * Caller must free opaque structs using the corresponding pb_*_free() function.
  *
- * Version: 2.7.0
+ * Version: 2.8.0
  */
 
 #pragma once
@@ -26,7 +26,7 @@ extern "C" {
  * Version
  * ========================================================================= */
 
-/** Returns "2.7.0" — owned by the library, do NOT free. */
+/** Returns "2.8.0" — owned by the library, do NOT free. */
 const char* pb_version(void);
 
 /* =========================================================================
@@ -121,8 +121,18 @@ int pb_generate_usd(const PBPlan* plan, const char* output_path);
 int pb_generate_usdz(const char* usd_path, const char* output_path);
 
 /* =========================================================================
- * GIS Engine (Phase 4 — placeholder)
- * ========================================================================= */
+ * GIS Engine (Phase 4 — IMPLEMENTED, Sprint P21)
+ * =========================================================================
+ *
+ * Land parcel parsing from GeoJSON, Shapefile, DXF.
+ * Geometry operations: setback/buffer, area, centroid, perimeter.
+ * Coordinate projection: WGS84 ↔ TWD97 TM2 (EPSG:3826).
+ *
+ * PBLandParcel lifecycle:
+ *   1. pb_land_from_*(path) → allocates PBLandParcel*
+ *   2. pb_land_to_json(parcel) → JSON string (caller frees with pb_free_string)
+ *   3. pb_land_free(parcel) → deallocates
+ */
 
 typedef struct PBLandParcel PBLandParcel;
 
@@ -131,6 +141,9 @@ PBLandParcel* pb_land_from_shapefile(const char* path);
 PBLandParcel* pb_land_from_dxf(const char* path);
 void          pb_land_free(PBLandParcel* parcel);
 char*         pb_land_to_json(const PBLandParcel* parcel);
+
+/** Parse GeoJSON string (not file) into LandParcel. */
+PBLandParcel* pb_land_from_geojson_string(const char* geojson_str);
 
 /* =========================================================================
  * MEP Engine (Phase 2 — placeholder)

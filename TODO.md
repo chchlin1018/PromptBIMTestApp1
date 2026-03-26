@@ -1,6 +1,6 @@
 # PromptBIMTestApp1 — TODO / 開發計劃追蹤
 
-> **版本:** v2.7.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
+> **版本:** v2.8.0 | **更新:** 2026-03-26 | **版本控制:** 本文件由 Claude Code 自動維護
 
 ---
 
@@ -43,8 +43,9 @@
 | P18 | V2 Migration Phase 0-1 — C++ 骨架 + Engine 遷移 | 1 | ✅ | P17 |
 | P19 | V2 Migration Phase 2 — MEP + Simulation C++ + P18 技術債 | 1 | ✅ | P18 |
 | P20 | V2 Migration Phase 3 — BIM Core (IFC + USD C++) | 1 | ✅ | P19 |
+| P21 | V2 Migration Phase 4 — GIS Engine C++ + macOS SwiftUI 3D | 1 | ✅ | P20 |
 
-**預估總開發時間: ~50 天**
+**預估總開發時間: ~51 天**
 
 ---
 

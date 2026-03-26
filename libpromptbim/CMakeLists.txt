@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(promptbim VERSION 2.7.0 LANGUAGES CXX)
+project(promptbim VERSION 2.8.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,7 +74,7 @@ set(PROMPTBIM_SOURCES
     src/simulation/simulation_engine.cpp
     src/bim/ifc_generator.cpp
     src/bim/usd_generator.cpp
-    src/stubs/future_stubs.cpp
+    src/gis/gis_engine.cpp
 )
 
 # ---------------------------------------------------------------------------
@@ -130,6 +130,7 @@ if(PROMPTBIM_BUILD_TESTS)
         tests/test_utf8.cpp
         tests/test_ifc_generator.cpp
         tests/test_bim_engine.cpp
+        tests/test_gis_engine.cpp
     )
     target_link_libraries(promptbim_tests
         PRIVATE promptbim_core

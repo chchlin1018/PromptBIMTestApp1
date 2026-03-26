@@ -14,6 +14,7 @@
 #include "promptbim/simulation_engine.hpp"
 #include "promptbim/ifc_generator.hpp"
 #include "promptbim/usd_generator.hpp"
+#include "promptbim/gis_engine.hpp"
 #include "promptbim/promptbim.h"
 
 namespace py = pybind11;
@@ -180,4 +181,65 @@ Returns:
         py::arg("usd_path"),
         py::arg("output_path"),
         "Package USDA into USDZ. Returns 0 on success.");
+
+    // -----------------------------------------------------------------------
+    // GIS Engine (Phase 4 — Sprint P21)
+    // -----------------------------------------------------------------------
+    py::class_<promptbim::GISEngine>(m, "GISEngine")
+        .def(py::init<>())
+        .def("parse_geojson",
+            &promptbim::GISEngine::parse_geojson,
+            py::arg("geojson_str"),
+            "Parse GeoJSON string to LandParcel.")
+        .def("parse_geojson_file",
+            &promptbim::GISEngine::parse_geojson_file,
+            py::arg("path"),
+            "Parse GeoJSON file to LandParcel.")
+        .def("parse_shapefile",
+            &promptbim::GISEngine::parse_shapefile,
+            py::arg("shp_path"),
+            "Parse Shapefile to LandParcel.")
+        .def("parse_dxf",
+            &promptbim::GISEngine::parse_dxf,
+            py::arg("dxf_path"),
+            "Parse DXF file to LandParcel.");
+
+    py::class_<promptbim::LandParcel>(m, "LandParcel")
+        .def(py::init<>())
+        .def_readwrite("name", &promptbim::LandParcel::name)
+        .def_readwrite("area_sqm", &promptbim::LandParcel::area_sqm)
+        .def_readwrite("crs", &promptbim::LandParcel::crs)
+        .def("to_json_str",
+            [](const promptbim::LandParcel& lp) {
+                return lp.to_json().dump();
+            },
+            "Serialize to JSON string.");
+
+    m.def("parse_land_geojson",
+        [](const std::string& geojson_str) {
+            promptbim::GISEngine engine;
+            auto lp = engine.parse_geojson(geojson_str);
+            return lp.to_json().dump();
+        },
+        py::arg("geojson_str"),
+        "Parse GeoJSON string, return JSON string with land parcel data.");
+
+    m.def("parse_land_file",
+        [](const std::string& path) {
+            promptbim::GISEngine engine;
+            promptbim::LandParcel lp;
+            if (path.size() >= 8 && path.substr(path.size() - 8) == ".geojson") {
+                lp = engine.parse_geojson_file(path);
+            } else if (path.size() >= 4 && path.substr(path.size() - 4) == ".shp") {
+                lp = engine.parse_shapefile(path);
+            } else if (path.size() >= 4 && path.substr(path.size() - 4) == ".dxf") {
+                lp = engine.parse_dxf(path);
+            } else {
+                // Try GeoJSON as default
+                lp = engine.parse_geojson_file(path);
+            }
+            return lp.to_json().dump();
+        },
+        py::arg("path"),
+        "Parse land file (auto-detect format). Returns JSON string.");
 }
