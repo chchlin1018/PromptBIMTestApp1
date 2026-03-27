@@ -62,10 +62,60 @@ ApplicationWindow {
                 }
             }
 
-            PropertyPanel {
-                id: propertyPanel
-                SplitView.preferredWidth: 280
-                SplitView.minimumWidth: 200
+            // Right panel with tabs
+            Rectangle {
+                SplitView.preferredWidth: 300
+                SplitView.minimumWidth: 220
+                color: "#16213e"
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 0
+
+                    TabBar {
+                        id: rightTabBar
+                        Layout.fillWidth: true
+                        background: Rectangle { color: "#0d1117" }
+
+                        TabButton {
+                            text: "Properties"
+                            width: implicitWidth
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 0 ? "#16213e" : "#0d1117" }
+                        }
+                        TabButton {
+                            text: "Cost"
+                            width: implicitWidth
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 1 ? "#16213e" : "#0d1117" }
+                        }
+                        TabButton {
+                            text: "Delta"
+                            width: implicitWidth
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 2 ? "#16213e" : "#0d1117" }
+                        }
+                    }
+
+                    StackLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        currentIndex: rightTabBar.currentIndex
+
+                        PropertyPanel {
+                            id: propertyPanel
+                        }
+                        CostPanel {
+                            id: costPanel
+                        }
+                        DeltaPanel {
+                            id: deltaPanel
+                            onUndoRequested: {
+                                if (agentBridge) agentBridge.modify("undo")
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -85,12 +135,19 @@ ApplicationWindow {
                 sceneBuilder.buildScene(result.model)
                 bimView.fitToScene()
             }
+            if (result.cost) costPanel.costData = result.cost
             chatPanel.addMessage("ai", "Generation complete!")
         }
         function onDeltaReady(delta) {
             if (delta.model) {
                 sceneBuilder.buildScene(delta.model)
             }
+            if (delta.cost) costPanel.costData = delta.cost
+            deltaPanel.addDelta(
+                delta.modification ? delta.modification.description : "Modification",
+                delta.cost ? (delta.cost.total_cost_twd || 0) : 0,
+                0, 0
+            )
             chatPanel.addMessage("ai", "Modification applied.")
         }
         function onStatusUpdate(message, progress) {
