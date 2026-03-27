@@ -81,9 +81,9 @@ Python AI Agent Runner (子進程)
 
 | Sprint | 週數 | Tasks | 目標 | 版本 | 狀態 |
 |--------|:----:|:-----:|------|------|:----:|
-| **W0 收尾** | 0.5 | 5 | P24/P25 pytest + tag | v2.11+v2.12 | 🔵 |
-| **D1-S1 引擎** | 2 | 15 | AI場景+Cost+4D+MEP | demo1-alpha | ⬜ |
-| **D1-S2 GUI+展示** | 2 | 14 | GUI整合+場景+TSMC展示 | demo1-v0.1.0 | ⬜ |
+| **W0 收尾** | 0.5 | 5 | P24/P25 pytest + tag | v2.11+v2.12 | ✅ |
+| **D1-S1 引擎** | 2 | 15 | AI場景+Cost+4D+MEP | demo1-alpha | ✅ |
+| **D1-S2 GUI+展示** | 2 | 14 | GUI整合+場景+TSMC展示 | demo1-v0.1.0 | ✅ |
 | **D2 Omniverse** | 5 | 35 | USD→Omni→Revit→建照 | demo2-v0.2.0 | ⬜ |
 
 ### Phase 1: Qt Quick 3D 遷移 (Week 11-18, P26-P29)

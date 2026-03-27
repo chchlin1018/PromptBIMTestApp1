@@ -93,3 +93,56 @@
 ---
 
 *docs/PROJECT_STATUS.md | 2026-03-27*
+
+---
+
+## D1-S2 Sprint 執行結果 — 2026-03-27
+
+### Sprint D1-S2 執行結果 — 2026-03-27 23:15
+
+- **狀態:** ✅ 完成
+- **版本:** demo1-v0.1.0
+- **Tasks:** 14/14
+- **Parts:** 3/3
+- **記憶體:** ~8GB used / 16GB(free:~8GB)
+- **pytest:** 60/60 PASS (test_demo/ all green)
+- **錯誤:** 無
+
+### 新增檔案 (D1-S2)
+
+| 檔案 | 說明 |
+|------|------|
+| `src/promptbim/gpu_render.py` | GPU 能力偵測 + RTX4090 preset |
+| `src/promptbim/gui/workflow_controller.py` | Prompt→3D→Cost→4D 自動流程控制 |
+| `src/promptbim/gui/delta_panel.py` | 變更對照面板 (3D+Cost+Schedule) |
+| `src/promptbim/gui/asset_browser.py` | 零件庫 GUI (24 assets, 3 categories) |
+| `src/promptbim/demo/scene_templates.py` | S1 Villa+Pool / S2 Fab / S3 DC 場景模板 |
+| `src/promptbim/codes/tw_industrial_code.py` | 台灣工業廠房法規檢核 (TW-IND-001~004) |
+| `src/promptbim/bim/export.py` | Demo-1 匯出 (JSON/CSV) |
+| `tests/test_demo/test_d1_s2_scenes.py` | 28 E2E 測試 (3 scenes + GPU + assets) |
+| `tests/test_demo/test_d1_performance.py` | 19 效能測試 (pipeline < 60s) |
+| `docs/DEMO_SCRIPT_D1.md` | 7分鐘 Demo 腳本 (TSMC版) |
+| `docs/TSMC_Presentation_D1.md` | 10頁 TSMC 簡報 |
+
+### 修改檔案 (D1-S2)
+
+| 檔案 | 變更 |
+|------|------|
+| `gui/main_window.py` | WorkflowController + DeltaPanel + ProgressBar 整合 |
+| `gui/model_view.py` | Component pick + MEP layer filter + sidebar |
+| `gui/simulation_tab.py` | Speed control + Gantt→4D click link |
+| `viz/gantt_chart.py` | day_clicked Signal + mpl click handler |
+
+### D1-S2 成果摘要
+
+- ✅ GUI: Prompt→3D→Cost→4D 一氣呵成 (WorkflowController + ProgressBar)
+- ✅ 3D: 樓層切換 + 零件點選 + MEP 8層分層顯示
+- ✅ 4D: Gantt 點擊跳轉 + 1×/2×/5×/10× 播放速度
+- ✅ Delta: 3D+Cost+Schedule 變更對照面板
+- ✅ S1 Villa+Pool: 1200m² | 4 stories | BCR=45%
+- ✅ S2 TSMC Fab: 9600m² | 4 stories | 無塵室 54.5% PASS
+- ✅ S3 Data Center: 4800m² | 5 stories | TIA-942 PASS
+- ✅ 零件庫 GUI: 24 assets / 3 categories / keyword search
+- ✅ 台灣工業法規: TW-IND-001~004 全 PASS
+- ✅ 60 tests PASS | 0.89s | 全流程 < 60s headless
+
