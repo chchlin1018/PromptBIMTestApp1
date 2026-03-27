@@ -146,3 +146,23 @@
 - ✅ 台灣工業法規: TW-IND-001~004 全 PASS
 - ✅ 60 tests PASS | 0.89s | 全流程 < 60s headless
 
+
+### Sprint M1-MVP 執行結果 — 2026-03-28 03:04
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.1.0
+- **Tasks:** 68/68
+- **記憶體:** 9.5/16.0GB(free:6.4GB)
+- **Tags:** mvp-v0.1.0-alpha, mvp-v0.1.0-beta, mvp-v0.1.0
+- **Build:** CMake+Ninja OK, 2 ctests PASS, 18+ pytest PASS
+- **錯誤:** （無）
+
+#### M1-MVP 成果摘要
+- ✅ Qt Quick 3D + Metal 渲染 (BIMView3D + PBR materials)
+- ✅ AgentBridge: C++↔Python JSON stdio protocol
+- ✅ 10 QML panels (Chat/3D/Properties/Cost/Delta/Schedule/Scenes/Assets/Loading/Splash)
+- ✅ ThemeManager: Dark/Light theme toggle
+- ✅ Keyboard shortcuts (F/1-4/T)
+- ✅ Crash recovery: auto-reconnect with 3 retries
+- ✅ io_usd: ILOS USD import/export
+- ✅ E2E: 3 scenes × 2 modifications = 6 scenarios PASS
+- ✅ Demo Script v2.0 + TSMC Presentation v2.0

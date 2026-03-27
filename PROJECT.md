@@ -1,9 +1,9 @@
 # Zigma PromptToBuild 專案管理
 
-> **版本:** v1.5 | **最後更新:** 2026-03-27 23:30
+> **版本:** v1.6 | **最後更新:** 2026-03-28
 > **專案:** Zigma PromptToBuild (PromptBIMTestApp1)
 > **組織:** Reality Matrix Inc.
-> **HEAD:** b058636 | **Tag:** demo1-v0.1.0
+> **Tag:** mvp-v0.1.0
 
 ---
 
@@ -15,8 +15,9 @@
 | **v2.11.0** | P24 | 2026-03-27 | **✅ W0 tagged** |
 | **v2.12.0** | P25 | 2026-03-27 | **✅ W0 tagged** |
 | **demo1-v0.1.0** | D1 | **2026-03-27** | **✅ Demo-1 Ready** |
+| **mvp-v0.1.0** | M1-MVP | **2026-03-28** | **✅ Qt Quick 3D MVP** |
 | demo2-v0.2.0 | D2 | — | ⬜ |
-| v3.0.0 | P29 | — | ⬜ Qt Quick 3D |
+| v3.0.0 | P29 | — | ⬜ |
 
 ## 2. 治理文件
 
@@ -24,7 +25,7 @@
 |------|------|
 | CLAUDE.md | **v1.23.3** |
 | SKILL.md | **v4.1** |
-| PROJECT.md | **v1.5** |
+| PROJECT.md | **v1.6** |
 
 ## 3. ADR-001: Qt Quick 3D + QML
 
@@ -39,6 +40,7 @@
 | **W0** | 5/5 | v2.11+v2.12 | **✅** |
 | **D1-S1** | 15/15 | demo1-alpha | **✅** |
 | **D1-S2** | 14/14 | demo1-v0.1.0 | **✅** |
+| **M1-MVP** | **68/68** | **mvp-v0.1.0** | **✅** |
 | D2 | 35 | demo2-v0.2.0 | ⬜ |
 | P26-P29 | — | v3.0.0 | ⬜ |
 
@@ -98,8 +100,8 @@ MikeRunClaudeSafe PromptBIMTestApp1 {Sprint} "..." --conda promptbim --kill
 ## 8. 里程碑
 
 ```
-2026 Q2: W0✅ → D1-S1✅ → D1-S2✅ → Demo-1★✅ → D2 → Demo-2★
-2026 Q3: P26-P29 Qt Quick 3D → v3.0.0
+2026 Q2: W0✅ → D1-S1✅ → D1-S2✅ → Demo-1★✅ → M1-MVP★✅ → D2 → Demo-2★
+2026 Q3: P26-P29 → v3.0.0
 2026 Q4: P30-P33 Windows+ILOS
 2027 Q1: P34-P41 Web+Mobile
 2027 Q2: P42-P44 私有 LLM
@@ -111,7 +113,8 @@ MikeRunClaudeSafe PromptBIMTestApp1 {Sprint} "..." --conda promptbim --kill
 |------|------|
 | v1.0-v1.4 | 初始 → ADR-001 + 路線圖 |
 | **v1.5** | **Demo-1 完成! 34/34 Tasks✅。W0+D1-S1+D1-S2 全部完成。demo1-v0.1.0 tagged。pytest 60/60 PASS。OOM診斷完成。MikeRunClaudeSafe v2.0。SKILL.md v4.1。** |
+| **v1.6** | **M1-MVP 完成! 68/68 Tasks✅。Qt Quick 3D + AgentBridge + PBR + Cost/Schedule/Delta/4D。ThemeManager + Splash + Crash Recovery。io_usd ILOS。6 E2E scenarios PASS。mvp-v0.1.0 tagged。** |
 
 ---
 
-*PROJECT.md v1.5 | Zigma PromptToBuild | 2026-03-27*
+*PROJECT.md v1.6 | Zigma PromptToBuild | 2026-03-28*
