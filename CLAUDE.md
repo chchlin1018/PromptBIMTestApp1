@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.22.0 | **更新:** 2026-03-27
+> **版本:** v1.23.3 | **更新:** 2026-03-27
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 標記 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -18,6 +18,7 @@
 | 🔴 P24d | Task 通知全被跳過 | Claude Code 只發 Part 通知 | **task_start()/task_done() 封裝函數** |
 | 🔴 P24e | pytest 反覆 OOM (4次) | conftest import PySide6 + 多 pytest | **conftest.py 頂部 + 禁止多 pytest + ignore e2e** |
 | 🟧 P24c | Git 遠端分歧 | Claude.ai 同時推 commit | **Sprint 前 git pull** |
+| 🔴 P25 | xcodebuild 並行衝突 | 多個 Claude Code 同時 build | **xcodebuild 必須 mutex lock** |
 
 ---
 
@@ -222,6 +223,57 @@ echo "✅ 全部函數+環境已就緒"
 
 ---
 
+## [MANDATORY] xcodebuild 互斥鎖 (v1.23.3 新增)
+
+> ⚠️ **Mac Mini 上可能同時有多個 Claude Code 實例在執行**
+> ⚠️ **xcodebuild 必須使用互斥鎖，禁止並行執行**
+> ⚠️ **所有新建/設定 Sprint PROMPT 時必須包含此機制**
+
+### 機制說明
+- 鎖檔: `/tmp/zigma-xcodebuild.lock` (mkdir atomic)
+- 超時: 300 秒，每 5 秒輪詢，每 30 秒輸出等待訊息
+- PID 追蹤: 寫入 lock 目錄
+- 自動清理: trap EXIT
+
+### PROMPT 必須包含的函數定義
+
+```bash
+# --- xcodebuild 互斥鎖 (v1.23.3) ---
+XCODE_LOCK=/tmp/zigma-xcodebuild.lock
+xcode_lock() {
+    local waited=0
+    while ! mkdir "$XCODE_LOCK" 2>/dev/null; do
+        if [ $waited -ge 300 ]; then
+            echo "⛔ xcodebuild lock 超時 (300s)"
+            return 1
+        fi
+        [ $((waited % 30)) -eq 0 ] && echo "⏳ 等待 xcodebuild lock... (${waited}s)"
+        sleep 5
+        waited=$((waited + 5))
+    done
+    echo $$ > "$XCODE_LOCK/pid"
+    echo "🔒 xcodebuild lock 取得 (PID $$)"
+    return 0
+}
+xcode_unlock() {
+    rm -rf "$XCODE_LOCK" 2>/dev/null
+    echo "🔓 xcodebuild lock 釋放"
+}
+trap 'xcode_unlock' EXIT
+```
+
+### 使用方式（MANDATORY）
+
+xcodebuild 呼叫前後必須用 `xcode_lock` / `xcode_unlock` 包夾：
+
+```bash
+xcode_lock || { notify "⛔ xcodebuild lock 取得失敗"; exit 1; }
+xcodebuild -workspace ... -scheme ... build
+xcode_unlock
+```
+
+---
+
 ## [MANDATORY] pytest 安全規則
 
 > ⚠️ **禁止同時跑多個 pytest 進程（Mac Mini 16GB 會 OOM）**
@@ -265,6 +317,7 @@ pkill -f "python.*pytest" 2>/dev/null
 ☐ ★ 啟動/完成/錯誤通知必須多行格式（不得單行簡化）★
 ☐ ★ 每個 Task 用 task_start/task_done 包夾 ★
 ☐ ★ 每個 Part 用 part_start/part_done 包夾 ★
+☐ xcodebuild: 必須用 xcode_lock/xcode_unlock 包夾（mutex 互斥鎖）
 ☐ pytest: offscreen + --timeout=10 + --ignore gui/mcp/e2e + -x + pkill 前後
 ☐ ★ Sprint 結束時更新 docs/PROJECT_STATUS.md（成功/失敗/錯誤）★
 ☐ ★ 錯誤/中斷時也必須更新 docs/PROJECT_STATUS.md ★
@@ -302,9 +355,10 @@ pkill -f "python.*pytest" 2>/dev/null
 | v1.19.0 | 歷史教訓 + Git 安全 + 26 步 |
 | v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
 | v1.21.0 | P24d Task 通知跳過 → task_start/task_done |
-| **v1.22.0** | **PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步** |
+| v1.22.0 | PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步 |
+| **v1.23.3** | **xcodebuild 互斥鎖 (mutex lock) — 多實例並行保護** |
 
 ---
 
-*CLAUDE.md v1.22.0 | 2026-03-27*
+*CLAUDE.md v1.23.3 | 2026-03-27*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
