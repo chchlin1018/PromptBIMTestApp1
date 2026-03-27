@@ -48,7 +48,7 @@ Item {
 
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
-            clearColor: "#1a1a2e"
+            clearColor: ThemeManager.viewport
             antialiasingMode: SceneEnvironment.MSAA
             antialiasingQuality: SceneEnvironment.High
         }
@@ -104,7 +104,7 @@ Item {
                 scale: Qt.vector3d(5, 5, 1)
                 eulerRotation.x: -90
                 materials: PrincipledMaterial {
-                    baseColor: "#2a2a3e"
+                    baseColor: ThemeManager.ground
                     roughness: 0.95
                 }
             }

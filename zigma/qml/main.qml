@@ -9,11 +9,19 @@ ApplicationWindow {
     width: 1280
     height: 800
     visible: true
-    color: "#1a1a2e"
+    color: ThemeManager.bgPrimary
 
     AgentBridge { id: agentBridge }
     BIMSceneBuilder { id: sceneBuilder }
     BIMMaterialLibrary { id: materialLibrary }
+
+    // Keyboard shortcuts (Task 59)
+    Shortcut { sequence: "F"; onActivated: bimView.fitToScene() }
+    Shortcut { sequence: "1"; onActivated: bimView.setView(0) }
+    Shortcut { sequence: "2"; onActivated: bimView.setView(1) }
+    Shortcut { sequence: "3"; onActivated: bimView.setView(2) }
+    Shortcut { sequence: "4"; onActivated: bimView.setView(3) }
+    Shortcut { sequence: "T"; onActivated: ThemeManager.toggle() }
 
     menuBar: MenuBar {
         Menu {
@@ -24,10 +32,13 @@ ApplicationWindow {
         }
         Menu {
             title: "View"
-            Action { text: "Perspective"; shortcut: "1"; onTriggered: bimView.setView(0) }
-            Action { text: "Top"; shortcut: "2"; onTriggered: bimView.setView(1) }
-            Action { text: "Front"; shortcut: "3"; onTriggered: bimView.setView(2) }
-            Action { text: "Right"; shortcut: "4"; onTriggered: bimView.setView(3) }
+            Action { text: "Perspective"; onTriggered: bimView.setView(0) }
+            Action { text: "Top"; onTriggered: bimView.setView(1) }
+            Action { text: "Front"; onTriggered: bimView.setView(2) }
+            Action { text: "Right"; onTriggered: bimView.setView(3) }
+            MenuSeparator {}
+            Action { text: "Fit to View"; onTriggered: bimView.fitToScene() }
+            Action { text: "Toggle Theme"; onTriggered: ThemeManager.toggle() }
         }
         Menu {
             title: "Help"
@@ -48,7 +59,7 @@ ApplicationWindow {
             Rectangle {
                 SplitView.preferredWidth: 300
                 SplitView.minimumWidth: 200
-                color: "#16213e"
+                color: ThemeManager.bgSecondary
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -57,22 +68,22 @@ ApplicationWindow {
                     TabBar {
                         id: leftTabBar
                         Layout.fillWidth: true
-                        background: Rectangle { color: "#0d1117" }
+                        background: Rectangle { color: ThemeManager.bgTertiary }
 
                         TabButton {
                             text: "Chat"
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: leftTabBar.currentIndex === 0 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 0 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                         TabButton {
                             text: "Scenes"
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: leftTabBar.currentIndex === 1 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 1 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                         TabButton {
                             text: "Assets"
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: leftTabBar.currentIndex === 2 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 2 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                     }
 
@@ -118,7 +129,7 @@ ApplicationWindow {
             Rectangle {
                 SplitView.preferredWidth: 300
                 SplitView.minimumWidth: 220
-                color: "#16213e"
+                color: ThemeManager.bgSecondary
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -127,31 +138,31 @@ ApplicationWindow {
                     TabBar {
                         id: rightTabBar
                         Layout.fillWidth: true
-                        background: Rectangle { color: "#0d1117" }
+                        background: Rectangle { color: ThemeManager.bgTertiary }
 
                         TabButton {
                             text: "Properties"
                             width: implicitWidth
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: rightTabBar.currentIndex === 0 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 0 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                         TabButton {
                             text: "Cost"
                             width: implicitWidth
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: rightTabBar.currentIndex === 1 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 1 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                         TabButton {
                             text: "Delta"
                             width: implicitWidth
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: rightTabBar.currentIndex === 2 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 2 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                         TabButton {
                             text: "Schedule"
                             width: implicitWidth
-                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
-                            background: Rectangle { color: rightTabBar.currentIndex === 3 ? "#16213e" : "#0d1117" }
+                            contentItem: Text { text: parent.text; color: ThemeManager.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 3 ? ThemeManager.bgSecondary : ThemeManager.bgTertiary }
                         }
                     }
 
@@ -188,10 +199,23 @@ ApplicationWindow {
         }
     }
 
+    // Loading overlay (Task 57)
+    LoadingOverlay {
+        id: loadingOverlay
+        anchors.fill: parent
+    }
+
+    // Splash screen (Task 58)
+    SplashScreen {
+        id: splashScreen
+        anchors.fill: parent
+    }
+
     // Connect AgentBridge signals
     Connections {
         target: agentBridge
         function onResultReady(result) {
+            loadingOverlay.hide()
             if (result.model) {
                 sceneBuilder.buildScene(result.model)
                 bimView.fitToScene()
@@ -201,6 +225,7 @@ ApplicationWindow {
             chatPanel.addMessage("ai", "Generation complete!")
         }
         function onDeltaReady(delta) {
+            loadingOverlay.hide()
             if (delta.model) {
                 sceneBuilder.buildScene(delta.model)
             }
@@ -213,9 +238,11 @@ ApplicationWindow {
             chatPanel.addMessage("ai", "Modification applied.")
         }
         function onStatusUpdate(message, progress) {
+            loadingOverlay.show(message)
             chatPanel.addMessage("ai", message)
         }
         function onErrorOccurred(error) {
+            loadingOverlay.hide()
             chatPanel.addMessage("system", "Error: " + error)
         }
     }
@@ -228,7 +255,7 @@ ApplicationWindow {
         standardButtons: Dialog.Ok
         Label {
             text: "Zigma PromptToBuild v0.1.0\nBIM generation powered by AI"
-            color: "white"
+            color: ThemeManager.textPrimary
         }
     }
 }

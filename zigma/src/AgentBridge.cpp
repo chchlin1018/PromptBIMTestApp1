@@ -25,6 +25,7 @@ AgentBridge::~AgentBridge()
 
 bool AgentBridge::isConnected() const { return m_connected; }
 bool AgentBridge::isBusy() const { return m_busy; }
+bool AgentBridge::isReconnecting() const { return m_reconnecting; }
 
 void AgentBridge::startPython()
 {
@@ -48,6 +49,12 @@ void AgentBridge::startPython()
     if (m_process->waitForStarted(5000)) {
         m_connected = true;
         emit connectedChanged();
+        if (m_reconnecting) {
+            m_reconnecting = false;
+            emit reconnectingChanged();
+            emit statusUpdate("AI reconnected", 0.0);
+        }
+        m_restartCount = 0;
         m_heartbeat->start();
         qDebug() << "AgentBridge: Python started";
     } else {
@@ -195,6 +202,14 @@ void AgentBridge::onHeartbeatTimeout()
 
 void AgentBridge::restartPython()
 {
+    if (m_restartCount >= 3) {
+        emit errorOccurred("Python agent failed to restart after 3 attempts");
+        return;
+    }
+    m_restartCount++;
+    m_reconnecting = true;
+    emit reconnectingChanged();
+    emit statusUpdate("AI reconnecting... (attempt " + QString::number(m_restartCount) + "/3)", 0.0);
     stopPython();
-    QTimer::singleShot(1000, this, &AgentBridge::startPython);
+    QTimer::singleShot(1000 * m_restartCount, this, &AgentBridge::startPython);
 }

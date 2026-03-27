@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
-    color: "#0d1117"
+    color: ThemeManager.bgTertiary
 
     property var agentBridge: null
 
@@ -22,19 +22,27 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 color: {
                     if (!agentBridge) return "#666"
+                    if (agentBridge.reconnecting) return "#f59e0b"
                     if (agentBridge.busy) return "#f59e0b"
                     if (agentBridge.connected) return "#4ade80"
                     return "#ef4444"
+                }
+                SequentialAnimation on opacity {
+                    running: agentBridge && agentBridge.reconnecting
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.3; duration: 500 }
+                    NumberAnimation { to: 1.0; duration: 500 }
                 }
             }
             Label {
                 text: {
                     if (!agentBridge) return "No Agent"
+                    if (agentBridge.reconnecting) return "Reconnecting..."
                     if (agentBridge.busy) return "Busy"
                     if (agentBridge.connected) return "Connected"
                     return "Disconnected"
                 }
-                color: "#8892b0"
+                color: ThemeManager.textSecondary
                 font.pixelSize: 11
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -48,7 +56,7 @@ Rectangle {
             value: 0
             visible: agentBridge && agentBridge.busy
 
-            background: Rectangle { color: "#1a1a2e"; radius: 3 }
+            background: Rectangle { color: ThemeManager.bgPrimary; radius: 3 }
             contentItem: Rectangle {
                 width: progressBar.visualPosition * progressBar.width
                 height: progressBar.height
@@ -61,15 +69,14 @@ Rectangle {
             id: statusText
             Layout.fillWidth: true
             text: "Ready"
-            color: "#8892b0"
+            color: ThemeManager.textSecondary
             font.pixelSize: 11
             elide: Text.ElideRight
         }
 
-        // Memory (placeholder)
         Label {
             text: "Zigma v0.1.0"
-            color: "#555"
+            color: ThemeManager.textMuted
             font.pixelSize: 11
         }
     }

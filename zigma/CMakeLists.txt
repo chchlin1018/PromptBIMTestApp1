@@ -18,6 +18,8 @@ qt_add_executable(zigma_app
 )
 set_target_properties(zigma_app PROPERTIES OUTPUT_NAME ZigmaApp)
 
+set_source_files_properties(qml/ThemeManager.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
 qt_add_qml_module(zigma_app
     URI Zigma
     VERSION 1.0
@@ -32,6 +34,9 @@ qt_add_qml_module(zigma_app
         qml/StatusBar.qml
         qml/ScenePicker.qml
         qml/AssetBrowser.qml
+        qml/ThemeManager.qml
+        qml/LoadingOverlay.qml
+        qml/SplashScreen.qml
 )
 
 target_include_directories(zigma_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
