@@ -23,6 +23,8 @@ from promptbim.gui.map_view import MapView
 from promptbim.gui.model_view import ModelView
 from promptbim.gui.modification_panel import ModificationPanel
 from promptbim.gui.simulation_tab import SimulationTab
+from promptbim.gui.delta_panel import DeltaPanel
+from promptbim.gui.workflow_controller import WorkflowController, WorkflowProgressBar
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
 from promptbim.schemas.plan import BuildingPlan
@@ -69,6 +71,11 @@ class MainWindow(QMainWindow):
         self._sim_tab = SimulationTab()
         self._sim_tab.day_changed.connect(self._on_sim_day_changed)
         self._tabs.addTab(self._sim_tab, "4D Simulation")
+
+        # Tab 5: Delta (change comparison)
+        self._delta_panel = DeltaPanel()
+        self._delta_panel.undo_requested.connect(self._on_delta_undo)
+        self._tabs.addTab(self._delta_panel, "🔄 Delta")
         splitter.addWidget(self._tabs)
 
         # Modification impact panel
@@ -83,6 +90,15 @@ class MainWindow(QMainWindow):
         self._chat_panel.undo_done.connect(self._on_undo_done)
         self._mod_panel.undo_requested.connect(self._chat_panel.request_undo)
         layout.addWidget(self._chat_panel)
+
+        # Workflow progress bar (Prompt→3D→Cost→4D→Done)
+        self._progress_bar = WorkflowProgressBar()
+        layout.addWidget(self._progress_bar)
+
+        # Workflow controller
+        self._workflow = WorkflowController(self)
+        self._workflow.step_changed.connect(self._on_workflow_step)
+        self._workflow.workflow_complete.connect(self._on_workflow_complete)
 
         # Status bar
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
@@ -180,7 +196,7 @@ class MainWindow(QMainWindow):
         else:
             self.statusBar().showMessage(f"Generation failed: {', '.join(result.errors)}")
 
-    def set_building_plan(self, plan: BuildingPlan):
+    def set_building_plan(self, plan: BuildingPlan, run_workflow: bool = True):
         """Display a generated building plan in 3D, site plan, cost, and 4D views."""
         logger.debug("set_building_plan: %s, %d stories", plan.name, len(plan.stories))
         self._model_view.set_plan(plan)
@@ -191,13 +207,33 @@ class MainWindow(QMainWindow):
         # Feed 4D simulation
         self._setup_simulation(plan)
 
+        # Update delta panel if present
+        if hasattr(self, "_delta_panel"):
+            self._delta_panel.set_plan(plan)
+
         self._tabs.setCurrentIndex(1)  # switch to 3D Model tab
+        self._progress_bar.set_step(1)
         logger.debug("Tab switched to 3D Model (index 1)")
         self.statusBar().showMessage(
             f"Building: {plan.name} | {len(plan.stories)} floors | "
             f"BCR: {plan.building_bcr:.0%} | FAR: {plan.building_far:.1f} | "
             f"Cost: NT${total_m:,.1f}M"
         )
+
+        # Trigger sequential Prompt→3D→Cost→4D workflow
+        if run_workflow:
+            self._workflow.run(plan)
+
+    def _on_workflow_step(self, tab_idx: int, label: str) -> None:
+        """Update progress bar when workflow advances."""
+        # Map tab idx to progress bar step
+        _tab_to_step = {1: 1, 2: 2, 3: 2, 4: 3, 5: 4}
+        step = _tab_to_step.get(tab_idx, 0)
+        self._progress_bar.set_step(step)
+
+    def _on_workflow_complete(self) -> None:
+        self._progress_bar.set_step(4)
+        self.statusBar().showMessage("✅ Demo-1 Workflow Complete — Prompt→3D→Cost→4D ready")
 
     def _setup_simulation(self, plan: BuildingPlan):
         """Initialize 4D simulation from a BuildingPlan."""
@@ -231,10 +267,15 @@ class MainWindow(QMainWindow):
         history_count = len(self._chat_panel._orchestrator.modification_history.records)
         self._mod_panel.show_record(record, history_count)
 
+    def _on_delta_undo(self) -> None:
+        """Undo triggered from delta panel."""
+        self._chat_panel.request_undo()
+
     def _on_undo_done(self, plan):
         """Handle an undo operation."""
         logger.debug("Undo done: plan=%s", plan.name)
-        self.set_building_plan(plan)
+        self.set_building_plan(plan, run_workflow=False)
+        self._delta_panel.clear()
         history_count = len(self._chat_panel._orchestrator.modification_history.records)
         self._mod_panel.update_history_count(history_count)
         if history_count == 0:

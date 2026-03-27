@@ -6,13 +6,19 @@ from typing import TYPE_CHECKING
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from PySide6.QtCore import Signal
 
 if TYPE_CHECKING:
     from promptbim.bim.simulation.scheduler import ConstructionSchedule
 
 
 class GanttChart(FigureCanvas):
-    """Interactive Gantt chart showing construction phases."""
+    """Interactive Gantt chart showing construction phases.
+
+    Emits ``day_clicked(int)`` when user clicks on a bar to jump to that day.
+    """
+
+    day_clicked = Signal(int)
 
     def __init__(
         self,
@@ -29,6 +35,8 @@ class GanttChart(FigureCanvas):
         self._current_day = 0
         self._day_line = None
         self._draw_empty()
+        # Connect mouse click → day_clicked signal
+        self._fig.canvas.mpl_connect("button_press_event", self._on_click)
 
     def _draw_empty(self) -> None:
         self._ax.clear()
@@ -123,6 +131,14 @@ class GanttChart(FigureCanvas):
 
         self._fig.tight_layout()
         self.draw()
+
+    def _on_click(self, event) -> None:
+        """Handle matplotlib click — emit day_clicked if in axes."""
+        if event.inaxes != self._ax or self._schedule is None:
+            return
+        day = int(event.xdata)
+        day = max(0, min(day, self._schedule.total_days))
+        self.day_clicked.emit(day)
 
     def export_svg(self, path: str) -> None:
         """Export the Gantt chart as SVG."""

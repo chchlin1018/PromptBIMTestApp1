@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
+    QComboBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -64,8 +65,9 @@ class SimulationTab(QWidget):
         splitter = QSplitter(Qt.Orientation.Vertical)
         layout.addWidget(splitter, stretch=1)
 
-        # Gantt chart
+        # Gantt chart — click on bar jumps 4D view to that day
         self._gantt = GanttChart(width=8, height=3, dpi=100)
+        self._gantt.day_clicked.connect(self._on_gantt_day_clicked)
         splitter.addWidget(self._gantt)
 
         # Placeholder for external 3D rendering info
@@ -104,6 +106,14 @@ class SimulationTab(QWidget):
         self._total_label.setFixedWidth(80)
         ctrl_layout.addWidget(self._total_label)
 
+        # Speed selector
+        ctrl_layout.addWidget(QLabel("Speed:"))
+        self._speed_combo = QComboBox()
+        self._speed_combo.addItems(["1×", "2×", "5×", "10×"])
+        self._speed_combo.currentIndexChanged.connect(self._on_speed_changed)
+        self._speed_combo.setFixedWidth(60)
+        ctrl_layout.addWidget(self._speed_combo)
+
         # Export GIF button
         self._export_btn = QPushButton("Export GIF")
         self._export_btn.setFixedWidth(100)
@@ -113,9 +123,10 @@ class SimulationTab(QWidget):
 
         layout.addWidget(controls)
 
-        # Auto-play timer
+        # Auto-play timer (200ms = 5fps at 1× speed)
+        self._play_speed = 1
         self._timer = QTimer(self)
-        self._timer.setInterval(200)  # 5 fps
+        self._timer.setInterval(200)
         self._timer.timeout.connect(self._advance_day)
 
     def set_building_data(
@@ -183,7 +194,8 @@ class SimulationTab(QWidget):
 
     def _advance_day(self) -> None:
         current = self._slider.value()
-        step = max(1, self._slider.maximum() // 200)
+        base_step = max(1, self._slider.maximum() // 200)
+        step = base_step * self._play_speed
         new_val = current + step
         if new_val >= self._slider.maximum():
             self._slider.setValue(self._slider.maximum())
@@ -192,6 +204,15 @@ class SimulationTab(QWidget):
             self._play_btn.setText("Play")
         else:
             self._slider.setValue(new_val)
+
+    def _on_gantt_day_clicked(self, day: int) -> None:
+        """Jump 4D view to day when user clicks Gantt bar."""
+        self._slider.setValue(day)
+
+    def _on_speed_changed(self, index: int) -> None:
+        speeds = [1, 2, 5, 10]
+        self._play_speed = speeds[index] if index < len(speeds) else 1
+        # Adjust step size for advance (interval stays 200ms, step multiplied)
 
     def _export_gif(self) -> None:
         if not self._animator:
