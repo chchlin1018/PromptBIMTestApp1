@@ -20,26 +20,44 @@ PART_TOTAL=3
 PART_DONE=0
 PCT=0
 
-# --- notify ---
+# --- notify (v2 — heredoc + log + safe argv) ---
 notify() {
     local msg="$1"
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"+886972535899\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "display notification \"$msg\" with title \"Zigma\"" 2>/dev/null || \
-    echo "[NOTIFY FALLBACK] $msg"
+    local log="/tmp/zigma-notify.log"
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "+886972535899" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "chchlin1018@icloud.com" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    display notification theMessage with title "Zigma"
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    echo "[NOTIFY FALLBACK] $msg" | tee -a "$log"
+    return 1
 }
+
+# --- 記憶體 ---
 get_mem() {
     local ps=$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)
     local tb=$(sysctl -n hw.memsize 2>/dev/null || echo 0)
@@ -111,7 +129,7 @@ EOF
     git add PROJECT.md && git commit -m "[${SPRINT}] update PROJECT.md final status" && git push origin main 2>/dev/null
 }
 
-echo "🧹 清理櫨屍..."
+echo "🧹 清理殭屍..."
 pkill -f "python.*pytest" 2>/dev/null
 pkill -f "python.*promptbim" 2>/dev/null
 pkill -f "python.*PySide6" 2>/dev/null
@@ -143,31 +161,22 @@ echo "✅ 檢查通過"
 part_start "A" "GUI + 3D + 4D Player" 5
 
 task_start 1 "Win RTX 4090 部署 + GPU 渲染確認"
-# Windows: conda activate promptbim && python -c "import pyvista; p=pyvista.Plotter(); print(p.render_window)"
-# 確認 OpenGL GPU 加速
 task_done
 
 task_start 2 "GUI 一氣呵成: Prompt→3D→Cost→4D"
 # 修改 src/promptbim/gui/main_window.py
-# 串接: ChatPanel → ModelView + CostPanel + SimulationTab
-# 生成後自動切換到 3D tab
 task_done
 
 task_start 3 "3D: 樓層切換 + 點擊零件 + MEP分層"
 # 修改 src/promptbim/gui/model_view.py + mep_toggle.py
-# 點擊 mesh → 顯示零件名稱 + 供應商 + 單價
-# MEP 圖層 checkbox 加入 HVAC
 task_done
 
 task_start 4 "4D Player: 甘特圖 ↔ 4D 聯動"
 # 修改 src/promptbim/gui/simulation_tab.py
-# 點擊甘特圖 phase → 4D slider 跳到對應週
-# 加入施工機械顯示開關
 task_done
 
 task_start 5 "變更對照面板: 3D+Cost+Schedule+4D"
 # 新建 src/promptbim/gui/delta_panel.py
-# 並排顯示: before/after 3D + 成本差異 + 工期差異
 task_done
 
 part_done "Part B: 場景+零件庫"
@@ -179,27 +188,19 @@ part_start "B" "場景模板 + 零件庫 GUI" 4
 
 task_start 6 "場景 S1: 3層別墅+泳池"
 # 新建 src/promptbim/bim/templates/villa.py
-# 參考現有 factory.py (P10) 格式
-# 包含: 1F客廳+泳池, 2F臥室, 3F書房
 task_done
 
 task_start 7 "場景 S2: 半導體廠房 + S3: 數據中心"
 # 新建 src/promptbim/bim/templates/datacenter.py
-# 廠房場景用現有 factory.py 擴充
-# 數據中心: 機架室 + 冷却通道 + 電力室
+# 廠房用現有 factory.py 擴充
 task_done
 
 task_start 8 "零件庫 GUI: 3分類瀏覽 + 搜尋 + 替換"
 # 新建 src/promptbim/gui/asset_browser.py
-# QTreeWidget: 家用/建築/工廠 3 分類
-# 點擊零件 → 顯示規格+供應商+單價
-# 「替換」按鈕 → 調用 cost swap
 task_done
 
 task_start 9 "台灣法規 + 匯出擴充"
 # 修改 codes/ + gui/
-# 容積/建蔽/高度檢查強化
-# 匯出加入: Cost CSV + Schedule JSON + BOM
 task_done
 
 part_done "Part C: 展示準備"
@@ -210,24 +211,19 @@ part_done "Part C: 展示準備"
 part_start "C" "展示準備" 5
 
 task_start 10 "3 場景 E2E 測試"
-# S1(別墅) + S2(廠房) + S3(數據中心) 全流程
-# NL → BIM → Cost → Schedule → 4D → 變更 → 對照
 task_done
 
 task_start 11 "效能: 全流程 < 3 分鐘"
-# 計時測試各場景
 task_done
 
 task_start 12 "Demo 腳本 7min + 排練"
-# 更新 docs/DEMO_SCRIPT.md (已有 P12 版本)
+# 更新 docs/DEMO_SCRIPT.md
 task_done
 
 task_start 13 "TSMC 簡報 10頁 + 螢幕錄影"
-# Keynote/PPTX + OBS/ScreenFlow 錄影
 task_done
 
 task_start 14 "Demo-1 審計 + PROJECT.md + tag"
-# 審計報告 + git tag demo1-v0.1.0
 git tag demo1-v0.1.0 2>/dev/null && git push origin demo1-v0.1.0 2>/dev/null
 task_done
 
@@ -260,14 +256,14 @@ echo "→ 下一步: Demo-2 (Omniverse → Revit → 建照)"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 櫨屍清理 + offscreen
+☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
+☑ 殭屍清理 + offscreen
 ☑ ★ 鐵律 1: 100% CLAUDE.md MANDATORY
 ☑ ★ 鐵律 2: 啟動讀取 PROJECT.md
-☑ ★ 鐵律 3: task_done → PROJECT.md sed
-☑ ★ 鐵律 3: sprint_finalize()
+☑ ★ 鐵律 3: task_done → PROJECT.md sed + sprint_finalize
 ☑ 通知多行 + 啟動順序 + pytest 安全
 ☑ 命名: [D1-S2] commit prefix
 ☑ Sprint 結束 tag: demo1-v0.1.0
 ☑ 不修改 CLAUDE.md / SKILL.md
+☑ notify log: /tmp/zigma-notify.log
 ```

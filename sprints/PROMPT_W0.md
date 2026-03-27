@@ -19,25 +19,41 @@ PART_TOTAL=2
 PART_DONE=0
 PCT=0
 
-# --- notify ---
+# --- notify (v2 — heredoc + log + safe argv) ---
 notify() {
     local msg="$1"
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"+886972535899\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "display notification \"$msg\" with title \"Zigma\"" 2>/dev/null || \
-    echo "[NOTIFY FALLBACK] $msg"
+    local log="/tmp/zigma-notify.log"
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "+886972535899" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "chchlin1018@icloud.com" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    display notification theMessage with title "Zigma"
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    echo "[NOTIFY FALLBACK] $msg" | tee -a "$log"
+    return 1
 }
 
 # --- 記憶體 ---
@@ -115,7 +131,7 @@ EOF
 }
 
 # --- 清理 + 環境 ---
-echo "🧹 清理櫨屍 Python..."
+echo "🧹 清理殭屍 Python..."
 pkill -f "python.*pytest" 2>/dev/null
 pkill -f "python.*promptbim" 2>/dev/null
 pkill -f "python.*PySide6" 2>/dev/null
@@ -157,8 +173,6 @@ echo "✅ 環境檢查通過"
 part_start "A" "P24+P25 收尾" 4
 
 task_start 1 "P24 conftest.py offscreen 修復"
-# 在 tests/conftest.py 最頂部加入 os.environ["QT_QPA_PLATFORM"] = "offscreen"
-# 確認已存在（P25 可能已加）
 grep -q 'QT_QPA_PLATFORM' tests/conftest.py || \
     sed -i '' '1i\
 import os; os.environ["QT_QPA_PLATFORM"] = "offscreen"
@@ -191,7 +205,6 @@ part_done "Part B: Win 環境"
 part_start "B" "Win RTX 4090 環境" 1
 
 task_start 5 "Win RTX 4090 conda + PyVista OpenGL 確認"
-# 此 Task 需在 Windows 執行，如在 Mac 則記錄待辦
 echo "⚠️ W0-T5 需在 Windows RTX 4090 上執行"
 echo "檢查項目: conda env + PyVista OpenGL + Revit 2026 MCP"
 task_done
@@ -200,8 +213,6 @@ part_done "Sprint 完成"
 
 # ===== Sprint 結束 =====
 sprint_finalize "✅" ""
-
-# tag
 git push origin main 2>/dev/null
 
 MEM=$(get_mem)
@@ -221,8 +232,8 @@ echo "✅ Sprint ${SPRINT} 完成"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 櫨屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
+☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
+☑ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
 ☑ ★ 鐵律 1: 100% 符合 CLAUDE.md 所有 MANDATORY 規則
 ☑ ★ 鐵律 2: 啟動時讀取 PROJECT.md
 ☑ ★ 鐵律 3: 每個 task_done() 後更新 PROJECT.md (sed ⬜→🔵→✅)
@@ -232,6 +243,7 @@ echo "✅ Sprint ${SPRINT} 完成"
 ☑ 每個 Task 用 task_start/task_done 包夾
 ☑ 每個 Part 用 part_start/part_done 包夾
 ☑ pytest: offscreen + --timeout=10 + --ignore + -x + pkill
-☑ 命名規則遍循
+☑ 命名規則遵循
 ☑ 不修改 CLAUDE.md / SKILL.md
+☑ notify log: /tmp/zigma-notify.log
 ```

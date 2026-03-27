@@ -20,26 +20,44 @@ PART_TOTAL=3
 PART_DONE=0
 PCT=0
 
-# --- notify ---
+# --- notify (v2 — heredoc + log + safe argv) ---
 notify() {
     local msg="$1"
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"+886972535899\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "
-        tell application \"Messages\"
-            set targetService to 1st account whose service type = iMessage
-            set targetBuddy to participant \"chchlin1018@icloud.com\" of targetService
-            send \"$msg\" to targetBuddy
-        end tell
-    " 2>/dev/null || \
-    osascript -e "display notification \"$msg\" with title \"Zigma\"" 2>/dev/null || \
-    echo "[NOTIFY FALLBACK] $msg"
+    local log="/tmp/zigma-notify.log"
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "+886972535899" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    tell application "Messages"
+        set targetService to 1st service whose service type = iMessage
+        set targetBuddy to buddy "chchlin1018@icloud.com" of targetService
+        send theMessage to targetBuddy
+    end tell
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    /usr/bin/osascript - "$msg" <<'EOF' >>"$log" 2>&1
+on run argv
+    set theMessage to item 1 of argv
+    display notification theMessage with title "Zigma"
+end run
+EOF
+    [ $? -eq 0 ] && return 0
+    echo "[NOTIFY FALLBACK] $msg" | tee -a "$log"
+    return 1
 }
+
+# --- 記憶體 ---
 get_mem() {
     local ps=$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)
     local tb=$(sysctl -n hw.memsize 2>/dev/null || echo 0)
@@ -111,7 +129,7 @@ EOF
     git add PROJECT.md && git commit -m "[${SPRINT}] update PROJECT.md final status" && git push origin main 2>/dev/null
 }
 
-echo "🧹 清理櫨屍..."
+echo "🧹 清理殭屍..."
 pkill -f "python.*pytest" 2>/dev/null
 pkill -f "python.*promptbim" 2>/dev/null
 pkill -f "python.*PySide6" 2>/dev/null
@@ -145,31 +163,25 @@ part_start "A" "AI 場景 + 變更強化" 5
 task_start 1 "Planner 6 場景 prompt template"
 # 修改 src/promptbim/agents/planner.py
 # 加入 VILLA/FAB/DATACENTER/FACTORY/BUILDING/BRIDGE 6 個 prompt template
-# 現有 14KB，加入 scene_templates dict
 task_done
 
 task_start 2 "Modifier 多輪累加變更強化"
 # 修改 src/promptbim/agents/modifier.py (17KB)
 # 強化 modify() 支援多輪累加：「加泳池」→「泳池改停車場」連續處理
-# 擴充 impact_propagation 到 cost + schedule
 task_done
 
 task_start 3 "Orchestrator 串接 Cost+Schedule+4D"
 # 修改 src/promptbim/agents/orchestrator.py (15KB)
 # generate() 流程加入: Build → Cost → Schedule → 4D assign
-# modify() 流程加入: Rebuild → CostDelta → ScheduleDelta → 4D rebuild
 task_done
 
 task_start 4 "USD phase tag + MEP layer"
 # 修改 src/promptbim/bim/usd_generator.py (9KB)
-# 每個 Prim 加入 custom:phase = "foundation"/"structure"/"mep"/"finish"
-# MEP Prim 加入 custom:mep_system = "piping"/"electrical"/"hvac"
+# 每個 Prim 加入 custom:phase + custom:mep_system
 task_done
 
 task_start 5 "BIM 模型轉換: IFC/FBX → USD"
 # 新建 src/promptbim/bim/converter.py
-# 用 IfcConvert (ifcopenshell) + trimesh (fbx/glb) → USD
-# 至少支援 3 種外部格式
 task_done
 
 part_done "Part B: 成本+零件庫"
@@ -182,31 +194,22 @@ part_start "B" "成本引擎 + 零件庫擴充" 5
 task_start 6 "零件庫擴充: 3分類 100+ 零件"
 # 修改 src/promptbim/bim/components/
 # 現有 76 件 → 擴充到 150+
-# 新增: residential.py (30+), commercial.py (20+), industrial.py (30+)
-# 每個零件: name, supplier, unit_price, spec, category
 task_done
 
 task_start 7 "零件庫搜尋 + 替代品 + 競合"
 # 修改 src/promptbim/bim/components/registry.py
-# 加入: search_alternatives(part_id) -> list
-# 加入: compare_parts(part_ids) -> comparison_table
 task_done
 
 task_start 8 "Cost Engine 供應商明細 + 圖表升級"
 # 修改 src/promptbim/bim/cost/estimator.py + cost_charts.py
-# 現有 QTO + 22 單價 → 加入供應商明細列
-# cost_charts 加入 supplier breakdown view
 task_done
 
 task_start 9 "零件替換 → 成本即時重算"
 # 修改 src/promptbim/bim/cost/estimator.py
-# 加入: swap_component(old_id, new_id) → 重算總價
 task_done
 
 task_start 10 "變更成本差異報告"
 # 新建 src/promptbim/bim/cost/cost_delta.py
-# compare(before: CostEstimate, after: CostEstimate) -> CostDelta
-# 輸出: 逐項差異 + 總價差異 + 圖表
 task_done
 
 part_done "Part C: 4D+MEP"
@@ -218,34 +221,22 @@ part_start "C" "4D 擴充 + MEP 強化" 5
 
 task_start 11 "4D 開挖+架設動畫擴充"
 # 修改 src/promptbim/bim/simulation/animator.py
-# 現有: visibility show/hide per phase
-# 加入: bottom_up_clip (從下往上), excavation_sink (向下凹陷)
-# 加入: construction_phases.py 加入 EXCAVATION, DIAPHRAGM_WALL phase
 task_done
 
 task_start 12 "4D 施工機械 3D + 進場邏輯"
 # 新建 assets/equipment/ 目錄
-# 下載 Sketchfab/TurboSquid 免費 Low Poly: 天車/卡車/挖土機
-# 轉換為 USD + 加入 phase_mapper 進場邏輯
 task_done
 
 task_start 13 "4D 變更連動: 設計變更 → 4D 自動更新"
 # 修改 src/promptbim/bim/simulation/scheduler.py
-# 加入: rebuild_schedule(new_plan) → 重新分配 phase
-# 移除泳池 → 4D 無泳池階段
 task_done
 
 task_start 14 "MEP 擴充: 電力+HVAC+穿孔"
 # 修改 src/promptbim/bim/mep/planner.py + systems.py
-# 現有: A* + piping/plumbing/electrical/fire
-# 加入: HVAC 風管路由
-# 加入: auto_penetration() → 管穿牆時自動產生穿孔記錄
 task_done
 
 task_start 15 "變更工期差異 + 甘特圖對照"
 # 新建 src/promptbim/bim/simulation/schedule_delta.py
-# compare(before: Schedule, after: Schedule) -> ScheduleDelta
-# 甘特圖 before/after overlay
 task_done
 
 part_done "Sprint 完成"
@@ -275,13 +266,13 @@ echo "✅ Sprint ${SPRINT} 完成 → 下一步: PROMPT_D1-S2.md"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 櫨屍清理 + offscreen
+☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
+☑ 殭屍清理 + offscreen
 ☑ ★ 鐵律 1: 100% CLAUDE.md MANDATORY
 ☑ ★ 鐵律 2: 啟動讀取 PROJECT.md
-☑ ★ 鐵律 3: task_done → PROJECT.md sed
-☑ ★ 鐵律 3: sprint_finalize()
+☑ ★ 鐵律 3: task_done → PROJECT.md sed + sprint_finalize
 ☑ 通知多行 + 啟動順序 + pytest 安全
 ☑ 命名: [D1-S1] commit prefix
 ☑ 不修改 CLAUDE.md / SKILL.md
+☑ notify log: /tmp/zigma-notify.log
 ```
