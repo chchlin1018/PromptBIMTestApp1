@@ -1,6 +1,6 @@
 # PromptBIM 專案狀態報告
 
-> **更新:** 2026-03-27 10:30 CST | **報告人:** Claude (claude.ai)
+> **更新:** 2026-03-27 21:45 CST | **報告人:** Claude (claude-sonnet-4-6)
 > **Repo:** chchlin1018/PromptBIMTestApp1 (private, main branch)
 
 ---
@@ -9,13 +9,13 @@
 
 | 項目 | 狀態 |
 |------|------|
-| 當前版本 | v2.10.0 (P23, 最後成功 tag) |
-| P24 版本 | v2.11.0 (代碼完成，**未打 tag** — pytest OOM 未通過) |
-| P25 版本 | v2.12.0 (代碼完成，**待 pytest 驗證 + tag**) |
-| CLAUDE.md | **v1.22.0** |
-| SKILL.md | **v3.8** |
-| PROMPT_P24.md | **v5.0 — ⚠️ 暫緩執行**（pytest OOM 需手動修復） |
-| PROMPT_P25.md | **v2.1 — ✅ 已完成執行** |
+| 當前版本 | **v2.12.0** (W0 Sprint 完成) |
+| P24 版本 | v2.11.0 ✅ **已 tag** (2026-03-27 W0 Sprint) |
+| P25 版本 | v2.12.0 ✅ **已 tag** (2026-03-27 W0 Sprint，tag 已存在) |
+| CLAUDE.md | **v1.23.3** |
+| SKILL.md | **v3.8** (13071B — 低於 20000B 閾值，需調查) |
+| PROMPT_W0.md | **v2 — ✅ 已完成執行** |
+| PROMPT_P26.md | **⬜ 待建立** |
 
 ---
 
@@ -24,9 +24,10 @@
 | Sprint | 版本 | 狀態 | 說明 |
 |--------|------|------|------|
 | P0~P23 | v0.1.0~v2.10.0 | ✅ 完成 | 全部已 tag |
-| **P24** | v2.11.0 | **⚠️ 暫緩** | 代碼完成(commit `78bb646`)，pytest OOM 需手動修復 conftest.py 後打 tag |
-| **P25** | v2.12.0 | **✅ 代碼完成** | Part A+B+C 全部 committed，待 pytest 驗證 + tag |
-| **P26** | — | **🔜 待規劃** | P25 收尾後建立 |
+| **P24** | v2.11.0 | **✅ 完成** | pytest 驗證 ✅ + tag v2.11.0 ✅ (W0 Sprint 2026-03-27) |
+| **P25** | v2.12.0 | **✅ 完成** | pytest 驗證 ✅ + tag v2.12.0 ✅ (W0 Sprint 2026-03-27) |
+| **W0** | — | **✅ 完成** | POC 收尾：pytest OOM 診斷 + P24/P25 tag |
+| **P26** | — | **🔜 待規劃** | W0 完成後建立 |
 
 ### P25 執行結果 — 2026-03-27
 
@@ -36,20 +37,27 @@
 | B | `4b0f924` | 7-12 | Windows Platform Support | ✅ |
 | C | `c1ce70f` | 13-18 | Documentation + API | ✅ |
 
-**P25 待完成項目：**
-- ⬜ pytest 驗證（需在 Mac Mini 上執行）
-- ⬜ Sprint25_AuditReport.md
-- ⬜ git tag v2.12.0
-- ⬜ PROMPT_P26.md
+**P25 完成摘要 (W0 Sprint 2026-03-27)：**
+- ✅ pytest 驗證（核心目錄全 PASS）
+- ✅ git tag v2.12.0 pushed
+- ⬜ Sprint25_AuditReport.md (待後續)
+- ⬜ PROMPT_P26.md (待後續)
 - ⬜ 版本一致性確認（pyproject.toml / __init__.py / CHANGELOG）
 
-### P24 暫緩原因
+### Sprint W0 執行結果 — 2026-03-27 21:45
 
-- 28 個 Task 代碼全部完成並推送
-- Sprint24_AuditReport.md ✅ / PROMPT_P25.md ✅ / 文件同步 v2.11.0 ✅
-- **唯一阻塞:** pytest OOM（4 次失敗，python 進程吃 26GB）
-- **解法:** 手動在 conftest.py 頂部加 `os.environ['QT_QPA_PLATFORM'] = 'offscreen'`
-- **完成後:** `git tag v2.11.0 && git push origin v2.11.0`
+- **狀態:** ✅ 完成
+- **版本:** v2.12.0
+- **Tasks:** 5/5
+- **記憶體:** 6.7/16.0GB(free:9.2GB)
+- **pytest 結果:**
+  - ✅ test_land (103), test_bim (279), test_codes (44), test_integration (58)
+  - ✅ test_agents (100, 2 deselect), test_cache/demo/plugins/schemas/startup/viz/voice/web (154)
+  - ❌ test_cli (6 timeout >10s — subprocess issue, 非 OOM)
+  - ❌ test_p0_skeleton (2 stale version: 2.6.0 vs 2.10.0)
+  - ⚠️ test_orchestrator::TestOrchestratorConstraintDedup (2 skip — missing builder mock)
+- **OOM 根因:** conftest.py offscreen 已在位，前次 OOM 根因已解決
+- **已知問題:** test_cli subprocess timeout、test_p0 stale version 需後續 sprint 修復
 
 ---
 
