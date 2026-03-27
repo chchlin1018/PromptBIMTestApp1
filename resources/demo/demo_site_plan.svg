@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60.0 -60.0 560.0 620.0" width="560.0" height="620.0">
+<rect width="100%" height="100%" fill="#f5f5f0"/>
+<polygon points="0.0,0.0 440.0,0.0 400.0,480.0 40.0,500.0" fill="#d4edda" stroke="#28a745" stroke-width="2"/>
+<polygon points="40.0,100.0 400.0,100.0 360.0,420.0 80.0,440.0" fill="none" stroke="#fd7e14" stroke-width="1" stroke-dasharray="6,3"/>
+<polygon points="100.0,100.0 360.0,100.0 340.0,420.0 100.0,440.0" fill="rgba(0,123,255,0.2)" stroke="#007bff" stroke-width="1.5"/>
+<text x="220.0" y="-30.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Site Plan — 台北市信義區住宅用地 (Demo)</text>
+<text x="220.0" y="245.0" font-size="9" text-anchor="middle" fill="#007bff">Building (3F)</text>
+</svg>

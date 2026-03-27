@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="60.0 60.0 340.0 420.0" width="340.0" height="420.0">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<polygon points="100.0,100.0 360.0,100.0 340.0,420.0 100.0,440.0" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
+<line x1="100.0" y1="100.0" x2="360.0" y2="100.0" stroke="#444" stroke-width="4.0"/>
+<line x1="360.0" y1="100.0" x2="340.0" y2="420.0" stroke="#444" stroke-width="4.0"/>
+<line x1="340.0" y1="420.0" x2="100.0" y2="440.0" stroke="#444" stroke-width="4.0"/>
+<line x1="100.0" y1="440.0" x2="100.0" y2="100.0" stroke="#444" stroke-width="4.0"/>
+<line x1="100.0" y1="240.0" x2="360.0" y2="240.0" stroke="#999" stroke-width="3.0"/>
+<text x="230.0" y="170.0" font-size="8" text-anchor="middle" fill="#555">大廳 (91m²)</text>
+<text x="190.0" y="340.0" font-size="8" text-anchor="middle" fill="#555">停車場 (90m²)</text>
+<text x="315.0" y="335.0" font-size="8" text-anchor="middle" fill="#555">機房 (36m²)</text>
+<text x="80.0" y="90.0" font-size="12" font-weight="bold" fill="#222">1F</text>
+</svg>

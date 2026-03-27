@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="60.0 60.0 340.0 420.0" width="340.0" height="420.0">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<polygon points="100.0,100.0 360.0,100.0 340.0,420.0 100.0,440.0" fill="#e0e0e0" stroke="#333" stroke-width="1"/>
+<line x1="100.0" y1="100.0" x2="360.0" y2="100.0" stroke="#444" stroke-width="4.0"/>
+<line x1="360.0" y1="100.0" x2="340.0" y2="420.0" stroke="#444" stroke-width="4.0"/>
+<line x1="340.0" y1="420.0" x2="100.0" y2="440.0" stroke="#444" stroke-width="4.0"/>
+<line x1="100.0" y1="440.0" x2="100.0" y2="100.0" stroke="#444" stroke-width="4.0"/>
+<line x1="100.0" y1="260.0" x2="360.0" y2="260.0" stroke="#999" stroke-width="3.0"/>
+<line x1="230.0" y1="100.0" x2="230.0" y2="440.0" stroke="#999" stroke-width="3.0"/>
+<text x="165.0" y="150.0" font-size="8" text-anchor="middle" fill="#555">客廳A (32m²)</text>
+<text x="165.0" y="230.0" font-size="8" text-anchor="middle" fill="#555">臥室A (20m²)</text>
+<text x="130.0" y="300.0" font-size="8" text-anchor="middle" fill="#555">廚房A (12m²)</text>
+<text x="195.0" y="300.0" font-size="8" text-anchor="middle" fill="#555">廁所A (14m²)</text>
+<text x="295.0" y="150.0" font-size="8" text-anchor="middle" fill="#555">客廳B (32m²)</text>
+<text x="295.0" y="230.0" font-size="8" text-anchor="middle" fill="#555">臥室B (20m²)</text>
+<text x="260.0" y="300.0" font-size="8" text-anchor="middle" fill="#555">廚房B (12m²)</text>
+<text x="322.5" y="300.0" font-size="8" text-anchor="middle" fill="#555">廁所B (12m²)</text>
+<text x="80.0" y="90.0" font-size="12" font-weight="bold" fill="#222">3F</text>
+</svg>
