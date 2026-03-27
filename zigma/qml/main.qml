@@ -95,6 +95,12 @@ ApplicationWindow {
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
                             background: Rectangle { color: rightTabBar.currentIndex === 2 ? "#16213e" : "#0d1117" }
                         }
+                        TabButton {
+                            text: "Schedule"
+                            width: implicitWidth
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: rightTabBar.currentIndex === 3 ? "#16213e" : "#0d1117" }
+                        }
                     }
 
                     StackLayout {
@@ -113,6 +119,9 @@ ApplicationWindow {
                             onUndoRequested: {
                                 if (agentBridge) agentBridge.modify("undo")
                             }
+                        }
+                        SchedulePanel {
+                            id: schedulePanel
                         }
                     }
                 }
@@ -136,6 +145,7 @@ ApplicationWindow {
                 bimView.fitToScene()
             }
             if (result.cost) costPanel.costData = result.cost
+            if (result.schedule) schedulePanel.scheduleData = result.schedule
             chatPanel.addMessage("ai", "Generation complete!")
         }
         function onDeltaReady(delta) {
