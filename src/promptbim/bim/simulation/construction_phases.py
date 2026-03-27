@@ -2,6 +2,12 @@
 
 Defines standard construction phases with IFC class mappings and
 duration ratios for scheduling.
+
+D1-S1 additions:
+- EXCAVATION_PHASES: detailed earthwork + shoring phases
+- STEEL_ERECTION_PHASES: steel frame erection sequence
+- get_extended_phases(): combine standard + excavation + erection
+- classify_component_extended(): handle excavation/erection labels
 """
 
 from __future__ import annotations
@@ -196,6 +202,158 @@ _COMPONENT_KEYWORDS: list[tuple[list[str], ComponentType]] = [
     (["sanitary", "furniture"], ComponentType.FIXTURE),
     (["light", "fire", "sprinkler"], ComponentType.MEP_FINISH),
 ]
+
+
+# ============================================================
+# D1-S1: Excavation phases (P-03 to P-01 — before P01)
+# ============================================================
+
+EXCAVATION_PHASES: list[ConstructionPhase] = [
+    ConstructionPhase(
+        "E01",
+        "土地清理",
+        ["IfcSite:clearing"],
+        0.02,
+        "Vegetation removal, site fencing, utility relocation",
+        color=(0.5, 0.35, 0.1),
+    ),
+    ConstructionPhase(
+        "E02",
+        "開挖第一層 (地表)",
+        ["IfcExcavation:L1"],
+        0.03,
+        "First cut excavation — topsoil to 2m depth",
+        color=(0.55, 0.38, 0.12),
+    ),
+    ConstructionPhase(
+        "E03",
+        "擋土支撐 (地下連續壁/鋼板樁)",
+        ["IfcPile:sheet", "IfcWall:retaining"],
+        0.04,
+        "Shoring: diaphragm wall, sheet pile, or soldier pile",
+        color=(0.4, 0.4, 0.45),
+    ),
+    ConstructionPhase(
+        "E04",
+        "開挖第二層 (中層)",
+        ["IfcExcavation:L2"],
+        0.04,
+        "Second cut excavation — 2m to basement depth",
+        color=(0.58, 0.40, 0.14),
+    ),
+    ConstructionPhase(
+        "E05",
+        "底版澆置",
+        ["IfcSlab:mat", "IfcFooting:mat"],
+        0.05,
+        "Mat foundation concrete pour",
+        color=(0.6, 0.6, 0.6),
+    ),
+]
+
+# ============================================================
+# D1-S1: Steel erection phases (for steel frame buildings)
+# ============================================================
+
+STEEL_ERECTION_PHASES: list[ConstructionPhase] = [
+    ConstructionPhase(
+        "S01",
+        "鋼柱安裝 (一二層)",
+        ["IfcColumn:steel_L1"],
+        0.06,
+        "Steel column erection — floors 1-2",
+        color=(0.5, 0.5, 0.7),
+    ),
+    ConstructionPhase(
+        "S02",
+        "鋼梁安裝 (一二層)",
+        ["IfcBeam:steel_L1"],
+        0.05,
+        "Steel beam erection — floors 1-2",
+        color=(0.55, 0.55, 0.72),
+    ),
+    ConstructionPhase(
+        "S03",
+        "鋼柱安裝 (三層以上)",
+        ["IfcColumn:steel_upper"],
+        0.07,
+        "Steel column erection — floor 3 and above",
+        color=(0.45, 0.45, 0.68),
+    ),
+    ConstructionPhase(
+        "S04",
+        "鋼梁安裝 (三層以上)",
+        ["IfcBeam:steel_upper"],
+        0.06,
+        "Steel beam erection — floor 3 and above",
+        color=(0.5, 0.5, 0.70),
+    ),
+    ConstructionPhase(
+        "S05",
+        "樓板鋪設 (鋼承板)",
+        ["IfcSlab:steel_deck"],
+        0.05,
+        "Metal deck and composite slab",
+        color=(0.7, 0.7, 0.65),
+    ),
+    ConstructionPhase(
+        "S06",
+        "防火被覆",
+        ["IfcBuildingElementProxy:fireproofing"],
+        0.04,
+        "Spray fireproofing on structural steel",
+        color=(0.8, 0.6, 0.4),
+    ),
+]
+
+
+def get_extended_phases(include_excavation: bool = True, include_steel: bool = False) -> list[ConstructionPhase]:
+    """Return standard phases optionally extended with excavation and/or steel erection.
+
+    D1-S1: Enables more detailed 4D simulation sequences.
+    """
+    phases = []
+    if include_excavation:
+        phases.extend(EXCAVATION_PHASES)
+    phases.extend(STANDARD_PHASES)
+    if include_steel:
+        # Insert steel phases after P02 (foundation)
+        result = []
+        for p in phases:
+            result.append(p)
+            if p.phase_id == "P02":
+                result.extend(STEEL_ERECTION_PHASES)
+        return result
+    return phases
+
+
+def classify_component_extended(label: str) -> str | None:
+    """Extended component classifier that handles excavation and steel labels (D1-S1)."""
+    label_lower = label.lower()
+    # Excavation keywords
+    if "excavat" in label_lower or "開挖" in label_lower or "cut" in label_lower:
+        if "l2" in label_lower or "level2" in label_lower or "deep" in label_lower:
+            return "E04"
+        return "E02"
+    if "shoring" in label_lower or "sheet_pile" in label_lower or "diaphragm" in label_lower:
+        return "E03"
+    if "mat_slab" in label_lower or "底版" in label_lower:
+        return "E05"
+    # Steel erection keywords
+    if "steel_column" in label_lower or "鋼柱" in label_lower:
+        if "upper" in label_lower or "l3" in label_lower:
+            return "S03"
+        return "S01"
+    if "steel_beam" in label_lower or "鋼梁" in label_lower:
+        if "upper" in label_lower or "l3" in label_lower:
+            return "S04"
+        return "S02"
+    if "steel_deck" in label_lower or "鋼承板" in label_lower:
+        return "S05"
+    if "fireproof" in label_lower or "防火被覆" in label_lower:
+        return "S06"
+    # Fall back to standard classifier
+    return classify_component(label)
 
 
 def classify_component(label: str) -> str | None:
