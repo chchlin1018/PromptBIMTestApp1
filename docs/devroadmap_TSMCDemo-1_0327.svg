@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 2200" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ee5a24"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a29bfe"/>
+      <stop offset="100%" stop-color="#6c5ce7"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#74b9ff"/>
+      <stop offset="100%" stop-color="#0984e3"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#55efc4"/>
+      <stop offset="100%" stop-color="#00b894"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffeaa7"/>
+      <stop offset="100%" stop-color="#fdcb6e"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#81ecec"/>
+      <stop offset="100%" stop-color="#00cec9"/>
+    </linearGradient>
+    <linearGradient id="timelineGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dfe6e9"/>
+      <stop offset="100%" stop-color="#b2bec3"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1400" height="2200" fill="#f8f9fa"/>
+  <rect x="0" y="0" width="1400" height="120" fill="url(#headerGrad)"/>
+  <text x="700" y="45" text-anchor="middle" fill="#fff" font-size="28" font-weight="700">Zigma PromptToBuild — TSMC Demo-1 Development Roadmap</text>
+  <text x="700" y="72" text-anchor="middle" fill="#a0a0cc" font-size="16">Reality Matrix Inc. | PromptBIMTestApp1 | 2026-03-27 Updated</text>
+  <text x="700" y="100" text-anchor="middle" fill="#74b9ff" font-size="14" font-weight="600">TSMC 三大需求: ❶ Prompt→BIM 生成  ❷ 設計變更→成本/工期 Delta  ❸ USD→Omniverse→Revit</text>
+  <rect x="40" y="135" width="1320" height="45" rx="8" fill="#fff" stroke="#ddd" stroke-width="1" filter="url(#shadow)"/>
+  <circle cx="80" cy="157" r="8" fill="#ff6b6b"/><text x="95" y="162" fill="#333" font-size="12">🔴 Blocking</text>
+  <circle cx="200" cy="157" r="8" fill="#a29bfe"/><text x="215" y="162" fill="#333" font-size="12">🟣 In Queue</text>
+  <circle cx="330" cy="157" r="8" fill="#0984e3"/><text x="345" y="162" fill="#333" font-size="12">🔵 Running</text>
+  <circle cx="455" cy="157" r="8" fill="#00b894"/><text x="470" y="162" fill="#333" font-size="12">✅ Done</text>
+  <circle cx="560" cy="157" r="8" fill="#fdcb6e"/><text x="575" y="162" fill="#333" font-size="12">🟡 TSMC Core</text>
+  <rect x="690" y="149" width="16" height="16" rx="3" fill="#00cec9" opacity="0.3" stroke="#00cec9"/>
+  <text x="712" y="162" fill="#333" font-size="12">New File</text>
+  <text x="810" y="162" fill="#333" font-size="12" font-weight="600">Progress: 0/34 (0%) | Assets: 40 items manifested ✅</text>
+  <text x="1200" y="162" fill="#999" font-size="11">HEAD: 0bdeaad</text>
+  <line x1="120" y1="200" x2="120" y2="2150" stroke="url(#timelineGrad)" stroke-width="4" stroke-linecap="round"/>
+  <rect x="40" y="200" width="1320" height="38" rx="6" fill="#1a1a2e"/>
+  <text x="700" y="225" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">Phase 0 — Demo 展示 (Week 0-10, 34T → demo1-v0.1.0)</text>
+  <circle cx="120" cy="270" r="14" fill="url(#redGrad)" filter="url(#glow)"/>
+  <text x="120" y="275" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">W0</text>
+  <rect x="160" y="250" width="1180" height="200" rx="10" fill="#fff" stroke="#ff6b6b" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="160" y="250" width="1180" height="36" rx="10" fill="url(#redGrad)"/>
+  <rect x="160" y="274" width="1180" height="12" fill="url(#redGrad)"/>
+  <text x="180" y="273" fill="#fff" font-size="15" font-weight="700">Sprint W0 — POC 收尾 (5T / 0.5wk) → v2.11.0 + v2.12.0</text>
+  <text x="1260" y="273" text-anchor="end" fill="#ffcccc" font-size="12">⬜ NOT STARTED | 🔴 BLOCKING</text>
+  <rect x="180" y="296" width="220" height="60" rx="6" fill="#fff0f0" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="290" y="316" text-anchor="middle" fill="#c0392b" font-size="12" font-weight="600">T1: conftest offscreen</text>
+  <text x="290" y="334" text-anchor="middle" fill="#888" font-size="11">P24 pytest OOM 根修</text>
+  <text x="290" y="349" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="600">⬜ BLOCKING</text>
+  <rect x="420" y="296" width="220" height="60" rx="6" fill="#fff0f0" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="530" y="316" text-anchor="middle" fill="#c0392b" font-size="12" font-weight="600">T2: P24 pytest + tag</text>
+  <text x="530" y="334" text-anchor="middle" fill="#888" font-size="11">分 7 批 OOM 診斷</text>
+  <text x="530" y="349" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="600">⬜ → v2.11.0</text>
+  <rect x="660" y="296" width="160" height="60" rx="6" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="740" y="316" text-anchor="middle" fill="#6c5ce7" font-size="12" font-weight="600">T3: P25 pytest</text>
+  <text x="740" y="334" text-anchor="middle" fill="#888" font-size="11">分目錄驗證</text>
+  <text x="740" y="349" text-anchor="middle" fill="#a29bfe" font-size="10">⬜</text>
+  <rect x="840" y="296" width="160" height="60" rx="6" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="920" y="316" text-anchor="middle" fill="#6c5ce7" font-size="12" font-weight="600">T4: tag v2.12.0</text>
+  <text x="920" y="334" text-anchor="middle" fill="#888" font-size="11">P25 正式版</text>
+  <text x="920" y="349" text-anchor="middle" fill="#a29bfe" font-size="10">⬜</text>
+  <rect x="1020" y="296" width="160" height="60" rx="6" fill="#f0f0f0" stroke="#b2bec3" stroke-width="1"/>
+  <text x="1100" y="316" text-anchor="middle" fill="#636e72" font-size="12" font-weight="600">T5: Win RTX 4090</text>
+  <text x="1100" y="334" text-anchor="middle" fill="#888" font-size="11">conda + GPU 確認</text>
+  <text x="1100" y="349" text-anchor="middle" fill="#b2bec3" font-size="10">⬜</text>
+  <rect x="180" y="366" width="1140" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1"/>
+  <text x="195" y="384" fill="#856404" font-size="11">⚠️ OOM 診斷策略: safe_pytest_dir 分 7 批 (land→agents→bim→codes→integration→cpp→root) | pkill 清理 | Mac Mini 16GB</text>
+  <line x1="120" y1="450" x2="120" y2="480" stroke="#636e72" stroke-width="3"/>
+  <polygon points="110,480 120,495 130,480" fill="#636e72"/>
+  <circle cx="120" cy="510" r="14" fill="url(#purpleGrad)" filter="url(#glow)"/>
+  <text x="120" y="515" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">S1</text>
+  <rect x="160" y="490" width="1180" height="380" rx="10" fill="#fff" stroke="#6c5ce7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="160" y="490" width="1180" height="36" rx="10" fill="url(#purpleGrad)"/>
+  <rect x="160" y="514" width="1180" height="12" fill="url(#purpleGrad)"/>
+  <text x="180" y="513" fill="#fff" font-size="15" font-weight="700">Sprint D1-S1 — 引擎強化 (15T / 2wk) → demo1-alpha</text>
+  <text x="1260" y="513" text-anchor="end" fill="#d5ccff" font-size="12">⬜ QUEUED | 前置: W0</text>
+  <text x="180" y="545" fill="#6c5ce7" font-size="13" font-weight="700">Part A: AI 場景 + 變更強化 (5T)</text>
+  <rect x="180" y="555" width="215" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="287" y="575" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T1: Planner 6 場景</text>
+  <text x="287" y="593" text-anchor="middle" fill="#888" font-size="10">別墅/廠房/數據中心/工廠/建築/橋梁</text>
+  <rect x="405" y="555" width="215" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="512" y="575" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T2: Modifier 累加變更</text>
+  <text x="512" y="593" text-anchor="middle" fill="#888" font-size="10">多輪設計變更 (17KB)</text>
+  <rect x="630" y="555" width="215" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="737" y="575" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T3: Orchestrator 串接</text>
+  <text x="737" y="593" text-anchor="middle" fill="#888" font-size="10">Cost+Schedule+4D (15KB)</text>
+  <rect x="855" y="555" width="175" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="942" y="575" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T4: USD tag</text>
+  <text x="942" y="593" text-anchor="middle" fill="#888" font-size="10">phase + MEP layer</text>
+  <rect x="1040" y="555" width="175" height="50" rx="5" fill="#e0fff5" stroke="#00cec9" stroke-width="1.5"/>
+  <text x="1127" y="575" text-anchor="middle" fill="#00867a" font-size="11" font-weight="600">T5: converter.py 🆕</text>
+  <text x="1127" y="593" text-anchor="middle" fill="#888" font-size="10">IFC/FBX → USD</text>
+  <text x="180" y="630" fill="#6c5ce7" font-size="13" font-weight="700">Part B: 成本引擎 + 零件庫 (5T)</text>
+  <rect x="180" y="640" width="215" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="287" y="660" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T6: 3分類 100+ 零件</text>
+  <text x="287" y="678" text-anchor="middle" fill="#888" font-size="10">家用/建築/工廠 🟡TSMC</text>
+  <rect x="405" y="640" width="215" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="512" y="660" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T7: 搜尋+替代品</text>
+  <text x="512" y="678" text-anchor="middle" fill="#888" font-size="10">零件競合邏輯</text>
+  <rect x="630" y="640" width="215" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="737" y="660" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T8: Cost 供應商明細</text>
+  <text x="737" y="678" text-anchor="middle" fill="#888" font-size="10">圖表升級</text>
+  <rect x="855" y="640" width="175" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="942" y="660" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T9: 替換→成本 🟡</text>
+  <text x="942" y="678" text-anchor="middle" fill="#888" font-size="10">零件成本即時重算</text>
+  <rect x="1040" y="640" width="175" height="50" rx="5" fill="#e0fff5" stroke="#00cec9" stroke-width="1.5"/>
+  <text x="1127" y="660" text-anchor="middle" fill="#00867a" font-size="11" font-weight="600">T10: cost_delta 🆕</text>
+  <text x="1127" y="678" text-anchor="middle" fill="#888" font-size="10">變更成本差異報告</text>
+  <text x="180" y="715" fill="#6c5ce7" font-size="13" font-weight="700">Part C: 4D + MEP 擴充 (5T)</text>
+  <rect x="180" y="725" width="215" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="287" y="745" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T11: 4D 開挖架設 🟡</text>
+  <text x="287" y="763" text-anchor="middle" fill="#888" font-size="10">連續壁+鋼梁動畫</text>
+  <rect x="405" y="725" width="215" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="512" y="745" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T12: 施工機械 3D 🟡</text>
+  <text x="512" y="763" text-anchor="middle" fill="#888" font-size="10">天車/吊車/卡車</text>
+  <rect x="630" y="725" width="215" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="737" y="745" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T13: 變更連動 🟡</text>
+  <text x="737" y="763" text-anchor="middle" fill="#888" font-size="10">設計→4D 自動更新</text>
+  <rect x="855" y="725" width="175" height="50" rx="5" fill="#f8f0ff" stroke="#a29bfe" stroke-width="1"/>
+  <text x="942" y="745" text-anchor="middle" fill="#6c5ce7" font-size="11" font-weight="600">T14: MEP 擴充</text>
+  <text x="942" y="763" text-anchor="middle" fill="#888" font-size="10">電力+HVAC+穿孔</text>
+  <rect x="1040" y="725" width="175" height="50" rx="5" fill="#e0fff5" stroke="#00cec9" stroke-width="1.5"/>
+  <text x="1127" y="745" text-anchor="middle" fill="#00867a" font-size="11" font-weight="600">T15: schedule_delta 🆕</text>
+  <text x="1127" y="763" text-anchor="middle" fill="#888" font-size="10">工期差異+甘特圖</text>
+  <rect x="180" y="790" width="1140" height="28" rx="4" fill="#e0fff5" stroke="#00b894" stroke-width="1"/>
+  <text x="195" y="808" fill="#00867a" font-size="11">✅ Assets Manifest: 40 items (14🔴 21🟡 5🟢) | scripts/download_assets.py ready</text>
+  <rect x="180" y="825" width="1140" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1"/>
+  <text x="195" y="843" fill="#856404" font-size="11">💡 CHANGELOG 審計: Cost+4D+MEP+Modifier+Parts+Voice+Omniverse 已完成 → 新建 7 檔, 強化 27 檔</text>
+  <line x1="120" y1="870" x2="120" y2="900" stroke="#636e72" stroke-width="3"/>
+  <polygon points="110,900 120,915 130,900" fill="#636e72"/>
+  <circle cx="120" cy="930" r="14" fill="url(#blueGrad)" filter="url(#glow)"/>
+  <text x="120" y="935" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">S2</text>
+  <rect x="160" y="910" width="1180" height="370" rx="10" fill="#fff" stroke="#0984e3" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="160" y="910" width="1180" height="36" rx="10" fill="url(#blueGrad)"/>
+  <rect x="160" y="934" width="1180" height="12" fill="url(#blueGrad)"/>
+  <text x="180" y="933" fill="#fff" font-size="15" font-weight="700">Sprint D1-S2 — GUI + 展示 (14T / 2wk) → demo1-v0.1.0</text>
+  <text x="1260" y="933" text-anchor="end" fill="#b3d9ff" font-size="12">⬜ QUEUED | 前置: D1-S1</text>
+  <text x="180" y="965" fill="#0984e3" font-size="13" font-weight="700">Part A: GUI + 3D + 4D Player (5T)</text>
+  <rect x="180" y="975" width="195" height="50" rx="5" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="277" y="995" text-anchor="middle" fill="#0984e3" font-size="11" font-weight="600">T1: Win GPU 部署</text>
+  <text x="277" y="1013" text-anchor="middle" fill="#888" font-size="10">RTX 4090 渲染確認</text>
+  <rect x="385" y="975" width="195" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="482" y="995" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T2: 一氣呵成 🟡</text>
+  <text x="482" y="1013" text-anchor="middle" fill="#888" font-size="10">Prompt→3D→Cost→4D</text>
+  <rect x="590" y="975" width="195" height="50" rx="5" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="687" y="995" text-anchor="middle" fill="#0984e3" font-size="11" font-weight="600">T3: 3D 互動</text>
+  <text x="687" y="1013" text-anchor="middle" fill="#888" font-size="10">樓層+零件+MEP分層</text>
+  <rect x="795" y="975" width="195" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="892" y="995" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T4: 4D Player 🟡</text>
+  <text x="892" y="1013" text-anchor="middle" fill="#888" font-size="10">甘特圖↔4D 聯動</text>
+  <rect x="1000" y="975" width="195" height="50" rx="5" fill="#e0fff5" stroke="#00cec9" stroke-width="1.5"/>
+  <text x="1097" y="995" text-anchor="middle" fill="#00867a" font-size="11" font-weight="600">T5: delta_panel 🆕</text>
+  <text x="1097" y="1013" text-anchor="middle" fill="#888" font-size="10">變更對照面板</text>
+  <text x="180" y="1050" fill="#0984e3" font-size="13" font-weight="700">Part B: 場景 + 零件庫 GUI (4T)</text>
+  <rect x="180" y="1060" width="195" height="50" rx="5" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="277" y="1080" text-anchor="middle" fill="#0984e3" font-size="11" font-weight="600">T6: S1 別墅+泳池</text>
+  <text x="277" y="1098" text-anchor="middle" fill="#888" font-size="10">3層住宅場景</text>
+  <rect x="385" y="1060" width="195" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="482" y="1080" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T7: S2 廠房+S3 🟡</text>
+  <text x="482" y="1098" text-anchor="middle" fill="#888" font-size="10">半導體+數據中心</text>
+  <rect x="590" y="1060" width="195" height="50" rx="5" fill="#e0fff5" stroke="#00cec9" stroke-width="1.5"/>
+  <text x="687" y="1080" text-anchor="middle" fill="#00867a" font-size="11" font-weight="600">T8: asset_browser 🆕</text>
+  <text x="687" y="1098" text-anchor="middle" fill="#888" font-size="10">零件庫 3分類 GUI</text>
+  <rect x="795" y="1060" width="195" height="50" rx="5" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="892" y="1080" text-anchor="middle" fill="#0984e3" font-size="11" font-weight="600">T9: 法規+匯出</text>
+  <text x="892" y="1098" text-anchor="middle" fill="#888" font-size="10">台灣法規擴充</text>
+  <text x="180" y="1135" fill="#0984e3" font-size="13" font-weight="700">Part C: TSMC 展示準備 (5T)</text>
+  <rect x="180" y="1145" width="180" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="270" y="1165" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T10: 3場景 E2E 🟡</text>
+  <text x="270" y="1183" text-anchor="middle" fill="#888" font-size="10">完整流程測試</text>
+  <rect x="370" y="1145" width="180" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="460" y="1165" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T11: 效能 &lt;3min 🟡</text>
+  <text x="460" y="1183" text-anchor="middle" fill="#888" font-size="10">全流程優化</text>
+  <rect x="560" y="1145" width="180" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="650" y="1165" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T12: Demo 腳本 🟡</text>
+  <text x="650" y="1183" text-anchor="middle" fill="#888" font-size="10">7min 排練</text>
+  <rect x="750" y="1145" width="180" height="50" rx="5" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1.5"/>
+  <text x="840" y="1165" text-anchor="middle" fill="#856404" font-size="11" font-weight="600">T13: TSMC 簡報 🟡</text>
+  <text x="840" y="1183" text-anchor="middle" fill="#888" font-size="10">10頁+螢幕錄影</text>
+  <rect x="940" y="1145" width="180" height="50" rx="5" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="1030" y="1165" text-anchor="middle" fill="#0984e3" font-size="11" font-weight="600">T14: 審計+tag</text>
+  <text x="1030" y="1183" text-anchor="middle" fill="#888" font-size="10">demo1-v0.1.0</text>
+  <line x1="120" y1="1280" x2="120" y2="1310" stroke="#636e72" stroke-width="3"/>
+  <rect x="250" y="1310" width="900" height="55" rx="27" fill="url(#greenGrad)" filter="url(#shadow)"/>
+  <text x="700" y="1340" text-anchor="middle" fill="#fff" font-size="20" font-weight="700">★ TSMC Demo-1 — tag: demo1-v0.1.0</text>
+  <text x="700" y="1358" text-anchor="middle" fill="#003d1a" font-size="12">NL→BIM + 成本/工期 Delta + 6 場景 + 4D + MEP 衝突檢測</text>
+  <circle cx="120" cy="1337" r="18" fill="url(#greenGrad)" stroke="#fff" stroke-width="3"/>
+  <text x="120" y="1343" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">★</text>
+  <line x1="120" y1="1365" x2="120" y2="1395" stroke="#636e72" stroke-width="3"/>
+  <polygon points="110,1395 120,1410 130,1395" fill="#636e72"/>
+  <circle cx="120" cy="1430" r="14" fill="url(#orangeGrad)"/>
+  <text x="120" y="1435" text-anchor="middle" fill="#333" font-size="10" font-weight="700">D2</text>
+  <rect x="160" y="1410" width="1180" height="80" rx="10" fill="#fff" stroke="#fdcb6e" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="160" y="1410" width="1180" height="32" rx="10" fill="url(#orangeGrad)"/>
+  <rect x="160" y="1432" width="1180" height="10" fill="url(#orangeGrad)"/>
+  <text x="180" y="1433" fill="#333" font-size="15" font-weight="700">Sprint D2 — Omniverse + Revit (35T / 5wk) → demo2-v0.2.0</text>
+  <text x="1260" y="1433" text-anchor="end" fill="#856404" font-size="12">⬜ FUTURE | Week 5-10</text>
+  <text x="180" y="1470" fill="#636e72" font-size="12">TSMC 需求 ❸: USD→Omniverse→Revit API (DirectShape+MEP)→建照 | IFC 最終法規輸出</text>
+  <text x="180" y="1485" fill="#636e72" font-size="12">驗證管線: Omniverse→USD→Revit API | 目標: LOI</text>
+  <line x1="120" y1="1490" x2="120" y2="1510" stroke="#636e72" stroke-width="2" stroke-dasharray="6,4"/>
+  <rect x="350" y="1510" width="700" height="40" rx="20" fill="#fdcb6e" stroke="#f39c12" stroke-width="1.5"/>
+  <text x="700" y="1536" text-anchor="middle" fill="#333" font-size="15" font-weight="700">★ TSMC Demo-2 → LOI? — tag: demo2-v0.2.0</text>
+  <line x1="120" y1="1550" x2="120" y2="1580" stroke="#b2bec3" stroke-width="2" stroke-dasharray="6,4"/>
+  <rect x="40" y="1585" width="1320" height="38" rx="6" fill="#2d3436"/>
+  <text x="700" y="1610" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">Phase 1-4 — 長期路線圖 (2026 Q3 ~ 2027 Q2)</text>
+  <circle cx="120" cy="1660" r="12" fill="url(#tealGrad)"/>
+  <rect x="160" y="1640" width="570" height="95" rx="8" fill="#fff" stroke="#00cec9" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="160" y="1640" width="570" height="28" rx="8" fill="url(#tealGrad)"/>
+  <rect x="160" y="1660" width="570" height="8" fill="url(#tealGrad)"/>
+  <text x="180" y="1660" fill="#fff" font-size="13" font-weight="700">Phase 1: Qt Quick 3D 遷移 (W11-18) → v3.0.0</text>
+  <text x="180" y="1690" fill="#333" font-size="11">P26 AgentBridge → P27 QML GUI → P28 Qt Quick 3D → P29 清理</text>
+  <text x="180" y="1710" fill="#888" font-size="11">ADR-001 已確認 | PySide6→Qt Quick 3D+QML</text>
+  <text x="180" y="1727" fill="#888" font-size="11">Qt3D (✘ deprecated) | QRhi (✘ 工程量) | PyVista (✘ 記憶體)</text>
+  <circle cx="120" cy="1775" r="12" fill="#b2bec3"/>
+  <rect x="160" y="1755" width="570" height="70" rx="8" fill="#fff" stroke="#b2bec3" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="160" y="1755" width="570" height="26" rx="8" fill="#636e72"/>
+  <rect x="160" y="1774" width="570" height="7" fill="#636e72"/>
+  <text x="180" y="1774" fill="#fff" font-size="13" font-weight="700">Phase 2: 平台擴展 (W19-26) → v3.x</text>
+  <text x="180" y="1800" fill="#333" font-size="11">P30 Windows → P31 ILOS → P32 Omniverse → P33 安全</text>
+  <text x="180" y="1817" fill="#888" font-size="11">ILOS Layout + Piping (Plan B: pathfinder.py)</text>
+  <circle cx="120" cy="1865" r="12" fill="#b2bec3"/>
+  <rect x="160" y="1845" width="570" height="55" rx="8" fill="#fff" stroke="#b2bec3" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="160" y="1845" width="570" height="26" rx="8" fill="#636e72"/>
+  <rect x="160" y="1864" width="570" height="7" fill="#636e72"/>
+  <text x="180" y="1864" fill="#fff" font-size="13" font-weight="700">Phase 3: 雲端+行動 (W27-34) → v4.x</text>
+  <text x="180" y="1890" fill="#333" font-size="11">P34-P37 Web (React/WebGPU) → P38-P41 Mobile (iPad/Vision Pro)</text>
+  <circle cx="120" cy="1940" r="12" fill="#b2bec3"/>
+  <rect x="160" y="1920" width="570" height="55" rx="8" fill="#fff" stroke="#b2bec3" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="160" y="1920" width="570" height="26" rx="8" fill="#636e72"/>
+  <rect x="160" y="1939" width="570" height="7" fill="#636e72"/>
+  <text x="180" y="1939" fill="#fff" font-size="13" font-weight="700">Phase 4: 私有 LLM (W35+) → v5.0</text>
+  <text x="180" y="1965" fill="#333" font-size="11">P42-P44 零外部 AI API → 完全 on-premise</text>
+  <rect x="760" y="1640" width="580" height="335" rx="10" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="760" y="1640" width="580" height="30" rx="10" fill="#1a1a2e"/>
+  <rect x="760" y="1662" width="580" height="8" fill="#1a1a2e"/>
+  <text x="1050" y="1661" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Project Summary — 2026-03-27</text>
+  <text x="790" y="1700" fill="#333" font-size="12" font-weight="600">治理框架</text>
+  <text x="790" y="1718" fill="#636e72" font-size="11">CLAUDE.md v1.23.3 | SKILL.md v4.0 | PROJECT.md v1.4</text>
+  <text x="790" y="1745" fill="#333" font-size="12" font-weight="600">Codebase</text>
+  <text x="790" y="1763" fill="#636e72" font-size="11">~820 Python + 137 C++ | 76 零件 | 7 Agents | 15 法規</text>
+  <text x="790" y="1805" fill="#333" font-size="12" font-weight="600">已知問題</text>
+  <text x="790" y="1823" fill="#c0392b" font-size="11">🔴 P24 pytest OOM | 🔴 PySide6 記憶體</text>
+  <text x="790" y="1843" fill="#f39c12" font-size="11">🟡 API Timeout 30s</text>
+  <text x="790" y="1870" fill="#333" font-size="12" font-weight="600">技術棧</text>
+  <text x="790" y="1888" fill="#636e72" font-size="11">Python + C++ (pybind11) + Swift</text>
+  <text x="790" y="1915" fill="#333" font-size="12" font-weight="600">平台</text>
+  <text x="790" y="1933" fill="#636e72" font-size="11">Mac Mini M4 + Win RTX 4090 + MacBook</text>
+  <rect x="40" y="2000" width="1320" height="150" rx="10" fill="#fff" stroke="#1a1a2e" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="40" y="2000" width="1320" height="32" rx="10" fill="#1a1a2e"/>
+  <rect x="40" y="2024" width="1320" height="8" fill="#1a1a2e"/>
+  <text x="700" y="2022" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">TSMC 三大需求 ↔ Sprint Task 對照</text>
+  <rect x="60" y="2045" width="400" height="90" rx="6" fill="#fff0f0" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="260" y="2068" text-anchor="middle" fill="#c0392b" font-size="13" font-weight="700">❶ Prompt→快速 BIM 生成</text>
+  <text x="260" y="2088" text-anchor="middle" fill="#636e72" font-size="11">D1-S1: T1 Planner, T3 Orchestrator, T5 converter</text>
+  <text x="260" y="2103" text-anchor="middle" fill="#636e72" font-size="11">D1-S1: T6 零件庫 100+ | D1-S2: T2,T6,T7</text>
+  <rect x="500" y="2045" width="400" height="90" rx="6" fill="#fff8e1" stroke="#fdcb6e" stroke-width="1"/>
+  <text x="700" y="2068" text-anchor="middle" fill="#856404" font-size="13" font-weight="700">❷ 設計變更→成本/工期 Delta</text>
+  <text x="700" y="2088" text-anchor="middle" fill="#636e72" font-size="11">D1-S1: T2 Modifier, T9,T10 cost_delta</text>
+  <text x="700" y="2103" text-anchor="middle" fill="#636e72" font-size="11">D1-S1: T13,T15 schedule_delta | D1-S2: T5</text>
+  <rect x="940" y="2045" width="400" height="90" rx="6" fill="#e8f4fd" stroke="#74b9ff" stroke-width="1"/>
+  <text x="1140" y="2068" text-anchor="middle" fill="#0984e3" font-size="13" font-weight="700">❸ USD→Omniverse→Revit</text>
+  <text x="1140" y="2088" text-anchor="middle" fill="#636e72" font-size="11">Demo-2 scope (D2, 35T, Week 5-10)</text>
+  <text x="1140" y="2103" text-anchor="middle" fill="#636e72" font-size="11">Omniverse→USD→Revit API | IFC 法規輸出</text>
+  <rect x="0" y="2160" width="1400" height="40" fill="#1a1a2e"/>
+  <text x="40" y="2184" fill="#a0a0cc" font-size="11">Zigma PromptToBuild Dev Roadmap v1.0 | Reality Matrix Inc. | chchlin1018/PromptBIMTestApp1</text>
+  <text x="1360" y="2184" text-anchor="end" fill="#a0a0cc" font-size="11">2026-03-27 22:30 CST</text>
+</svg>
