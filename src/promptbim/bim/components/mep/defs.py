@@ -1,6 +1,6 @@
-"""MEP (Mechanical, Electrical, Plumbing) components — 11 types."""
+"""MEP (Mechanical, Electrical, Plumbing) components — 22 types (D1-S1 expanded)."""
 
-from promptbim.bim.components.base import ComponentCategory, ComponentDef
+from promptbim.bim.components.base import ComponentCategory, ComponentDef, PriceRange, SupplierInfo
 
 CAT = ComponentCategory.MEP
 
@@ -150,5 +150,180 @@ MEP_COMPONENTS = [
         },
         ai_keywords=["發電機", "generator", "emergency generator", "緊急發電機"],
         ai_placement_rules="地下室或屋頂。需排煙管道和燃料儲存。",
+    ),
+    # ---- D1-S1 new MEP components ----
+    ComponentDef(
+        id="hvac_chiller",
+        category=CAT,
+        name_zh="冰水主機",
+        name_en="Water-Cooled Chiller",
+        ifc_class="IfcChiller",
+        geometry_mode="mesh",
+        parameters={
+            "cooling_ton": {"default": 200, "min": 50, "max": 2000},
+            "cop": {"default": 5.5, "min": 4.0, "max": 7.0},
+        },
+        suppliers=[
+            SupplierInfo(name="Carrier", brand="Carrier", country="US",
+                         price=PriceRange(min_price=800000, max_price=5000000, unit="per_unit", source="2025")),
+            SupplierInfo(name="約克", brand="Johnson Controls York", country="US",
+                         price=PriceRange(min_price=750000, max_price=4500000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["冰水主機", "chiller", "空調主機", "冷凍主機"],
+        ai_placement_rules="機房或屋頂，需冷卻水塔、泵浦配套。面積>=30m²。",
+    ),
+    ComponentDef(
+        id="cooling_tower",
+        category=CAT,
+        name_zh="冷卻水塔",
+        name_en="Cooling Tower",
+        ifc_class="IfcCoolingTower",
+        geometry_mode="mesh",
+        parameters={
+            "cooling_ton": {"default": 200, "min": 50, "max": 2000},
+            "type": {"default": "cross_flow", "options": ["cross_flow", "counter_flow"]},
+        },
+        suppliers=[
+            SupplierInfo(name="乙欣企業", brand="YiHsin", country="TW",
+                         price=PriceRange(min_price=50000, max_price=500000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["冷卻水塔", "cooling tower", "散熱塔"],
+        ai_placement_rules="屋頂或室外，距開口3m以上。需防噪處理。",
+    ),
+    ComponentDef(
+        id="fire_pump",
+        category=CAT,
+        name_zh="消防泵浦",
+        name_en="Fire Pump",
+        ifc_class="IfcPump",
+        geometry_mode="mesh",
+        parameters={
+            "flow_lpm": {"default": 1000, "min": 500, "max": 5000},
+            "pressure_bar": {"default": 8, "min": 4, "max": 16},
+        },
+        suppliers=[
+            SupplierInfo(name="格蘭富", brand="Grundfos", country="DK",
+                         price=PriceRange(min_price=80000, max_price=400000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["消防泵", "fire pump", "消防水泵", "撒水泵"],
+        ai_placement_rules="地下層消防水池旁，需電力和備用電源。",
+    ),
+    ComponentDef(
+        id="pipe_drain",
+        category=CAT,
+        name_zh="排水管",
+        name_en="Drain Pipe",
+        ifc_class="IfcPipeSegment",
+        parameters={
+            "diameter_mm": {"default": 100, "options": [50, 75, 100, 150, 200]},
+            "slope_pct": {"default": 1.0, "min": 0.5, "max": 3.0},
+        },
+        ai_keywords=["排水管", "drain pipe", "廢水管", "污水管"],
+        ai_placement_rules="天花板內或地板下，坡度1%以上。",
+    ),
+    ComponentDef(
+        id="conduit_emt",
+        category=CAT,
+        name_zh="電線管",
+        name_en="EMT Conduit",
+        ifc_class="IfcCableCarrierSegment",
+        parameters={
+            "diameter_mm": {"default": 25, "options": [16, 19, 25, 32, 39, 51, 63]},
+        },
+        ai_keywords=["電線管", "conduit", "EMT", "線管", "走線管"],
+        ai_placement_rules="天花板內或牆內走管，保護電力電纜。",
+    ),
+    ComponentDef(
+        id="cable_tray",
+        category=CAT,
+        name_zh="電纜橋架",
+        name_en="Cable Tray",
+        ifc_class="IfcCableCarrierSegment",
+        parameters={
+            "width_mm": {"default": 300, "options": [100, 150, 200, 300, 400, 500, 600]},
+            "type": {"default": "ladder", "options": ["ladder", "solid", "perforated"]},
+        },
+        suppliers=[
+            SupplierInfo(name="大同電纜", brand="Tatung", country="TW",
+                         price=PriceRange(min_price=200, max_price=800, unit="per_m", source="2025")),
+        ],
+        ai_keywords=["橋架", "cable tray", "電纜架", "走線架"],
+        ai_placement_rules="天花板內集中走線，分強弱電橋架>=30cm間距。",
+    ),
+    ComponentDef(
+        id="smoke_detector",
+        category=CAT,
+        name_zh="煙霧偵測器",
+        name_en="Smoke Detector",
+        ifc_class="IfcSensor",
+        geometry_mode="mesh",
+        parameters={
+            "type": {"default": "optical", "options": ["optical", "ionization", "heat"]},
+            "coverage_sqm": {"default": 60, "min": 20, "max": 80},
+        },
+        ai_keywords=["煙霧偵測", "smoke detector", "偵煙", "火警感知器"],
+        ai_placement_rules="天花板，距牆>=0.3m，覆蓋面積依規定。每層強制安裝。",
+    ),
+    ComponentDef(
+        id="emergency_light",
+        category=CAT,
+        name_zh="緊急出口燈",
+        name_en="Emergency Exit Light",
+        ifc_class="IfcLightFixture",
+        parameters={
+            "battery_hours": {"default": 1.5, "options": [1.5, 3.0]},
+            "luminance_lux": {"default": 10, "min": 5, "max": 15},
+        },
+        ai_keywords=["緊急出口燈", "exit sign", "疏散指示燈", "緊急照明"],
+        ai_placement_rules="安全梯入口、走廊每20m、轉角處。法規強制。",
+    ),
+    ComponentDef(
+        id="ups",
+        category=CAT,
+        name_zh="不斷電系統",
+        name_en="UPS",
+        ifc_class="IfcElectricDistributionBoard",
+        geometry_mode="mesh",
+        parameters={
+            "capacity_kva": {"default": 60, "options": [10, 20, 40, 60, 120, 200]},
+            "battery_minutes": {"default": 15, "options": [5, 15, 30, 60]},
+        },
+        suppliers=[
+            SupplierInfo(name="Eaton", brand="Eaton", country="US",
+                         price=PriceRange(min_price=50000, max_price=500000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["UPS", "不斷電", "uninterruptible power supply", "備電"],
+        ai_placement_rules="機房、資料中心。需散熱和防止震動。",
+    ),
+    ComponentDef(
+        id="bms_controller",
+        category=CAT,
+        name_zh="樓宇自控系統",
+        name_en="BMS Controller",
+        ifc_class="IfcController",
+        parameters={
+            "points": {"default": 500, "min": 50, "max": 10000},
+        },
+        suppliers=[
+            SupplierInfo(name="Siemens", brand="Siemens Desigo CC", country="DE",
+                         price=PriceRange(min_price=200000, max_price=2000000, unit="per_unit", source="2025")),
+            SupplierInfo(name="Honeywell", brand="Honeywell EBI", country="US",
+                         price=PriceRange(min_price=180000, max_price=1800000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["BMS", "樓宇自控", "智能大樓", "building management"],
+        ai_placement_rules="中央管理室，連接空調/照明/電力/門禁系統。",
+    ),
+    ComponentDef(
+        id="mep_penetration_sleeve",
+        category=CAT,
+        name_zh="穿牆套管",
+        name_en="Wall Penetration Sleeve",
+        ifc_class="IfcBuildingElementProxy",
+        parameters={
+            "diameter_mm": {"default": 150, "options": [50, 75, 100, 150, 200, 250, 300]},
+            "fire_rated": {"default": True},
+        },
+        ai_keywords=["穿牆套管", "penetration sleeve", "防火套管", "管道穿牆", "穿孔"],
+        ai_placement_rules="管道穿越防火區劃時必須安裝，需防火填塞材料。",
     ),
 ]

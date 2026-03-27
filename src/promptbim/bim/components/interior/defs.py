@@ -1,6 +1,6 @@
-"""Interior partition components — 6 types."""
+"""Interior partition components — 15 types (D1-S1 expanded)."""
 
-from promptbim.bim.components.base import ComponentCategory, ComponentDef
+from promptbim.bim.components.base import ComponentCategory, ComponentDef, PriceRange, SupplierInfo
 
 CAT = ComponentCategory.INTERIOR
 
@@ -83,5 +83,167 @@ INTERIOR_COMPONENTS = [
         },
         ai_keywords=["玻璃欄杆", "glass railing", "透明欄杆"],
         ai_placement_rules="景觀陽台、現代建築使用，需強化玻璃。",
+    ),
+    # ---- D1-S1 new interior components ----
+    ComponentDef(
+        id="flooring_tile",
+        category=CAT,
+        name_zh="磁磚地板",
+        name_en="Ceramic Tile Flooring",
+        ifc_class="IfcCovering",
+        ifc_predefined_type="FLOORING",
+        parameters={
+            "tile_size_mm": {"default": 600, "options": [300, 400, 600, 800]},
+            "thickness_mm": {"default": 10, "min": 8, "max": 15},
+        },
+        suppliers=[
+            SupplierInfo(name="冠軍磁磚", brand="Champion", country="TW",
+                         price=PriceRange(min_price=800, max_price=3500, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["磁磚", "tile", "ceramic tile", "瓷磚", "地磚"],
+        ai_placement_rules="衛浴、廚房、大廳地面標準選材。",
+    ),
+    ComponentDef(
+        id="flooring_wood_laminate",
+        category=CAT,
+        name_zh="木質地板",
+        name_en="Wood Laminate Flooring",
+        ifc_class="IfcCovering",
+        ifc_predefined_type="FLOORING",
+        parameters={
+            "plank_width_mm": {"default": 180, "min": 90, "max": 220},
+            "thickness_mm": {"default": 12, "options": [8, 12, 15]},
+        },
+        suppliers=[
+            SupplierInfo(name="銘源木業", brand="MingYuan", country="TW",
+                         price=PriceRange(min_price=1200, max_price=4500, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["木地板", "wood floor", "laminate", "實木地板"],
+        ai_placement_rules="住宅臥室、辦公室，需架高2cm避免受潮。",
+    ),
+    ComponentDef(
+        id="ceiling_gypsum",
+        category=CAT,
+        name_zh="石膏板天花板",
+        name_en="Gypsum Board Ceiling",
+        ifc_class="IfcCovering",
+        ifc_predefined_type="CEILING",
+        parameters={
+            "thickness_mm": {"default": 12, "options": [9, 12, 15]},
+            "frame_spacing_mm": {"default": 450, "options": [450, 600]},
+        },
+        suppliers=[
+            SupplierInfo(name="泰山企業", brand="USG Boral", country="TW",
+                         price=PriceRange(min_price=350, max_price=600, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["石膏板天花", "gypsum ceiling", "平頂天花", "白色天花板"],
+        ai_placement_rules="住宅常見，可做造型頂，配合間接燈光。",
+    ),
+    ComponentDef(
+        id="partition_movable",
+        category=CAT,
+        name_zh="活動隔間牆",
+        name_en="Movable Partition",
+        ifc_class="IfcWall",
+        parameters={
+            "thickness_m": {"default": 0.1, "min": 0.075, "max": 0.15},
+            "height_m": {"default": 2.7, "min": 2.4, "max": 3.5},
+            "width_per_panel_m": {"default": 1.2, "min": 0.6, "max": 1.5},
+        },
+        suppliers=[
+            SupplierInfo(name="DORMA", brand="DORMA", country="DE",
+                         price=PriceRange(min_price=8000, max_price=25000, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["活動隔間", "movable partition", "折疊牆", "活動牆"],
+        ai_placement_rules="會議室、展覽空間，可彈性調整空間大小。",
+    ),
+    ComponentDef(
+        id="acoustic_panel",
+        category=CAT,
+        name_zh="吸音板",
+        name_en="Acoustic Panel",
+        ifc_class="IfcCovering",
+        parameters={
+            "thickness_mm": {"default": 50, "options": [25, 50, 100]},
+            "nrc": {"default": 0.8, "min": 0.5, "max": 1.0},
+        },
+        suppliers=[
+            SupplierInfo(name="岩棉隔音", brand="Rockwool", country="DK",
+                         price=PriceRange(min_price=600, max_price=2500, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["吸音板", "acoustic panel", "隔音", "音控", "NRC"],
+        ai_placement_rules="錄音室、會議室、演講廳牆面和天花板。",
+    ),
+    ComponentDef(
+        id="kitchen_cabinet",
+        category=CAT,
+        name_zh="廚房系統廚具",
+        name_en="Kitchen Cabinet System",
+        ifc_class="IfcFurnishingElement",
+        parameters={
+            "cabinet_width_m": {"default": 0.6, "options": [0.4, 0.5, 0.6, 0.8]},
+            "height_m": {"default": 0.85, "min": 0.8, "max": 0.9},
+            "depth_m": {"default": 0.6, "min": 0.5, "max": 0.65},
+        },
+        suppliers=[
+            SupplierInfo(name="IKEA", brand="IKEA", country="SE",
+                         price=PriceRange(min_price=15000, max_price=80000, unit="per_unit", source="2025")),
+            SupplierInfo(name="德豐廚具", brand="DefongKitchen", country="TW",
+                         price=PriceRange(min_price=20000, max_price=120000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["廚具", "kitchen cabinet", "系統廚具", "廚房"],
+        ai_placement_rules="L形或U形佈局，工作三角（冰箱-洗碗-爐台）最佳化。",
+    ),
+    ComponentDef(
+        id="bathroom_vanity",
+        category=CAT,
+        name_zh="衛浴洗面台",
+        name_en="Bathroom Vanity",
+        ifc_class="IfcSanitaryTerminal",
+        parameters={
+            "width_m": {"default": 0.8, "options": [0.6, 0.8, 1.0, 1.2]},
+            "depth_m": {"default": 0.5, "min": 0.45, "max": 0.55},
+        },
+        suppliers=[
+            SupplierInfo(name="和成衛浴", brand="HCG", country="TW",
+                         price=PriceRange(min_price=5000, max_price=25000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["洗面台", "vanity", "浴室洗手台", "盥洗台"],
+        ai_placement_rules="衛浴正對門或側牆，距馬桶>=45cm。",
+    ),
+    ComponentDef(
+        id="wardrobe_builtin",
+        category=CAT,
+        name_zh="嵌入式衣櫥",
+        name_en="Built-in Wardrobe",
+        ifc_class="IfcFurnishingElement",
+        parameters={
+            "width_m": {"default": 2.4, "min": 0.9, "max": 4.8},
+            "depth_m": {"default": 0.6, "min": 0.55, "max": 0.65},
+            "height_m": {"default": 2.4, "min": 2.1, "max": 2.7},
+        },
+        suppliers=[
+            SupplierInfo(name="系統傢俱", brand="KC House", country="TW",
+                         price=PriceRange(min_price=12000, max_price=40000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["衣櫥", "wardrobe", "衣帽間", "系統衣櫃"],
+        ai_placement_rules="臥室牆面嵌入，頂天立地最大化收納。",
+    ),
+    ComponentDef(
+        id="interior_door_solid",
+        category=CAT,
+        name_zh="實木室內門",
+        name_en="Solid Interior Door",
+        ifc_class="IfcDoor",
+        parameters={
+            "width_m": {"default": 0.9, "options": [0.75, 0.9, 1.0]},
+            "height_m": {"default": 2.1, "options": [2.1, 2.4]},
+        },
+        suppliers=[
+            SupplierInfo(name="台特門窗", brand="TaiTe", country="TW",
+                         price=PriceRange(min_price=3500, max_price=15000, unit="per_unit", source="2025")),
+        ],
+        ai_keywords=["室內門", "interior door", "臥室門", "實木門"],
+        ai_placement_rules="臥室、廁所、辦公室標準開門。",
     ),
 ]

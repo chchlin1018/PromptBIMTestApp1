@@ -1,4 +1,4 @@
-"""Structural components — 12 types."""
+"""Structural components — 18 types (D1-S1 expanded)."""
 
 from promptbim.bim.components.base import (
     ComponentCategory,
@@ -233,5 +233,106 @@ STRUCTURAL_COMPONENTS = [
         },
         ai_keywords=["剪力牆", "RC牆", "shear wall", "structural wall"],
         ai_placement_rules="建築核心筒或外圍，提供側向抵抗力。台灣耐震規範要求。",
+    ),
+    # ---- D1-S1 new structural components ----
+    ComponentDef(
+        id="steel_column_hss",
+        category=CAT,
+        name_zh="方形鋼管柱",
+        name_en="HSS Steel Column",
+        ifc_class="IfcColumn",
+        ifc_predefined_type="COLUMN",
+        omniclass_code="21-02 10",
+        parameters={
+            "size_mm": {"default": 200, "options": [150, 175, 200, 250, 300]},
+            "thickness_mm": {"default": 9, "options": [6, 9, 12, 16]},
+            "height_m": {"default": 3.6, "min": 2.5, "max": 12.0},
+        },
+        suppliers=[
+            SupplierInfo(name="中鋼", brand="CSC", country="TW",
+                         price=PriceRange(min_price=22000, max_price=30000, unit="per_ton", source="2025")),
+        ],
+        ai_keywords=["方管柱", "HSS column", "鋼管柱", "steel column"],
+        ai_placement_rules="鋼結構建築標準柱型。工廠/倉庫常用。",
+    ),
+    ComponentDef(
+        id="precast_hollow_slab",
+        category=CAT,
+        name_zh="預製空心板",
+        name_en="Precast Hollow Core Slab",
+        ifc_class="IfcSlab",
+        omniclass_code="21-02 20",
+        parameters={
+            "width_m": {"default": 1.2, "options": [0.6, 1.2]},
+            "depth_mm": {"default": 200, "options": [150, 200, 265, 320]},
+            "span_m": {"default": 8.0, "min": 3.0, "max": 15.0},
+        },
+        suppliers=[
+            SupplierInfo(name="榮工預鑄", brand="RongGong Precast", country="TW",
+                         price=PriceRange(min_price=1800, max_price=2800, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["空心板", "hollow core", "預製板", "預鑄樓板"],
+        ai_placement_rules="工廠/倉庫/停車場大跨距樓板，施工快速。",
+    ),
+    ComponentDef(
+        id="transfer_beam",
+        category=CAT,
+        name_zh="轉換大梁",
+        name_en="Transfer Beam",
+        ifc_class="IfcBeam",
+        parameters={
+            "width_m": {"default": 0.6, "min": 0.4, "max": 1.2},
+            "depth_m": {"default": 1.2, "min": 0.8, "max": 2.5},
+            "span_m": {"default": 8.0, "min": 4.0, "max": 20.0},
+        },
+        suppliers=[
+            SupplierInfo(name="台灣預拌混凝土公會", brand="RC", country="TW",
+                         price=PriceRange(min_price=5000, max_price=9000, unit="per_m3", source="2025")),
+        ],
+        ai_keywords=["轉換梁", "transfer beam", "大梁", "托梁"],
+        ai_placement_rules="商住混合建築的柱網轉換層，跨越底層大空間。",
+    ),
+    ComponentDef(
+        id="retaining_wall",
+        category=CAT,
+        name_zh="擋土牆",
+        name_en="Retaining Wall",
+        ifc_class="IfcWall",
+        parameters={
+            "height_m": {"default": 3.0, "min": 1.0, "max": 10.0},
+            "base_thickness_m": {"default": 0.4, "min": 0.2, "max": 1.0},
+        },
+        ai_keywords=["擋土牆", "retaining wall", "地下室外牆", "擋土"],
+        ai_placement_rules="地下室外周、坡地建築。需計算側向土壓力。",
+    ),
+    ComponentDef(
+        id="expansion_joint",
+        category=CAT,
+        name_zh="伸縮縫",
+        name_en="Expansion Joint",
+        ifc_class="IfcBuildingElementProxy",
+        parameters={
+            "gap_mm": {"default": 50, "min": 25, "max": 150},
+            "length_m": {"default": 10.0},
+        },
+        ai_keywords=["伸縮縫", "expansion joint", "沉降縫", "抗震縫"],
+        ai_placement_rules="長度>60m建築必須設置，防溫度和地震變形造成裂縫。",
+    ),
+    ComponentDef(
+        id="curtain_wall_frame",
+        category=CAT,
+        name_zh="帷幕牆骨架",
+        name_en="Curtain Wall Framing",
+        ifc_class="IfcCurtainWall",
+        parameters={
+            "module_width_m": {"default": 1.5, "min": 0.9, "max": 1.8},
+            "module_height_m": {"default": 3.6, "min": 2.7, "max": 4.5},
+        },
+        suppliers=[
+            SupplierInfo(name="天泰帷幕牆", brand="TianTai", country="TW",
+                         price=PriceRange(min_price=6000, max_price=18000, unit="per_sqm", source="2025")),
+        ],
+        ai_keywords=["帷幕牆", "curtain wall", "玻璃帷幕", "外牆系統"],
+        ai_placement_rules="辦公大樓外牆，連接主結構樓板邊緣。防水防風測試必要。",
     ),
 ]

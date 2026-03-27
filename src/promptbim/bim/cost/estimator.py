@@ -30,6 +30,12 @@ class CostLineItem:
     unit_price_twd: float
     total_twd: float
     price_key: str = ""
+    # D1-S1: vendor/supplier details
+    vendor_name: str = ""
+    vendor_brand: str = ""
+    vendor_country: str = ""
+    vendor_price_low: float = 0.0
+    vendor_price_high: float = 0.0
 
 
 @dataclass
@@ -44,7 +50,10 @@ class CostBreakdown:
 
 @dataclass
 class CostEstimate:
-    """Complete cost estimation result."""
+    """Complete cost estimation result.
+
+    D1-S1: Adds chart_data() for visualization and vendor_summary for supplier breakdown.
+    """
 
     project_name: str
     total_cost_twd: float
@@ -70,6 +79,91 @@ class CostEstimate:
             ],
             "notes": self.notes,
         }
+
+    def chart_data(self) -> dict:
+        """Return chart-ready data for cost visualization (D1-S1).
+
+        Returns a dict with:
+        - pie: [{label, value, color}] for category breakdown pie chart
+        - bar: [{label, cost_low, cost_mid, cost_high}] for uncertainty bar chart
+        - top_items: top 10 line items by cost for waterfall chart
+        """
+        # Category colors (consistent across charts)
+        _COLORS = {
+            "structure": "#4A90D9",
+            "envelope": "#7B68EE",
+            "interior": "#50C878",
+            "door_window": "#FFD700",
+            "mep": "#FF6B6B",
+            "roof": "#FF8C00",
+            "site": "#8B4513",
+            "monitoring": "#20B2AA",
+        }
+
+        pie = [
+            {
+                "label": b.label,
+                "value": round(b.cost_twd),
+                "ratio": round(b.ratio, 3),
+                "color": _COLORS.get(b.category, "#AAAAAA"),
+            }
+            for b in self.breakdown
+        ]
+
+        # Bar chart: cost range (±30% uncertainty)
+        bar = [
+            {
+                "label": b.label,
+                "cost_low": round(b.cost_twd * 0.7),
+                "cost_mid": round(b.cost_twd),
+                "cost_high": round(b.cost_twd * 1.3),
+            }
+            for b in self.breakdown
+        ]
+
+        # Top 10 items by cost
+        top_items = sorted(self.line_items, key=lambda li: li.total_twd, reverse=True)[:10]
+
+        return {
+            "pie": pie,
+            "bar": bar,
+            "top_items": [
+                {
+                    "name": li.name,
+                    "quantity": round(li.quantity, 1),
+                    "unit": li.unit,
+                    "unit_price": round(li.unit_price_twd),
+                    "total": round(li.total_twd),
+                    "vendor": li.vendor_name or "standard",
+                }
+                for li in top_items
+            ],
+            "summary": {
+                "total": round(self.total_cost_twd),
+                "per_sqm": round(self.cost_per_sqm_twd),
+                "floor_area": round(self.total_floor_area_sqm, 1),
+                "range_low": round(self.total_cost_twd * 0.7),
+                "range_high": round(self.total_cost_twd * 1.3),
+            },
+        }
+
+    def vendor_summary(self) -> list[dict]:
+        """Return per-vendor cost summary for supplier analysis (D1-S1)."""
+        vendors: dict[str, dict] = {}
+        for li in self.line_items:
+            if li.vendor_name:
+                key = li.vendor_name
+                if key not in vendors:
+                    vendors[key] = {
+                        "vendor": li.vendor_name,
+                        "brand": li.vendor_brand,
+                        "country": li.vendor_country,
+                        "total_twd": 0.0,
+                        "items": [],
+                    }
+                vendors[key]["total_twd"] += li.total_twd
+                vendors[key]["items"].append(li.name)
+        return sorted(vendors.values(), key=lambda v: v["total_twd"], reverse=True)
 
 
 # ---- QTO category → price key mapping ----
@@ -107,10 +201,67 @@ _QTO_COST_CATEGORY: dict[str, str] = {
 
 
 class CostEstimator:
-    """Estimate construction costs from a BuildingPlan."""
+    """Estimate construction costs from a BuildingPlan.
+
+    D1-S1: Adds component substitution with real-time cost recalculation.
+    - replace_component(): swap a component ID and get delta cost
+    - estimate_with_substitutions(): estimate with a custom component mapping
+    """
 
     def __init__(self) -> None:
         self._qto = QuantityTakeOff()
+        # D1-S1: active component substitutions {qto_category → component_id}
+        self._substitutions: dict[str, str] = {}
+
+    def replace_component(
+        self,
+        plan: BuildingPlan,
+        qto_category: str,
+        new_component_id: str,
+    ) -> "tuple[CostEstimate, float]":
+        """Replace a component and recalculate costs immediately (D1-S1).
+
+        Args:
+            plan: Current BuildingPlan.
+            qto_category: QTO category to override (e.g. "wall_exterior").
+            new_component_id: ComponentDef ID to use instead.
+
+        Returns:
+            (new_estimate, delta_twd) — the new CostEstimate and cost change.
+        """
+        old_estimate = self.estimate(plan)
+
+        # Register substitution and recalculate
+        old_subs = dict(self._substitutions)
+        self._substitutions[qto_category] = new_component_id
+        new_estimate = self.estimate(plan)
+        self._substitutions = old_subs  # restore after estimate
+
+        delta = new_estimate.total_cost_twd - old_estimate.total_cost_twd
+        logger.info(
+            "Component substitution: %s → %s: delta = NT$%.0f",
+            qto_category, new_component_id, delta,
+        )
+        return new_estimate, delta
+
+    def estimate_with_substitutions(
+        self,
+        plan: BuildingPlan,
+        substitutions: dict[str, str],
+        monitor_plan=None,
+    ) -> "CostEstimate":
+        """Estimate costs with explicit component substitutions (D1-S1).
+
+        Args:
+            plan: BuildingPlan to estimate.
+            substitutions: {qto_category: component_id} overrides.
+        """
+        self._substitutions = dict(substitutions)
+        try:
+            result = self.estimate(plan, monitor_plan)
+        finally:
+            self._substitutions = {}
+        return result
 
     def estimate(
         self,
@@ -180,6 +331,13 @@ class CostEstimator:
     def _price_items(self, qto_items: list[QTOItem]) -> list[CostLineItem]:
         result: list[CostLineItem] = []
         for qi in qto_items:
+            # D1-S1: check if there's an active component substitution
+            if qi.category in self._substitutions:
+                sub_item = self._price_item_from_component(qi, self._substitutions[qi.category])
+                if sub_item:
+                    result.append(sub_item)
+                    continue
+
             price_key = _QTO_PRICE_MAP.get(qi.category)
             if not price_key:
                 logger.warning(
@@ -196,6 +354,12 @@ class CostEstimator:
                 continue
             unit_price = entry["price"]
             total = qi.quantity * unit_price
+
+            # D1-S1: enrich with vendor info from component registry
+            vendor_name, vendor_brand, vendor_country, price_low, price_high = (
+                self._lookup_vendor(qi.category, unit_price)
+            )
+
             result.append(
                 CostLineItem(
                     category=_QTO_COST_CATEGORY.get(qi.category, qi.category),
@@ -205,9 +369,74 @@ class CostEstimator:
                     unit_price_twd=unit_price,
                     total_twd=total,
                     price_key=qi.category,
+                    vendor_name=vendor_name,
+                    vendor_brand=vendor_brand,
+                    vendor_country=vendor_country,
+                    vendor_price_low=price_low,
+                    vendor_price_high=price_high,
                 )
             )
         return result
+
+    def _price_item_from_component(
+        self, qi: QTOItem, component_id: str
+    ) -> CostLineItem | None:
+        """Create a CostLineItem using a specific component's supplier price (D1-S1)."""
+        try:
+            from promptbim.bim.components.registry import ComponentRegistry
+            comp = ComponentRegistry.get(component_id)
+            if comp is None or not comp.suppliers:
+                return None
+            sup = comp.suppliers[0]
+            if sup.price is None:
+                return None
+            unit_price = (sup.price.min_price + sup.price.max_price) / 2
+            total = qi.quantity * unit_price
+            return CostLineItem(
+                category=_QTO_COST_CATEGORY.get(qi.category, qi.category),
+                name=f"{qi.name} [{comp.name_zh}]",
+                quantity=qi.quantity,
+                unit=qi.unit,
+                unit_price_twd=unit_price,
+                total_twd=total,
+                price_key=qi.category,
+                vendor_name=sup.name,
+                vendor_brand=sup.brand or "",
+                vendor_country=sup.country or "",
+                vendor_price_low=sup.price.min_price,
+                vendor_price_high=sup.price.max_price,
+            )
+        except Exception:
+            return None
+
+    def _lookup_vendor(
+        self, qto_category: str, unit_price: float
+    ) -> tuple[str, str, str, float, float]:
+        """Look up vendor info from component registry for a QTO category (D1-S1)."""
+        # Map QTO category → component search keywords
+        _QTO_VENDOR_KEYWORDS: dict[str, list[str]] = {
+            "wall_exterior": ["外牆", "brick", "curtain wall"],
+            "wall_interior": ["輕隔間", "partition"],
+            "mep_hvac": ["空調", "HVAC"],
+            "mep_electrical": ["配電", "electrical"],
+            "mep_plumbing": ["給水管", "plumbing"],
+            "mep_fire": ["消防", "sprinkler"],
+        }
+        keywords = _QTO_VENDOR_KEYWORDS.get(qto_category, [])
+        if not keywords:
+            return ("", "", "", unit_price * 0.7, unit_price * 1.3)
+
+        try:
+            from promptbim.bim.components.registry import ComponentRegistry
+            results = ComponentRegistry.search(keywords, max_results=1)
+            if results and results[0].suppliers:
+                sup = results[0].suppliers[0]
+                price_low = sup.price.min_price if sup.price else unit_price * 0.7
+                price_high = sup.price.max_price if sup.price else unit_price * 1.3
+                return (sup.name, sup.brand or "", sup.country or "", price_low, price_high)
+        except Exception:
+            pass
+        return ("", "", "", unit_price * 0.7, unit_price * 1.3)
 
     def _monitoring_cost_items(self, monitor_plan: MonitorPlan) -> list[CostLineItem]:
         """Add monitoring sensor/actuator costs from a MonitorPlan."""
