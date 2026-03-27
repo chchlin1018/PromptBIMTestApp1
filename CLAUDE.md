@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.23.0 | **更新:** 2026-03-27
+> **版本:** v1.23.1 | **更新:** 2026-03-27
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 標記 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -88,6 +88,39 @@ Zigma（整體解決方案品牌）
 
 > ⚠️ **docs/PROJECT_STATUS.md 已 deprecated，功能合併到根目錄 PROJECT.md**
 > ⚠️ **Sprint 啟動/結束讀寫目標：PROJECT.md（不再是 docs/PROJECT_STATUS.md）**
+
+---
+
+## [MANDATORY] 治理文件備份機制 (v1.23.1 新增)
+
+> ⚠️ **CLAUDE.md / SKILL.md / PROJECT.md 三份治理文件必須建立雙重備份**
+> ⚠️ **每次版本升級後必須同步更新備份**
+
+### 備份策略
+
+| 備份位置 | 格式 | 說明 |
+|---------|------|------|
+| **GitHub** `governance/backups/` | `{FILE}_{VERSION}_{YYYY-MM-DD}.md` | 時間戳備份標記 |
+| **Notion** 📋 治理文件備份 | 子頁面 | Zigma PromptToBuild 下的備份頁面 |
+
+### 同步時機（MANDATORY）
+
+| 事件 | GitHub 備份 | Notion 備份 |
+|------|:----------:|:----------:|
+| CLAUDE.md 版本升級 | ✅ 必須 | ✅ 必須 |
+| SKILL.md 版本升級 | ✅ 必須 | ✅ 必須 |
+| PROJECT.md Phase 里程碑完成 | ✅ 必須 | ✅ 必須 |
+| Sprint 完成（一般） | — | — |
+
+### Notion 備份位置
+
+```
+Zigma PromptToBuild (330f154a-6472-81ae)
+└── 📋 治理文件備份 Governance Backup (330f154a-6472-8178)
+    ├── 📜 CLAUDE.md v1.23.1 備份
+    ├── 📖 SKILL.md v4.0 備份
+    └── 📊 PROJECT.md v1.2 備份
+```
 
 ---
 
@@ -311,6 +344,7 @@ pkill -f "python.*pytest" 2>/dev/null
 | CLAUDE.md | ≥5000B，不可修改 |
 | SKILL.md | ≥20000B，不可修改 |
 | PROJECT.md | Claude Code 應主動更新（鐵律 3） |
+| 治理文件備份 | 版本升級後同步 GitHub + Notion（v1.23.1） |
 
 ---
 
@@ -368,9 +402,10 @@ pkill -f "python.*pytest" 2>/dev/null
 | v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
 | v1.21.0 | P24d Task 通知跳過 → task_start/task_done |
 | v1.22.0 | PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步 |
-| **v1.23.0** | **Sprint PROMPT 合規性三大鐵律 + Zigma 品牌 + PROJECT.md 10 條同步規則 + 命名規則 + sprint_finalize() + 30 步** |
+| v1.23.0 | Sprint PROMPT 合規性三大鐵律 + Zigma 品牌 + PROJECT.md 10 條同步規則 + 命名規則 + sprint_finalize() + 30 步 |
+| **v1.23.1** | **治理文件備份機制 MANDATORY — GitHub governance/backups/ + Notion 雙重備份** |
 
 ---
 
-*CLAUDE.md v1.23.0 | 2026-03-27*
+*CLAUDE.md v1.23.1 | 2026-03-27*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
