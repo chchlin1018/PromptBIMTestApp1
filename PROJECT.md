@@ -1,7 +1,7 @@
 # PromptToBuild 專案管理
 
-> **版本:** v1.0 | **最後更新:** 2026-03-27
-> **專案:** PromptToBuild (PromptBIMTestApp1)
+> **版本:** v1.1 | **最後更新:** 2026-03-27
+> **專案:** Zigma PromptToBuild (PromptBIMTestApp1)
 > **組織:** Reality Matrix Inc.
 > **倉庫:** github.com/chchlin1018/PromptBIMTestApp1
 
@@ -23,12 +23,18 @@
 
 ## 2. 治理文件同步狀態
 
-| 文件 | 版本 | 角色 | 維護者 |
-|------|------|------|--------|
-| CLAUDE.md | v1.22.0 | 最高治理規則 | 人工 |
-| SKILL.md | v3.8 | 技術 SSOT | 人工 |
-| **PROJECT.md** | **v1.0** | **專案管理** | **Claude Code + 人工** |
-| PROJECT_STATUS.md | ⚠️ deprecated | 舊版狀態追蹤 | 已遷移至 PROJECT.md |
+| 文件 | 版本 | 角色 | 維護者 | 草稿版本 |
+|------|------|------|--------|----------|
+| CLAUDE.md | v1.22.0 | 最高治理規則 | 人工 | ⚠️ v1.23.0 DRAFT 待審閱 |
+| SKILL.md | v3.8 | 技術 SSOT | 人工 | ⚠️ v4.0 DRAFT 待審閱 |
+| **PROJECT.md** | **v1.1** | **專案管理** | **Claude Code + 人工** | — |
+| PROJECT_STATUS.md | ⚠️ deprecated | 舊版狀態追蹤 | 已遷移至 PROJECT.md | — |
+| Governance Framework | v1.0 | 治理架構定義 | 人工 | — |
+| Context Prompt | v2.0 | 會話接續知識庫 | 人工 | — |
+
+### 治理草稿審閱追蹤
+- [ ] `docs/drafts/CLAUDE_v1.23.0_DRAFT.md` — +8 PROJECT.md 同步規則, +Zigma 品牌, +命名規則
+- [ ] `docs/drafts/SKILL_v4.0_DRAFT.md` — +治理框架, +命名規則, +架構決策, +Zigma 品牌
 
 ---
 
@@ -77,6 +83,21 @@
 | PH0-PC-T13 | Win: Pipe.Create 測試 | ⬜ |
 | PH0-PC-T14 | Win: Omniverse Streaming | ⬜ |
 | PH0-PC-T15 | .env API_TIMEOUT=120 | ⬜ |
+
+### 治理升級進度（架構設計 Session 產出）
+
+| Task | 說明 | 狀態 |
+|------|------|:----:|
+| GOV-T1 | Governance Framework v1.0 | ✅ |
+| GOV-T2 | PROJECT.md v1.0 | ✅ |
+| GOV-T3 | Context Prompt v2.0 | ✅ |
+| GOV-T4 | Repo Restructuring Plan v1.0 | ✅ |
+| GOV-T5 | CLAUDE.md v1.23.0 DRAFT | ✅ |
+| GOV-T6 | SKILL.md v4.0 DRAFT | ✅ |
+| GOV-T7 | Michael 審閱 CLAUDE v1.23.0 | 🔄 |
+| GOV-T8 | Michael 審閱 SKILL v4.0 | 🔄 |
+| GOV-T9 | RS-S1 範圍審閱 | ⬜ |
+| GOV-T10 | Demo-1/Demo-2 範圍審閱 | ⬜ |
 
 ---
 
@@ -134,4 +155,13 @@
 
 ---
 
-*PROJECT.md v1.0 | PromptToBuild | Reality Matrix Inc. | 2026-03-27*
+## 9. 變更日誌
+
+| 版本 | 日期 | 變更 |
+|------|------|------|
+| v1.0 | 2026-03-27 | 初始建立（架構設計 Session） |
+| **v1.1** | **2026-03-27** | **+治理草稿追蹤, +GOV task 狀態, +變更日誌** |
+
+---
+
+*PROJECT.md v1.1 | Zigma PromptToBuild | Reality Matrix Inc. | 2026-03-27*
