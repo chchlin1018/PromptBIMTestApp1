@@ -46,7 +46,7 @@ Thumbs.db
 # Conda
 *.conda
 
-# 3D model cache
+# 3D model cache (legacy)
 src/promptbim/bim/components/models/*.glb
 src/promptbim/bim/components/models/*.obj
 !src/promptbim/bim/components/models/README.md
@@ -54,3 +54,16 @@ Miniforge3-MacOSX-arm64.sh
 Pic_MyLand/
 libpromptbim/build_py*/
 libpromptbim/build/
+
+# Assets — binary files (downloaded via scripts/download_assets.py)
+assets/models/**/*.glb
+assets/models/**/*.fbx
+assets/models/**/*.gltf
+assets/models/**/*.bin
+assets/textures/**/*.png
+assets/textures/**/*.jpg
+assets/textures/**/*.exr
+assets/hdri/**/*.hdr
+assets/hdri/**/*.exr
+!assets/**/.gitkeep
+!assets/**/README.md
