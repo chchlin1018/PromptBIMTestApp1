@@ -1,6 +1,6 @@
 # Zigma PromptToBuild 專案管理
 
-> **版本:** v1.3 | **最後更新:** 2026-03-27
+> **版本:** v1.4 | **最後更新:** 2026-03-27
 > **專案:** Zigma PromptToBuild (PromptBIMTestApp1)
 > **組織:** Reality Matrix Inc.
 > **倉庫:** github.com/chchlin1018/PromptBIMTestApp1
@@ -12,207 +12,212 @@
 | 標籤 | 版本 | Sprint/Demo | 日期 | 說明 |
 |------|------|------------|------|------|
 | v2.10.0 | 2.10.0 | P23 | 2026-03 | 審計修復（最後成功 tag） |
-| v2.11.0 | 2.11.0 | P24 | 2026-03 | 代碼完成，**待 tag**（pytest OOM） |
+| v2.11.0 | 2.11.0 | P24 | 2026-03 | 代碼完成，**待 tag** |
 | v2.12.0 | 2.12.0 | P25 | 2026-03 | 代碼完成，**待 pytest + tag** |
 | demo1-v0.1.0 | 0.1.0 | D1 | — | TSMC Demo-1（NL→BIM→Cost→4D） |
 | demo2-v0.2.0 | 0.2.0 | D2 | — | TSMC Demo-2（USD→Omniverse→Revit→建照） |
+| v3.0.0 | 3.0.0 | P29 | — | Qt Quick 3D + QML 原生 GUI |
 
 ---
 
-## 2. 治理文件同步狀態
+## 2. 治理文件
 
 | 文件 | 版本 | 維護者 |
 |------|------|--------|
-| CLAUDE.md | **v1.23.1** | 人工 |
+| CLAUDE.md | **v1.23.3** | 人工 |
 | SKILL.md | **v4.0** | 人工 |
-| PROJECT.md | **v1.3** | Claude Code + 人工 |
+| PROJECT.md | **v1.4** | Claude Code + 人工 |
 
 ---
 
-## 3. TSMC Demo-1 需求（v1.2 確認版）
+## 3. 架構決策記錄 (ADR)
 
-### Mandatory
+### ADR-001: GUI 遷移至 Qt Quick 3D + QML (2026-03-27)
 
-| # | 需求 | 現有模組 | 狀態 |
-|---|------|--------|:----:|
-| M1 | Prompt → AI 語意 → BIM | agents/planner.py (14KB) + enhancer.py | ✅ 強化 |
-| M2 | 3D BIM (RTX 4090 OpenGL) | viz/model_3d.py + gui/model_view.py | ✅ 強化 |
-| M3 | Cost + Schedule + 變更 | bim/cost/ (P6) + bim/simulation/ (P8) | ✅ 強化 |
-| M4 | 即時變更（泳池→停車場） | agents/modifier.py (17KB, P4.8) | ✅ 強化 |
-| M5 | 4D 建造模擬 + 施工機械 | bim/simulation/ + gui/simulation_tab.py (P8) | 🟡 擴充 |
-| M6 | 供應商零件庫 3 分類 | bim/components/ (76件, P2.5) | 🟡 擴充 |
-| M7 | MEP 管路+衝突+穿孔 | bim/mep/ (A*, 4系統, P7) | 🟡 擴充 |
+| 項目 | 決策 |
+|------|------|
+| **狀態** | ✅ 已確認 |
+| **背景** | PySide6 記憶體問題 (ISSUE-004, 16GB OOM)；Qt3D 已在 Qt 6.8 deprecated |
+| **決策** | 採用 Qt Quick 3D + QML 取代 PySide6 + PyVista |
+| **理由** | Qt 官方主推、內建 RHI (Vulkan/Metal/D3D12)、PBR 材質、代碼量減 50%、動畫系統整合 |
+| **風險** | 需學 QML；大量 BIM 元素效能未驗證 |
+| **替代方案** | Qt3D (✘ deprecated)、QRhi 自建 (✘ 工程量太大)、保持 PyVista (✘ 記憶體) |
+| **執行時機** | Demo-1 + Demo-2 完成後 (Phase 1, P26-P29) |
 
-### Nice to Have
+### 技術架構變更
 
-| N1 | 語音輸入 | voice/stt.py (Whisper, P5) | ✅ 已有 |
+```
+現有 (Demo 期間保持)          目標 (P26-P29)
+────────────────────          ───────────────
+├─ PySide6 GUI (Python)      → Qt Quick (QML + C++)
+├─ PyVista 3D (Python)       → Qt Quick 3D (QML)
+├─ matplotlib charts         → QML Charts / Canvas
+├─ pytest-qt                 → Qt Test + QML TestCase
+├─ Python 直接嵌入 GUI        → QProcess + JSON stdio
+└─ AI Agents (Python)        → AI Agents (Python, 不變)
+```
+
+### QProcess + JSON stdio 架構
+
+```
+Qt Quick 3D GUI (主進程, C++/QML)
+    │  QProcess::start("python3 agents/agent_runner.py")
+    │  stdin  ← JSON {"action":"enhance","prompt":"..."}
+    │  stdout → JSON {"type":"delta","text":"..."}
+    │  stderr → 錯誤日誌
+    ▼
+Python AI Agent Runner (子進程)
+    │  asyncio.StreamReader 讀 stdin
+    │  Claude API (AsyncAnthropic)
+    │  JSON streaming 輸出
+    └─ heartbeat 每 10s
+```
 
 ---
 
-## 4. Sprint 計劃（Demo-1，34 Tasks，4.5 週）
+## 4. 開發路線圖
+
+### Phase 0: Demo 展示 (Week 0-10)
+
+| Sprint | 週數 | Tasks | 目標 | 版本 | 狀態 |
+|--------|:----:|:-----:|------|------|:----:|
+| **W0 收尾** | 0.5 | 5 | P24/P25 pytest + tag | v2.11+v2.12 | 🔵 |
+| **D1-S1 引擎** | 2 | 15 | AI場景+Cost+4D+MEP | demo1-alpha | ⬜ |
+| **D1-S2 GUI+展示** | 2 | 14 | GUI整合+場景+TSMC展示 | demo1-v0.1.0 | ⬜ |
+| **D2 Omniverse** | 5 | 35 | USD→Omni→Revit→建照 | demo2-v0.2.0 | ⬜ |
+
+### Phase 1: Qt Quick 3D 遷移 (Week 11-18, P26-P29)
+
+| Sprint | 週數 | 目標 | 版本 |
+|--------|:----:|------|------|
+| **P26 AgentBridge** | 1 | QProcess+JSON stdio + agent_runner.py | v2.13.0 |
+| **P27 QML GUI** | 2 | ApplicationWindow + ChatPanel + QML 基礎 | v2.14.0 |
+| **P28 Quick 3D** | 2 | Qt Quick 3D 取代 PyVista + BIM 渲染 | v2.15.0 |
+| **P29 清理** | 1 | 移除 PySide6/PyVista + 測試遷移 | v3.0.0 |
+
+#### P26: AgentBridge (風險最低，價值最高)
+- AgentBridge.h/cpp: QProcess + JSON stdio
+- agents/agent_runner.py: asyncio stdin reader + Claude streaming
+- heartbeat + timeout 機制
+- Qt Test: ping/pong < 5s
+
+#### P27: QML GUI 骨架
+- main.qml: ApplicationWindow + SplitView
+- ChatPanel.qml: 輸入 + streaming 顯示
+- LandView2D.qml: Canvas 地籍圖
+- AgentBridge 透過 Q_PROPERTY/Q_INVOKABLE 暴露給 QML
+
+#### P28: Qt Quick 3D
+- View3D + PerspectiveCamera + OrbitCameraController
+- BIM 幾何體: Model + PrincipledMaterial (PBR)
+- USD → Qt Quick 3D 橋接 (QQuick3DGeometry C++)
+- 實體選取 + 高亮 (PickHandler)
+- 4D 動畫: NumberAnimation on visible/opacity/position
+
+#### P29: 清理 + 測試遷移
+- 移除 PySide6/PyVista/pyvistaqt/pytest-qt
+- 820 個 pytest → ~150 個 AI Agent 測試 (tests/python_ai/)
+- Qt Test + QML TestCase (tests/cpp/)
+- 記憶體基線: 啟動 < 500MB
+
+### Phase 2: 平台擴展 (Week 19-26, P30-P33)
+
+| Sprint | 目標 |
+|--------|------|
+| P30 | Windows 平台 + USD↔Revit |
+| P31 | ILOS Plugin 整合 |
+| P32 | Omniverse 深化 |
+| P33 | 認證 + 安全 |
+
+### Phase 3: 雲端 + 行動 (Week 27-34, P34-P41)
+
+| Sprint | 目標 |
+|--------|------|
+| P34-P37 | Web 版 (React/WebGPU) |
+| P38-P41 | Mobile (iPad/Vision Pro) |
+
+### Phase 4: 私有 LLM (Week 35+, P42-P44)
+
+| Sprint | 目標 |
+|--------|------|
+| P42-P44 | 零外部 AI API，完全 on-premise |
+
+---
+
+## 5. TSMC Demo-1 Sprint 計劃 (34T, 4.5 週)
 
 ### 工時與 Token 估算
 
-| Sprint | 週數 | Tasks | 新建 | 強化 | 預估 Tokens |
-|--------|:----:|:-----:|:----:|:----:|:-----------:|
+| Sprint | 週數 | Tasks | 新建 | 強化 | Tokens |
+|--------|:----:|:-----:|:----:|:----:|:------:|
 | W0 收尾 | 0.5 | 5 | 0 | 5 | ~30K |
-| D1-S1 引擎強化 | 2 | 15 | 4 | 11 | ~150K |
-| D1-S2 GUI+展示 | 2 | 14 | 3 | 11 | ~120K |
+| D1-S1 引擎 | 2 | 15 | 4 | 11 | ~150K |
+| D1-S2 GUI | 2 | 14 | 3 | 11 | ~120K |
 | **合計** | **4.5** | **34** | **7** | **27** | **~300K** |
 
----
-
-### W0: POC 收尾（2-3 天，5T，~30K tokens）
-
-| ID | 說明 | 檔案 | 狀態 |
-|----|------|------|:----:|
-| W0-T1 | P24 conftest.py offscreen 修復 | tests/conftest.py | ⬜ |
-| W0-T2 | P24 pytest pass + tag v2.11.0 | git tag | ⬜ |
-| W0-T3 | P25 pytest 驗證 | tests/ | ⬜ |
-| W0-T4 | P25 tag v2.12.0 | git tag | ⬜ |
-| W0-T5 | Win RTX 4090 conda + PyVista OpenGL 確認 | 新環境 | ⬜ |
+(詳細 Task 清單見下方 Sprint 進度區段)
 
 ---
 
-### D1-S1: 引擎強化（Week 1-2，15T，~150K tokens）
+## 6. 當前 Sprint 進度
 
-#### Part A: AI + 場景 + 變更（5T，~50K）
+### W0: POC 收尾
 
-| ID | 說明 | 現有檔案 | 操作 | 狀態 |
-|----|------|---------|------|:----:|
-| D1-S1-PA-T1 | Planner 6 場景 prompt template | agents/planner.py | 加 6 template | ⬜ |
-| D1-S1-PA-T2 | Modifier 累加變更邏輯強化 | agents/modifier.py | 強化多輪 | ⬜ |
-| D1-S1-PA-T3 | Orchestrator 串接 Cost+Schedule+4D | agents/orchestrator.py | 擴充流程 | ⬜ |
-| D1-S1-PA-T4 | USD phase tag + MEP layer 加入 | bim/usd_generator.py | 加欄位 | ⬜ |
-| D1-S1-PA-T5 | 現成 BIM 轉換: IFC/FBX→USD 管線 | bim/ 新增 converter.py | **新建** | ⬜ |
+| ID | 說明 | 狀態 |
+|----|------|:----:|
+| W0-T1 | P24 conftest.py offscreen | ⬜ |
+| W0-T2 | P24 pytest + tag v2.11.0 | ⬜ |
+| W0-T3 | P25 pytest 驗證 | ⬜ |
+| W0-T4 | P25 tag v2.12.0 | ⬜ |
+| W0-T5 | Win RTX 4090 環境 | ⬜ |
 
-#### Part B: 成本 + 零件庫擴充（5T，~50K）
+### D1-S1: 引擎強化
 
-| ID | 說明 | 現有檔案 | 操作 | 狀態 |
-|----|------|---------|------|:----:|
-| D1-S1-PB-T6 | 零件庫擴充: 家用+建築+工廠 100+ | bim/components/ (76件) | 擴充 JSON | ⬜ |
-| D1-S1-PB-T7 | 零件庫搜尋+替代+競合 API | bim/components/registry.py | 加方法 | ⬜ |
-| D1-S1-PB-T8 | Cost Engine: 供應商明細+圖表升級 | bim/cost/estimator.py + cost_charts.py | 強化 | ⬜ |
-| D1-S1-PB-T9 | 零件替換→成本即時重算 | bim/cost/ + bim/components/ | 加 swap | ⬜ |
-| D1-S1-PB-T10 | 變更成本差異報告（前後對照） | bim/cost/ 新增 cost_delta.py | **新建** | ⬜ |
+| ID | 說明 | 狀態 |
+|----|------|:----:|
+| D1-S1-PA-T1 | Planner 6 場景 | ⬜ |
+| D1-S1-PA-T2 | Modifier 累加變更 | ⬜ |
+| D1-S1-PA-T3 | Orchestrator Cost+Schedule+4D | ⬜ |
+| D1-S1-PA-T4 | USD phase+MEP tag | ⬜ |
+| D1-S1-PA-T5 | BIM 轉換 converter.py | ⬜ |
+| D1-S1-PB-T6 | 零件庫 3分類 100+ | ⬜ |
+| D1-S1-PB-T7 | 零件搜尋+替代 | ⬜ |
+| D1-S1-PB-T8 | Cost 供應商+圖表 | ⬜ |
+| D1-S1-PB-T9 | 零件替換→成本 | ⬜ |
+| D1-S1-PB-T10 | 成本差異報告 | ⬜ |
+| D1-S1-PC-T11 | 4D 開挖+架設 | ⬜ |
+| D1-S1-PC-T12 | 4D 施工機械 | ⬜ |
+| D1-S1-PC-T13 | 4D 變更連動 | ⬜ |
+| D1-S1-PC-T14 | MEP 電力+HVAC+穿孔 | ⬜ |
+| D1-S1-PC-T15 | 工期差異+甘特圖 | ⬜ |
 
-#### Part C: 4D + MEP 擴充（5T，~50K）
+### D1-S2: GUI + 展示
 
-| ID | 說明 | 現有檔案 | 操作 | 狀態 |
-|----|------|---------|------|:----:|
-| D1-S1-PC-T11 | 4D 擴充: 地下開挖+鋼梁架設動畫 | bim/simulation/animator.py | 加動畫類型 | ⬜ |
-| D1-S1-PC-T12 | 4D 施工機械 3D 資產+進場邏輯 | assets/ 新增 + simulation/ | **新建** | ⬜ |
-| D1-S1-PC-T13 | 4D 變更連動: 設計變更→4D 自動更新 | bim/simulation/scheduler.py | 加 rebuild | ⬜ |
-| D1-S1-PC-T14 | MEP 擴充: 電力+HVAC 路由+穿孔 | bim/mep/planner.py + systems.py | 強化 | ⬜ |
-| D1-S1-PC-T15 | 變更工期差異+甘特圖對照 | bim/simulation/ 新增 schedule_delta.py | **新建** | ⬜ |
-
----
-
-### D1-S2: GUI + 多場景 + 展示（Week 3-4，14T，~120K tokens）
-
-#### Part A: GUI 面板升級（5T，~50K）
-
-| ID | 說明 | 現有檔案 | 操作 | 狀態 |
-|----|------|---------|------|:----:|
-| D1-S2-PA-T1 | Win RTX 4090 部署 + GPU 渲染確認 | viz/ | 環境 | ⬜ |
-| D1-S2-PA-T2 | GUI 一氣呵成: Prompt→3D→Cost→4D | gui/main_window.py | 串接 | ⬜ |
-| D1-S2-PA-T3 | 3D: 樓層切換+點擊零件+MEP分層 | gui/model_view.py + mep_toggle.py | 強化 | ⬜ |
-| D1-S2-PA-T4 | 4D Player: 甘特圖↔4D 聯動 | gui/simulation_tab.py | 強化 | ⬜ |
-| D1-S2-PA-T5 | 變更對照面板: 3D+Cost+Schedule+4D | gui/ 新增 delta_panel.py | **新建** | ⬜ |
-
-#### Part B: 場景 + 零件庫 GUI（4T，~35K）
-
-| ID | 說明 | 現有檔案 | 操作 | 狀態 |
-|----|------|---------|------|:----:|
-| D1-S2-PB-T6 | 場景 S1: 3層別墅+泳池 | bim/templates/ | 新 template | ⬜ |
-| D1-S2-PB-T7 | 場景 S2: 半導體廠房 | bim/templates/ | 新 template | ⬜ |
-| D1-S2-PB-T8 | 場景 S3: 數據中心 | bim/templates/ | 新 template | ⬜ |
-| D1-S2-PB-T9 | 零件庫 GUI: 3 分類瀏覽+替換 | gui/ 新增 asset_browser.py | **新建** | ⬜ |
-
-#### Part C: 展示準備（5T，~35K）
-
-| ID | 說明 | 檔案 | 狀態 |
-|----|------|------|:----:|
-| D1-S2-PC-T10 | 3 場景 E2E 測試（S1-S3 必過） | tests/ 新增 | ⬜ |
-| D1-S2-PC-T11 | 效能: 全流程 < 3 分鐘 | 全系統 | ⬜ |
-| D1-S2-PC-T12 | Demo 腳本 7min + 排練 | docs/DEMO_SCRIPT.md | ⬜ |
-| D1-S2-PC-T13 | TSMC 簡報 10 頁 + 螢幕錄影 | — | ⬜ |
-| D1-S2-PC-T14 | Demo-1 審計 + PROJECT.md + tag | docs/ + git | ⬜ |
+| ID | 說明 | 狀態 |
+|----|------|:----:|
+| D1-S2-PA-T1 | Win RTX 4090 GPU | ⬜ |
+| D1-S2-PA-T2 | GUI 一氣呵成 | ⬜ |
+| D1-S2-PA-T3 | 3D 樓層+零件+MEP | ⬜ |
+| D1-S2-PA-T4 | 4D 甘特↔4D | ⬜ |
+| D1-S2-PA-T5 | 變更對照面板 | ⬜ |
+| D1-S2-PB-T6 | 場景 S1 別墅 | ⬜ |
+| D1-S2-PB-T7 | 場景 S2 廠房 | ⬜ |
+| D1-S2-PB-T8 | 場景 S3 數據中心 | ⬜ |
+| D1-S2-PB-T9 | 零件庫 GUI | ⬜ |
+| D1-S2-PC-T10 | 3場景 E2E | ⬜ |
+| D1-S2-PC-T11 | 效能 <3min | ⬜ |
+| D1-S2-PC-T12 | Demo 腳本 | ⬜ |
+| D1-S2-PC-T13 | TSMC 簡報 | ⬜ |
+| D1-S2-PC-T14 | 審計+tag | ⬜ |
 
 ---
 
-## 5. 現有模組 vs Demo-1 對照（基於 CHANGELOG 審計）
-
-### 完整存在（直接複用，不改或微調）
-
-| 模組 | Sprint | 檔案 | 大小 |
-|------|--------|------|------|
-| Enhancer Agent | P2 | agents/enhancer.py | 5KB |
-| Builder Agent | P2 | agents/builder.py | 4KB |
-| Checker Agent | P4.5 | agents/checker.py | 9KB |
-| Land Reader Agent | P9 | agents/land_reader.py | 8KB |
-| Rate Limiter | P17 | agents/rate_limiter.py | 2KB |
-| IFC Generator | P2+P20 | bim/ifc_generator.py + C++ | 11KB+C++ |
-| USD Generator | P4+P20 | bim/usd_generator.py + C++ | 9KB+C++ |
-| Geometry | P2 | bim/geometry.py | 8KB |
-| Structural | P24 | bim/structural.py | 4KB |
-| Materials | P24 | bim/materials.py | 3KB |
-| Parking | P24 | bim/parking.py | 4KB |
-| Vertical | P24 | bim/vertical.py | 5KB |
-| Land Parsers | P1+P9+P13 | land/parsers/ (5 parsers) | 全 |
-| Taiwan Code Engine | P4.5+P18 | codes/ (15 rules) + C++ | 全+C++ |
-| Voice STT | P5 | voice/stt.py | Whisper |
-| GUI MainWindow | P6 | gui/main_window.py | PySide6 |
-| GUI ChatPanel | P4 | gui/chat_panel.py | 有 |
-| GUI ModelView | P3 | gui/model_view.py | PyVista |
-| Omniverse | P10 | bim/omniverse.py | 8KB |
-| Debug | P10.2 | debug.py | 全 |
-| Health Check | P10.3 | startup/ | 全 |
-| Cache | P17 | cache/ | 全 |
-| Schemas | P0+ | schemas/ | 全 |
-
-### 需要強化（已有基礎，加功能）
-
-| 模組 | Sprint | 現有 | Demo-1 要加什麼 |
-|------|--------|------|----------------|
-| Planner | P2 | 通用建築 prompt | +6 場景 template |
-| Modifier | P4.8 | 單次修改+undo | +多輪累加+差異報告 |
-| Orchestrator | P4 | Enhance→Plan→Build→Check | +Cost→Schedule→4D 串接 |
-| Cost Engine | P6 | QTO+22 單價+estimator | +供應商明細+替換+差異 |
-| 4D Simulation | P8 | 16-phase+scheduler+GIF | +開挖/架設動畫+機械 |
-| MEP | P7 | A*+4系統+clash | +電力路由+穿孔 |
-| Components | P2.5 | 76 件+registry | +100 件+3 分類+替換 |
-| Simulation Tab | P8 | timeline+play+gantt | +甘特↔4D 聯動 |
-| Cost Panel | P6 | pie/bar+detail | +供應商+替換 |
-| Model View | P3 | floor切換+section | +點擊零件+MEP 分層 |
-
-### 真正新建（7 個檔案）
-
-| 新檔案 | 用途 |
-|--------|------|
-| bim/converter.py | IFC/FBX/glTF → USD 轉換 |
-| bim/cost/cost_delta.py | 變更成本差異報告 |
-| bim/simulation/schedule_delta.py | 變更工期差異 |
-| gui/delta_panel.py | 變更對照面板 |
-| gui/asset_browser.py | 零件庫 GUI 瀏覽器 |
-| assets/equipment/ | 施工機械 3D 資產 |
-| bim/templates/villa.py + fab.py + datacenter.py | 場景模板 |
-
----
-
-## 6. Demo-2 計劃（不變）
-
-Demo-2（USD→Omniverse→Revit→建照）維持 v1.0 計劃，35T，Week 5-10。
-注意: bim/omniverse.py (P10) 已有 Nucleus connector 骨架。
-
----
-
-## 7. 合作夥伴狀態
+## 7. 合作夥伴
 
 | 模組 | 狀態 | Plan B |
 |------|:----:|--------|
-| ILOS Layout Engine | ⬜ 未到（P34+） | 現有 simulation/ 簡化版 |
-| ILOS Piping Router | ⬜ 未到（P34+） | 現有 mep/pathfinder.py (A*) |
+| ILOS Layout Engine | ⬜ P34+ | simulation/ 簡化版 |
+| ILOS Piping Router | ⬜ P34+ | mep/pathfinder.py (A*) |
 
 ---
 
@@ -220,22 +225,37 @@ Demo-2（USD→Omniverse→Revit→建照）維持 v1.0 計劃，35T，Week 5-10
 
 | ID | 問題 | 嚴重度 | 計劃 |
 |----|------|:------:|------|
-| ISSUE-001 | P24 pytest OOM | 🔴 | W0-T1/T2 |
+| ISSUE-001 | P24 pytest OOM | 🔴 | W0 分目錄 pytest |
 | ISSUE-002 | API Timeout 30s | 🟡 | .env 120s |
-| ISSUE-004 | PySide6 記憶體 | 🔴 | P29 移除 |
+| ISSUE-004 | PySide6 記憶體 | 🔴 | P29 Qt Quick 3D 取代 |
 
 ---
 
-## 9. 里程碑
+## 9. 里程碑時間線
 
 ```
-Week 0:    W0 收尾 → v2.11.0 + v2.12.0 tags
-Week 1-2:  D1-S1 引擎強化 (15T)
-Week 3-4:  D1-S2 GUI+展示 (14T) → demo1-v0.1.0
-           ★ TSMC Demo-1 展示
-Week 5-10: D2 Omniverse→Revit→建照 (35T)
-           ★ TSMC Demo-2 展示 → LOI?
-Week 11+:  Phase 1 (P26-P29) Plugin 架構
+2026 Q2:
+  Week 0     W0 收尾              → v2.11+v2.12
+  Week 1-2   D1-S1 引擎強化       → demo1-alpha
+  Week 3-4   D1-S2 GUI+展示       → demo1-v0.1.0
+             ★ TSMC Demo-1
+  Week 5-10  D2 Omniverse+Revit    → demo2-v0.2.0
+             ★ TSMC Demo-2 → LOI?
+
+2026 Q3:
+  Week 11    P26 AgentBridge       → v2.13.0
+  Week 12-13 P27 QML GUI           → v2.14.0
+  Week 14-15 P28 Qt Quick 3D       → v2.15.0
+  Week 16    P29 清理+測試遷移    → v3.0.0 🌟
+
+2026 Q4:
+  Week 19-26 P30-P33 Windows+ILOS  → v3.x
+
+2027 Q1:
+  P34-P41 Web + Mobile             → v4.x
+
+2027 Q2:
+  P42-P44 私有 LLM                 → v5.0
 ```
 
 ---
@@ -257,10 +277,11 @@ Week 11+:  Phase 1 (P26-P29) Plugin 架構
 | 版本 | 日期 | 變更 |
 |------|------|------|
 | v1.0 | 2026-03-27 | 初始建立 |
-| v1.1 | 2026-03-27 | +治理草稿追蹤 |
-| v1.2 | 2026-03-27 | GOV-T7/T8 完成, 三大鐵律 |
-| **v1.3** | **2026-03-27** | **TSMC Demo-1 Sprint 計劃（基於 CHANGELOG 完整審計）。50T→34T 大幅精簡（Cost/4D/MEP/Modifier 已存在）。新建僅 7 檔案，其餘為強化。Token 估算 ~300K。** |
+| v1.1 | 2026-03-27 | +治理草稿 |
+| v1.2 | 2026-03-27 | 三大鐵律 |
+| v1.3 | 2026-03-27 | Demo-1 Sprint 計劃 (CHANGELOG 審計) |
+| **v1.4** | **2026-03-27** | **ADR-001: Qt Quick 3D + QML 架構決策。完整開發路線圖 Phase 0-4。P26-P29 拆分為 4 個獨立 Sprint (AgentBridge → QML GUI → Quick 3D → 清理)。Qt3D deprecated → Qt Quick 3D。** |
 
 ---
 
-*PROJECT.md v1.3 | Zigma PromptToBuild | 2026-03-27*
+*PROJECT.md v1.4 | Zigma PromptToBuild | 2026-03-27*
