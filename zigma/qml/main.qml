@@ -44,11 +44,63 @@ ApplicationWindow {
             Layout.fillHeight: true
             orientation: Qt.Horizontal
 
-            ChatPanel {
-                id: chatPanel
+            // Left panel with Chat + ScenePicker tabs
+            Rectangle {
                 SplitView.preferredWidth: 300
                 SplitView.minimumWidth: 200
-                agentBridge: agentBridge
+                color: "#16213e"
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 0
+
+                    TabBar {
+                        id: leftTabBar
+                        Layout.fillWidth: true
+                        background: Rectangle { color: "#0d1117" }
+
+                        TabButton {
+                            text: "Chat"
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 0 ? "#16213e" : "#0d1117" }
+                        }
+                        TabButton {
+                            text: "Scenes"
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 1 ? "#16213e" : "#0d1117" }
+                        }
+                        TabButton {
+                            text: "Assets"
+                            contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter }
+                            background: Rectangle { color: leftTabBar.currentIndex === 2 ? "#16213e" : "#0d1117" }
+                        }
+                    }
+
+                    StackLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        currentIndex: leftTabBar.currentIndex
+
+                        ChatPanel {
+                            id: chatPanel
+                            agentBridge: agentBridge
+                        }
+                        ScenePicker {
+                            id: scenePicker
+                            onSceneSelected: function(sceneId, prompt, landData) {
+                                chatPanel.addMessage("user", prompt)
+                                if (agentBridge) agentBridge.generate(prompt, landData)
+                                leftTabBar.currentIndex = 0
+                            }
+                        }
+                        AssetBrowser {
+                            id: assetBrowser
+                            onAssetSelected: function(assetId, category, name) {
+                                chatPanel.addMessage("system", "Selected: " + name)
+                            }
+                        }
+                    }
+                }
             }
 
             BIMView3D {
