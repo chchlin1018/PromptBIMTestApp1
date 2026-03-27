@@ -121,8 +121,8 @@ def compute_plan_delta(
         )
 
     # GFA
-    gfa_before = sum(s.gfa_sqm for s in before.stories)
-    gfa_after = sum(s.gfa_sqm for s in after.stories)
+    gfa_before = sum(sum(sp.area_sqm for sp in s.spaces) for s in before.stories)
+    gfa_after = sum(sum(sp.area_sqm for sp in s.spaces) for s in after.stories)
     if abs(gfa_before - gfa_after) > 0.5:
         records.append(
             DeltaRecord(

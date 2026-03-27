@@ -95,7 +95,7 @@ def export_plan_json(plan: "BuildingPlan", path: Path) -> Path:
                 "name": s.name,
                 "elevation_m": s.elevation_m,
                 "height_m": s.height_m,
-                "gfa_sqm": s.gfa_sqm,
+                "gfa_sqm": sum(sp.area_sqm for sp in s.spaces),
                 "spaces": [
                     {
                         "name": sp.name,
