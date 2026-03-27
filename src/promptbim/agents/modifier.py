@@ -194,13 +194,20 @@ Return ONLY the JSON, no extra text.
 
 
 class ModifierAgent(BaseAgent):
-    """Agent 5 — parses modification intent and applies incremental changes."""
+    """Agent 5 — parses modification intent and applies incremental changes.
+
+    D1-S1 Enhancement: Multi-round cumulative change tracking.
+    - batch_modify(): apply a list of commands sequentially
+    - get_cumulative_delta(): summarize all changes vs. original baseline
+    - _original_snapshot: baseline plan stored on first modify call
+    """
 
     SYSTEM_PROMPT = MODIFIER_SYSTEM_PROMPT
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._history = ModificationHistory()
+        self._original_snapshot: dict | None = None  # baseline for cumulative delta
 
     @property
     def history(self) -> ModificationHistory:
@@ -219,6 +226,10 @@ class ModifierAgent(BaseAgent):
         """
         if zoning is None:
             zoning = ZoningRules()
+
+        # Store original baseline on first modify
+        if self._original_snapshot is None:
+            self._original_snapshot = current_plan.model_dump()
 
         # Snapshot before
         old_snapshot = current_plan.model_dump()
@@ -257,6 +268,70 @@ class ModifierAgent(BaseAgent):
 
         self._history.add(record)
         return new_plan, record
+
+    def batch_modify(
+        self,
+        commands: list[str],
+        current_plan: BuildingPlan,
+        zoning: ZoningRules | None = None,
+    ) -> tuple[BuildingPlan, list[ModificationRecord]]:
+        """Apply a sequence of modification commands cumulatively.
+
+        D1-S1: Enables multi-round change accumulation — each command is
+        applied on top of the result of the previous one.
+        Returns (final_plan, list_of_records).
+        """
+        plan = current_plan
+        records: list[ModificationRecord] = []
+        for cmd in commands:
+            plan, record = self.modify(cmd, plan, zoning)
+            records.append(record)
+        return plan, records
+
+    def get_cumulative_delta(self, current_plan: BuildingPlan) -> dict:
+        """Return a summary of all changes from the original baseline to current_plan.
+
+        D1-S1: Provides a cumulative diff useful for cost delta and schedule delta.
+        Returns a dict with keys: stories_delta, height_delta_m, area_delta_sqm,
+        bcr_delta, far_delta, modification_count, commands.
+        """
+        if self._original_snapshot is None:
+            return {
+                "stories_delta": 0,
+                "height_delta_m": 0.0,
+                "area_delta_sqm": 0.0,
+                "bcr_delta": 0.0,
+                "far_delta": 0.0,
+                "modification_count": 0,
+                "commands": [],
+            }
+        orig = BuildingPlan.model_validate(self._original_snapshot)
+        orig_stories = len(orig.stories)
+        orig_height = sum(s.height_m for s in orig.stories)
+        orig_area = sum(
+            poly_area(s.slab_boundary) if s.slab_boundary else poly_area(orig.building_footprint)
+            for s in orig.stories
+        )
+        curr_height = sum(s.height_m for s in current_plan.stories)
+        curr_area = sum(
+            poly_area(s.slab_boundary) if s.slab_boundary else poly_area(current_plan.building_footprint)
+            for s in current_plan.stories
+        )
+        commands = [r.command for r in self._history.records]
+        return {
+            "stories_delta": len(current_plan.stories) - orig_stories,
+            "height_delta_m": round(curr_height - orig_height, 2),
+            "area_delta_sqm": round(curr_area - orig_area, 1),
+            "bcr_delta": round(current_plan.building_bcr - orig.building_bcr, 4),
+            "far_delta": round(current_plan.building_far - orig.building_far, 4),
+            "modification_count": len(self._history.records),
+            "commands": commands,
+        }
+
+    def reset_baseline(self, plan: BuildingPlan) -> None:
+        """Reset the original baseline to the given plan (e.g. after regeneration)."""
+        self._original_snapshot = plan.model_dump()
+        self._history = ModificationHistory()
 
     def undo(
         self, current_plan: BuildingPlan
@@ -351,6 +426,12 @@ class ModifierAgent(BaseAgent):
             new_plan = self._apply_roof(intent, new_plan)
         elif intent.modification_type == ModificationType.FOOTPRINT:
             new_plan = self._apply_footprint(intent, new_plan, zoning)
+        elif intent.modification_type == ModificationType.ROOMS:
+            new_plan = self._apply_rooms(intent, new_plan)
+        elif intent.modification_type == ModificationType.MATERIALS:
+            new_plan = self._apply_materials(intent, new_plan)
+        elif intent.modification_type == ModificationType.OPENINGS:
+            new_plan = self._apply_openings(intent, new_plan)
         else:
             logger.warning("Unsupported modification type: %s", intent.modification_type)
 
@@ -456,6 +537,95 @@ class ModifierAgent(BaseAgent):
                 space.boundary = _scale_polygon(space.boundary, scale)
                 space.area_sqm *= scale * scale
 
+        return plan
+
+
+    def _apply_rooms(self, intent: ModificationIntent, plan: BuildingPlan) -> BuildingPlan:
+        """Add/remove/rename rooms in specified stories (D1-S1 enhancement)."""
+        from promptbim.schemas.plan import SpaceDef
+
+        params = intent.parameters
+        target_story = params.get("story", "all")
+        add_rooms: list[dict] = params.get("add_rooms", [])
+        remove_rooms: list[str] = params.get("remove_rooms", [])
+
+        for story in plan.stories:
+            if target_story != "all" and story.name != str(target_story):
+                continue
+            # Remove rooms by name
+            if remove_rooms:
+                story.spaces = [s for s in story.spaces if s.name not in remove_rooms]
+            # Add rooms (append as small spaces; geometry is approximate)
+            for room_def in add_rooms:
+                room_name = room_def.get("name", "New Room")
+                room_area = float(room_def.get("area_sqm", 20.0))
+                room_type = room_def.get("space_type", "office")
+                # Place new room at a nominal offset from footprint centroid
+                if plan.building_footprint:
+                    cx = sum(p[0] for p in plan.building_footprint) / len(plan.building_footprint)
+                    cy = sum(p[1] for p in plan.building_footprint) / len(plan.building_footprint)
+                    half = (room_area ** 0.5) / 2
+                    boundary = [
+                        (cx - half, cy - half), (cx + half, cy - half),
+                        (cx + half, cy + half), (cx - half, cy + half),
+                    ]
+                else:
+                    boundary = [(0, 0), (5, 0), (5, 4), (0, 4)]
+                story.spaces.append(
+                    SpaceDef(
+                        name=room_name,
+                        boundary=boundary,
+                        space_type=room_type,
+                        area_sqm=room_area,
+                    )
+                )
+        return plan
+
+    def _apply_materials(self, intent: ModificationIntent, plan: BuildingPlan) -> BuildingPlan:
+        """Change wall types/materials for facade (D1-S1 enhancement)."""
+        params = intent.parameters
+        wall_type = params.get("wall_type")  # e.g. "curtain_wall", "brick", "concrete"
+        target = params.get("target", "exterior")  # "exterior" | "all"
+        if wall_type:
+            for story in plan.stories:
+                for wall in story.walls:
+                    if target == "all" or wall.wall_type == "exterior":
+                        wall.wall_type = wall_type
+        return plan
+
+    def _apply_openings(self, intent: ModificationIntent, plan: BuildingPlan) -> BuildingPlan:
+        """Adjust window/door openings (D1-S1 enhancement)."""
+        from promptbim.schemas.plan import OpeningDef
+
+        params = intent.parameters
+        action = params.get("action", "add")  # "add" | "resize" | "remove"
+        target_story = params.get("story", "all")
+        opening_type = params.get("opening_type", "window")
+        width_m = float(params.get("width_m", 1.2))
+        height_m = float(params.get("height_m", 1.5))
+
+        for story in plan.stories:
+            if target_story != "all" and story.name != str(target_story):
+                continue
+            if action == "add":
+                for wall_idx in range(len(story.walls)):
+                    story.openings.append(
+                        OpeningDef(
+                            wall_index=wall_idx,
+                            offset_m=0.5,
+                            width_m=width_m,
+                            height_m=height_m,
+                            sill_height_m=0.9 if opening_type == "window" else 0.0,
+                            opening_type=opening_type,
+                        )
+                    )
+            elif action == "resize":
+                for opening in story.openings:
+                    if opening.opening_type == opening_type:
+                        opening.width_m = width_m
+                        opening.height_m = height_m
+            elif action == "remove":
+                story.openings = [o for o in story.openings if o.opening_type != opening_type]
         return plan
 
 

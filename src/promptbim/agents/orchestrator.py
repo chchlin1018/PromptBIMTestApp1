@@ -76,6 +76,9 @@ class Orchestrator:
         self._plan: BuildingPlan | None = None
         self._build_result: BuildResult | None = None
         self._check_result: CheckResult | None = None
+        # D1-S1: Cost + Schedule + 4D integration
+        self._cost_estimate: "CostEstimate | None" = None
+        self._schedule: "ConstructionSchedule | None" = None
 
     @property
     def requirement(self) -> "BuildingRequirement | None":
@@ -259,6 +262,11 @@ class Orchestrator:
 
         result = self._build_result_obj(_pipeline_start)
         self._store_cache(cache_key, result)
+        # D1-S1: auto-compute cost + schedule after generation
+        self._emit("cost", "Computing cost estimate...", 0.92)
+        self.compute_cost()
+        self._emit("schedule", "Generating 4D schedule...", 0.96)
+        self.compute_schedule()
         return result
 
     async def agenerate(
@@ -321,6 +329,9 @@ class Orchestrator:
 
         result = self._build_result_obj(_pipeline_start)
         self._store_cache(cache_key, result)
+        # D1-S1: auto-compute cost + schedule after async generation
+        self.compute_cost()
+        self.compute_schedule()
         return result
 
     def modify(
@@ -388,6 +399,90 @@ class Orchestrator:
     @property
     def modification_history(self):
         return self._modifier.history
+
+    @property
+    def cost_estimate(self) -> "CostEstimate | None":
+        """Latest cost estimate (populated after generate/modify)."""
+        return self._cost_estimate
+
+    @property
+    def schedule(self) -> "ConstructionSchedule | None":
+        """Latest construction schedule (populated after generate/modify)."""
+        return self._schedule
+
+    # ------------------------------------------------------------------ #
+    # D1-S1: Cost + Schedule + 4D helpers
+    # ------------------------------------------------------------------ #
+
+    def compute_cost(self, monitor_plan=None) -> "CostEstimate | None":
+        """Run cost estimation on the current plan and cache result.
+
+        D1-S1: exposes cost as a first-class Orchestrator concern.
+        """
+        if self._plan is None:
+            return None
+        try:
+            from promptbim.bim.cost.estimator import CostEstimator
+            self._cost_estimate = CostEstimator().estimate(self._plan, monitor_plan)
+            logger.info(
+                "Cost estimate: %.0f TWD (%.0f TWD/m²)",
+                self._cost_estimate.total_cost_twd,
+                self._cost_estimate.cost_per_sqm_twd,
+            )
+        except Exception:
+            logger.warning("Cost estimation failed", exc_info=True)
+        return self._cost_estimate
+
+    def compute_schedule(self, total_days: int = 360) -> "ConstructionSchedule | None":
+        """Generate construction schedule for the current plan.
+
+        D1-S1: exposes 4D schedule as a first-class Orchestrator concern.
+        """
+        if self._plan is None:
+            return None
+        try:
+            from promptbim.bim.simulation.scheduler import generate_schedule
+            component_labels = []
+            for story in self._plan.stories:
+                for i, wall in enumerate(story.walls):
+                    component_labels.append(f"{story.name}_wall_{i}")
+                for i, _ in enumerate(story.spaces):
+                    component_labels.append(f"{story.name}_slab_{i}")
+            self._schedule = generate_schedule(
+                component_labels,
+                total_days=total_days,
+                num_stories=len(self._plan.stories),
+            )
+            logger.info("Schedule: %d phases, %d days", len(self._schedule.phases), self._schedule.total_days)
+        except Exception:
+            logger.warning("Schedule generation failed", exc_info=True)
+        return self._schedule
+
+    def export_4d_gif(self, output_path: "str | Path | None" = None, fps: int = 5) -> "Path | None":
+        """Render 4D construction animation as GIF.
+
+        D1-S1: bridges Orchestrator → 4D Animator.
+        Requires QT_QPA_PLATFORM=offscreen or display.
+        """
+        if self._plan is None or self._schedule is None:
+            logger.warning("export_4d_gif: plan or schedule not ready")
+            return None
+        try:
+            import os
+            from pathlib import Path as _Path
+            from promptbim.bim.simulation.animator import ConstructionAnimator
+
+            if output_path is None:
+                base = self._output_dir or _Path(".")
+                output_path = base / "construction_4d.gif"
+            output_path = _Path(output_path)
+            anim = ConstructionAnimator(self._plan, self._schedule)
+            anim.export_gif(str(output_path), fps=fps)
+            logger.info("4D GIF exported to %s", output_path)
+            return output_path
+        except Exception:
+            logger.warning("4D GIF export failed", exc_info=True)
+            return None
 
     def _emit(self, stage: str, message: str, progress: float) -> None:
         logger.info("[%s] %s (%.0f%%)", stage, message, progress * 100)

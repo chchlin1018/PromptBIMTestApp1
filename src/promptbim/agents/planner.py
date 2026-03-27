@@ -17,6 +17,124 @@ from promptbim.schemas.zoning import ZoningRules
 
 logger = get_logger("agents.planner")
 
+# ============================================================
+# D1-S1: 6 Scenario Prompt Templates
+# ============================================================
+
+SCENARIO_TEMPLATES: dict[str, dict] = {
+    "residential": {
+        "name_zh": "住宅",
+        "layout_hint": (
+            "Layout: Living/dining on ground floor, bedrooms on upper floors. "
+            "Typical story height 2.8-3.2m. Include balconies (min 1.5m depth). "
+            "Private stair in center or corner. Kitchen at rear with ventilation. "
+            "Parking on ground or basement if FAR allows."
+        ),
+        "space_types": ["living", "dining", "kitchen", "bedroom", "bathroom", "balcony", "corridor"],
+        "story_height_m": 2.9,
+        "preferred_roof": "hip",
+    },
+    "office": {
+        "name_zh": "辦公",
+        "layout_hint": (
+            "Layout: Open-plan office floor plates with central core (elevator, stairs, toilets). "
+            "Story height 3.6-4.2m for suspended ceiling + plenum. "
+            "Ground floor: lobby/reception, cafe, meeting rooms. "
+            "Upper floors: open office or cellular offices. "
+            "Curtain wall preferred for exterior."
+        ),
+        "space_types": ["lobby", "office", "meeting_room", "toilet", "corridor", "cafe"],
+        "story_height_m": 3.9,
+        "preferred_roof": "flat",
+    },
+    "factory": {
+        "name_zh": "工廠",
+        "layout_hint": (
+            "Layout: Large open production hall (70%+ area, 6-8m clear height), "
+            "office wing (2-3 floors, 3.6m height), loading dock at rear. "
+            "Heavy structural grid 6x6m to 12x12m. "
+            "Gable or sawtooth roof for natural light. "
+            "Overhead crane clearance min 1.5m above tallest equipment. "
+            "Separate entry for personnel and vehicles."
+        ),
+        "space_types": ["production", "warehouse", "office", "loading_dock", "toilet", "utility"],
+        "story_height_m": 6.5,
+        "preferred_roof": "gable",
+    },
+    "hospital": {
+        "name_zh": "醫院",
+        "layout_hint": (
+            "Layout: H-shape or cross-shape for natural light and ventilation. "
+            "Ground floor: ER entrance (ambulance access), lobby, radiology, pharmacy. "
+            "Upper floors: wards (single/double patient rooms along corridors). "
+            "Central core with elevators (patient + service separate), stairs. "
+            "Corridor width 2.8m minimum (gurney clearance). "
+            "Story height 3.8-4.2m for services. "
+            "Infection control: isolation ward on top floor or separate wing."
+        ),
+        "space_types": ["er", "ward", "icu", "operating_room", "radiology", "lobby", "corridor", "pharmacy"],
+        "story_height_m": 4.0,
+        "preferred_roof": "flat",
+    },
+    "school": {
+        "name_zh": "學校",
+        "layout_hint": (
+            "Layout: L-shape or rectangular classroom block with central corridor. "
+            "Classrooms on south-facing side (Taiwan: natural light). "
+            "Ground floor: main entrance, office, library, gym/hall. "
+            "Upper floors: classrooms (8x9m each, 35 students). "
+            "Corridor width 2.5m minimum. Story height 3.5m. "
+            "Separate blocks for different grades if site allows. "
+            "Open courtyard between blocks."
+        ),
+        "space_types": ["classroom", "office", "library", "gym", "cafeteria", "toilet", "corridor"],
+        "story_height_m": 3.5,
+        "preferred_roof": "flat",
+    },
+    "mixed_use": {
+        "name_zh": "商住混合",
+        "layout_hint": (
+            "Layout: Podium (commercial/retail, 2-4F, 4.5m height) + tower (residential, 5F+, 3.0m height). "
+            "Ground floor: retail shops with double-height lobby (5m). "
+            "2-4F: office or commercial spaces. "
+            "Transfer floor at podium-tower junction. "
+            "Residential tower: corridor with apartments on both sides. "
+            "Separate entrance and vertical circulation for residential vs commercial. "
+            "Roof garden on podium top. Curtain wall for commercial, solid facade for residential."
+        ),
+        "space_types": ["retail", "office", "lobby", "apartment", "corridor", "roof_garden", "parking"],
+        "story_height_m": 3.6,
+        "preferred_roof": "flat",
+    },
+}
+
+
+def get_scenario_hint(building_type: str) -> str:
+    """Return scenario-specific layout hint for the Planner prompt."""
+    bt = building_type.lower().strip()
+    # Map common keywords to scenario keys
+    mapping = {
+        "residential": "residential", "house": "residential", "apartment": "residential",
+        "住宅": "residential", "公寓": "residential", "透天": "residential",
+        "office": "office", "commercial": "office", "辦公": "office", "商業": "office",
+        "factory": "factory", "industrial": "factory", "工廠": "factory", "廠房": "factory",
+        "hospital": "hospital", "clinic": "hospital", "醫院": "hospital", "診所": "hospital",
+        "school": "school", "education": "school", "學校": "school", "校舍": "school",
+        "mixed": "mixed_use", "mixed_use": "mixed_use", "商住": "mixed_use", "複合": "mixed_use",
+    }
+    scenario_key = mapping.get(bt)
+    if scenario_key and scenario_key in SCENARIO_TEMPLATES:
+        t = SCENARIO_TEMPLATES[scenario_key]
+        return (
+            f"\n## Scenario Guidance ({t['name_zh']})\n"
+            f"{t['layout_hint']}\n"
+            f"- Recommended space types: {', '.join(t['space_types'])}\n"
+            f"- Typical story height: {t['story_height_m']}m\n"
+            f"- Preferred roof: {t['preferred_roof']}\n"
+        )
+    return ""
+
+
 PLANNER_SYSTEM_PROMPT = """\
 You are an expert architect and urban planner. Your task is to generate a
 BuildingPlan JSON that places a building on a real land parcel.
@@ -164,6 +282,7 @@ class PlannerAgent(BaseAgent):
         buildable_area: list[tuple[float, float]],
     ) -> str:
         code_constraints = _get_code_constraints(land, zoning, req.num_stories)
+        scenario_hint = get_scenario_hint(req.building_type)
         return (
             f"## Land Parcel\n"
             f"- Boundary: {land.boundary}\n"
@@ -177,7 +296,8 @@ class PlannerAgent(BaseAgent):
             f"left={zoning.setback_left_m}m, right={zoning.setback_right_m}m\n\n"
             f"## Buildable Area (after setback)\n"
             f"- Polygon: {buildable_area}\n\n"
-            f"{code_constraints}\n\n"
+            f"{code_constraints}"
+            f"{scenario_hint}\n"
             f"## Building Requirement\n"
             f"- Type: {req.building_type}\n"
             f"- Stories: {req.num_stories}\n"

@@ -30,18 +30,39 @@ _logger = get_logger("bim.usd")
 
 
 class USDGenerator:
-    """Build an OpenUSD stage from a :class:`BuildingPlan`."""
+    """Build an OpenUSD stage from a :class:`BuildingPlan`.
+
+    D1-S1 additions:
+    - Phase tags: each prim receives ``custom:construction_phase_id`` and
+      ``custom:construction_phase_name`` attributes when a schedule is provided.
+    - MEP layer: pipes and ducts are generated under ``/Building/MEP/``.
+    """
 
     def __init__(self) -> None:
         self._stage: Usd.Stage | None = None
         self._material_cache: dict[str, UsdShade.Material] = {}
+        # D1-S1: phase mapping — prim_path → phase_id (built from schedule)
+        self._phase_map: dict[str, tuple[str, str]] = {}  # prim_label → (phase_id, phase_name)
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def generate(self, plan: BuildingPlan, output_path: str | Path) -> Path:
-        """Generate a ``.usda`` file from *plan*."""
+    def generate(
+        self,
+        plan: BuildingPlan,
+        output_path: str | Path,
+        schedule=None,  # ConstructionSchedule | None (D1-S1)
+        include_mep: bool = True,  # D1-S1
+    ) -> Path:
+        """Generate a ``.usda`` file from *plan*.
+
+        Args:
+            plan: BuildingPlan to convert.
+            output_path: Destination .usda path.
+            schedule: Optional ConstructionSchedule for phase tagging (D1-S1).
+            include_mep: Whether to add MEP layer (D1-S1, default True).
+        """
         import time as _time
 
         _t0 = _time.time()
@@ -51,12 +72,17 @@ class USDGenerator:
 
         self._stage = Usd.Stage.CreateNew(str(output_path))
         self._material_cache.clear()
+        self._phase_map.clear()
 
         UsdGeom.SetStageUpAxis(self._stage, UsdGeom.Tokens.z)
         UsdGeom.SetStageMetersPerUnit(self._stage, 1.0)
 
         root = UsdGeom.Xform.Define(self._stage, "/Building")
         root.GetPrim().SetMetadata("kind", "assembly")
+
+        # D1-S1: build phase map from schedule
+        if schedule is not None:
+            self._build_phase_map(schedule)
 
         # Pre-warm material cache to avoid per-element lookups
         self._prewarm_materials(plan)
@@ -72,6 +98,10 @@ class USDGenerator:
             if boundary:
                 self._add_roof(plan.roof.roof_type, boundary, roof_z)
 
+        # D1-S1: MEP layer
+        if include_mep and plan.stories:
+            self._add_mep_layer(plan)
+
         self._stage.GetRootLayer().Save()
         _elapsed = _time.time() - _t0
 
@@ -85,6 +115,103 @@ class USDGenerator:
             _elapsed,
         )
         return output_path
+
+    # ------------------------------------------------------------------
+    # D1-S1: Phase map + tagging helpers
+    # ------------------------------------------------------------------
+
+    def _build_phase_map(self, schedule) -> None:
+        """Build label→(phase_id, phase_name) from a ConstructionSchedule."""
+        for sp in schedule.phases:
+            phase_id = sp.phase.phase_id
+            phase_name = sp.phase.name
+            for label in sp.components:
+                self._phase_map[label] = (phase_id, phase_name)
+
+    def _tag_phase(self, prim_path: str, label: str) -> None:
+        """Attach construction phase custom attributes to a prim (D1-S1)."""
+        if not self._phase_map or label not in self._phase_map:
+            return
+        phase_id, phase_name = self._phase_map[label]
+        prim = self._stage.GetPrimAtPath(prim_path)
+        if not prim:
+            return
+        prim.CreateAttribute("custom:construction_phase_id", Sdf.ValueTypeNames.String).Set(phase_id)
+        prim.CreateAttribute("custom:construction_phase_name", Sdf.ValueTypeNames.String).Set(phase_name)
+
+    # ------------------------------------------------------------------
+    # D1-S1: MEP Layer
+    # ------------------------------------------------------------------
+
+    def _add_mep_layer(self, plan: BuildingPlan) -> None:
+        """Add simplified MEP geometry layer under /Building/MEP.
+
+        Creates:
+        - /Building/MEP/HVAC: duct stubs (rectangular tubes along building spine)
+        - /Building/MEP/Plumbing: pipe stubs (cylinders along service core)
+        - /Building/MEP/Electrical: conduit stubs
+
+        Geometry is schematic (not construction-level detail).
+        """
+        mep_path = "/Building/MEP"
+        UsdGeom.Xform.Define(self._stage, mep_path)
+        UsdGeom.Xform.Define(self._stage, f"{mep_path}/HVAC")
+        UsdGeom.Xform.Define(self._stage, f"{mep_path}/Plumbing")
+        UsdGeom.Xform.Define(self._stage, f"{mep_path}/Electrical")
+
+        if not plan.building_footprint:
+            return
+
+        # Centroid of building footprint
+        fp = plan.building_footprint
+        cx = sum(p[0] for p in fp) / len(fp)
+        cy = sum(p[1] for p in fp) / len(fp)
+
+        for story in plan.stories:
+            floor_z = story.elevation_m + story.height_m * 0.85  # near ceiling
+            sn = _safe_name(story.name)
+
+            # HVAC duct: a flat box spanning building width at ceiling level
+            fp_pts = story.slab_boundary or plan.building_footprint
+            if fp_pts:
+                xs = [p[0] for p in fp_pts]
+                ys = [p[1] for p in fp_pts]
+                duct_x0, duct_x1 = min(xs), max(xs)
+                duct_y = cy
+                duct_w = duct_x1 - duct_x0
+                duct_mesh = _box_mesh(
+                    x=duct_x0, y=duct_y - 0.15, z=floor_z,
+                    w=duct_w, d=0.3, h=0.25,
+                )
+                hvac_path = f"{mep_path}/HVAC/{sn}_MainDuct"
+                self._create_mesh_prim(hvac_path, duct_mesh)
+                p = self._stage.GetPrimAtPath(hvac_path)
+                if p:
+                    p.CreateAttribute("custom:mep_type", Sdf.ValueTypeNames.String).Set("HVAC_duct")
+                    p.CreateAttribute("custom:story", Sdf.ValueTypeNames.String).Set(story.name)
+
+                # Plumbing riser: vertical cylinder at service core
+                riser_mesh = _cylinder_mesh(cx=cx, cy=cy, z0=story.elevation_m, z1=story.elevation_m + story.height_m, radius=0.05)
+                plumb_path = f"{mep_path}/Plumbing/{sn}_Riser"
+                self._create_mesh_prim(plumb_path, riser_mesh)
+                p = self._stage.GetPrimAtPath(plumb_path)
+                if p:
+                    p.CreateAttribute("custom:mep_type", Sdf.ValueTypeNames.String).Set("plumbing_riser")
+                    p.CreateAttribute("custom:story", Sdf.ValueTypeNames.String).Set(story.name)
+
+                # Electrical conduit: thin horizontal line above duct
+                conduit_mesh = _box_mesh(
+                    x=duct_x0, y=duct_y - 0.03, z=floor_z + 0.3,
+                    w=duct_w, d=0.06, h=0.06,
+                )
+                elec_path = f"{mep_path}/Electrical/{sn}_Conduit"
+                self._create_mesh_prim(elec_path, conduit_mesh)
+                p = self._stage.GetPrimAtPath(elec_path)
+                if p:
+                    p.CreateAttribute("custom:mep_type", Sdf.ValueTypeNames.String).Set("electrical_conduit")
+                    p.CreateAttribute("custom:story", Sdf.ValueTypeNames.String).Set(story.name)
+
+        _logger.debug("MEP layer added: HVAC + Plumbing + Electrical (%d stories)", len(plan.stories))
 
     def _prewarm_materials(self, plan: BuildingPlan) -> None:
         """Pre-create all materials used in the plan."""
@@ -133,6 +260,10 @@ class USDGenerator:
         usd_mat = self._get_or_create_material(mat_def)
         UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(prim_path)).Bind(usd_mat)
 
+        # D1-S1: phase tag
+        label = f"{story.name}_wall_{idx}"
+        self._tag_phase(prim_path, label)
+
     # ------------------------------------------------------------------
     # Slab
     # ------------------------------------------------------------------
@@ -153,6 +284,10 @@ class USDGenerator:
         mat_def = slab_material()
         usd_mat = self._get_or_create_material(mat_def)
         UsdShade.MaterialBindingAPI(self._stage.GetPrimAtPath(prim_path)).Bind(usd_mat)
+
+        # D1-S1: phase tag
+        label = f"{story.name}_slab_0"
+        self._tag_phase(prim_path, label)
 
     # ------------------------------------------------------------------
     # Roof
@@ -263,3 +398,53 @@ def _safe_name(name: str) -> str:
     if result and result[0].isdigit():
         result = "F" + result
     return result
+
+
+def _box_mesh(x: float, y: float, z: float, w: float, d: float, h: float) -> Mesh:
+    """Create a simple box mesh for MEP geometry (D1-S1).
+
+    Args:
+        x, y, z: corner origin
+        w, d, h: width (x), depth (y), height (z)
+    """
+    verts = np.array([
+        [x,     y,     z    ], [x + w, y,     z    ],
+        [x + w, y + d, z    ], [x,     y + d, z    ],
+        [x,     y,     z + h], [x + w, y,     z + h],
+        [x + w, y + d, z + h], [x,     y + d, z + h],
+    ], dtype=np.float32)
+    faces = np.array([
+        [0,1,2],[0,2,3],  # bottom
+        [4,6,5],[4,7,6],  # top
+        [0,5,1],[0,4,5],  # front
+        [1,6,2],[1,5,6],  # right
+        [2,7,3],[2,6,7],  # back
+        [3,4,0],[3,7,4],  # left
+    ], dtype=np.int32)
+    return Mesh(vertices=verts, faces=faces)
+
+
+def _cylinder_mesh(cx: float, cy: float, z0: float, z1: float, radius: float, segments: int = 8) -> Mesh:
+    """Create a vertical cylinder mesh for plumbing risers (D1-S1)."""
+    import math
+    angles = [2 * math.pi * i / segments for i in range(segments)]
+    bottom = [(cx + radius * math.cos(a), cy + radius * math.sin(a), z0) for a in angles]
+    top = [(cx + radius * math.cos(a), cy + radius * math.sin(a), z1) for a in angles]
+
+    verts = np.array(bottom + top, dtype=np.float32)
+    faces = []
+    for i in range(segments):
+        j = (i + 1) % segments
+        # Side quad → 2 tris
+        faces.append([i, j, segments + j])
+        faces.append([i, segments + j, segments + i])
+    # Cap triangles (fan from center — add center verts)
+    bc_idx = len(verts)
+    tc_idx = bc_idx + 1
+    verts = np.vstack([verts, [[cx, cy, z0], [cx, cy, z1]]])
+    for i in range(segments):
+        j = (i + 1) % segments
+        faces.append([bc_idx, j, i])
+        faces.append([tc_idx, segments + i, segments + j])
+
+    return Mesh(vertices=verts, faces=np.array(faces, dtype=np.int32))
