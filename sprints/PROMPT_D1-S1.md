@@ -4,7 +4,7 @@
 > **目標:** AI 6場景 + Cost強化 + 零件庫擴充 + 4D機械 + MEP穿孔 + 變更差異
 > **平台:** Mac Mini (M4)
 > **前置:** W0 完成, v2.12.0 tagged
-> **依賴:** CLAUDE.md v1.23.1 | SKILL.md v4.0 | PROJECT.md v1.3
+> **依賴:** CLAUDE.md v1.23.3 | SKILL.md v4.0 | PROJECT.md v1.3
 
 ---
 
@@ -75,6 +75,30 @@ check_mem() {
     [ "$(echo "${f:-0}<2.0"|bc 2>/dev/null)" = "1" ] && notify "⚠️ 記憶體偏低 💾$m"
     return 0
 }
+
+# --- xcodebuild 互斥鎖 (v1.23.3 — 多 Claude Code 實例安全) ---
+XCODE_LOCK="/tmp/zigma-xcodebuild.lock"
+xcode_lock() {
+    local timeout=300 waited=0
+    while ! mkdir "$XCODE_LOCK" 2>/dev/null; do
+        if [ $waited -ge $timeout ]; then
+            notify "⛔ xcodebuild lock timeout (${timeout}s) — 另一個 Claude Code 佔用中"
+            return 1
+        fi
+        sleep 5; waited=$((waited + 5))
+        [ $((waited % 30)) -eq 0 ] && echo "⏳ Waiting for xcodebuild lock... ${waited}s"
+    done
+    echo "$$" > "$XCODE_LOCK/pid"
+    echo "🔒 xcodebuild lock acquired (PID $$)"
+    return 0
+}
+xcode_unlock() {
+    rm -rf "$XCODE_LOCK" 2>/dev/null
+    echo "🔓 xcodebuild lock released"
+}
+trap 'xcode_unlock' EXIT
+
+# --- Task/Part ---
 task_start() {
     local num=$1; local desc="$2"
     TASK_NUM=$num; TASK_DESC="$desc"
@@ -162,22 +186,18 @@ part_start "A" "AI 場景 + 變更強化" 5
 
 task_start 1 "Planner 6 場景 prompt template"
 # 修改 src/promptbim/agents/planner.py
-# 加入 VILLA/FAB/DATACENTER/FACTORY/BUILDING/BRIDGE 6 個 prompt template
 task_done
 
 task_start 2 "Modifier 多輪累加變更強化"
 # 修改 src/promptbim/agents/modifier.py (17KB)
-# 強化 modify() 支援多輪累加：「加泳池」→「泳池改停車場」連續處理
 task_done
 
 task_start 3 "Orchestrator 串接 Cost+Schedule+4D"
 # 修改 src/promptbim/agents/orchestrator.py (15KB)
-# generate() 流程加入: Build → Cost → Schedule → 4D assign
 task_done
 
 task_start 4 "USD phase tag + MEP layer"
 # 修改 src/promptbim/bim/usd_generator.py (9KB)
-# 每個 Prim 加入 custom:phase + custom:mep_system
 task_done
 
 task_start 5 "BIM 模型轉換: IFC/FBX → USD"
@@ -192,20 +212,15 @@ part_done "Part B: 成本+零件庫"
 part_start "B" "成本引擎 + 零件庫擴充" 5
 
 task_start 6 "零件庫擴充: 3分類 100+ 零件"
-# 修改 src/promptbim/bim/components/
-# 現有 76 件 → 擴充到 150+
 task_done
 
 task_start 7 "零件庫搜尋 + 替代品 + 競合"
-# 修改 src/promptbim/bim/components/registry.py
 task_done
 
 task_start 8 "Cost Engine 供應商明細 + 圖表升級"
-# 修改 src/promptbim/bim/cost/estimator.py + cost_charts.py
 task_done
 
 task_start 9 "零件替換 → 成本即時重算"
-# 修改 src/promptbim/bim/cost/estimator.py
 task_done
 
 task_start 10 "變更成本差異報告"
@@ -220,19 +235,15 @@ part_done "Part C: 4D+MEP"
 part_start "C" "4D 擴充 + MEP 強化" 5
 
 task_start 11 "4D 開挖+架設動畫擴充"
-# 修改 src/promptbim/bim/simulation/animator.py
 task_done
 
 task_start 12 "4D 施工機械 3D + 進場邏輯"
-# 新建 assets/equipment/ 目錄
 task_done
 
 task_start 13 "4D 變更連動: 設計變更 → 4D 自動更新"
-# 修改 src/promptbim/bim/simulation/scheduler.py
 task_done
 
 task_start 14 "MEP 擴充: 電力+HVAC+穿孔"
-# 修改 src/promptbim/bim/mep/planner.py + systems.py
 task_done
 
 task_start 15 "變更工期差異 + 甘特圖對照"
@@ -241,12 +252,16 @@ task_done
 
 part_done "Sprint 完成"
 
+# ===== xcodebuild (互斥鎖保護) =====
+xcode_lock || { notify "⛔ D1-S1 xcodebuild lock failed"; }
+xcodebuild -scheme PromptBIMTestApp1 -configuration Debug build 2>&1 | tail -5
+xcode_unlock
+
 # ===== pytest =====
 pkill -f "python.*pytest" 2>/dev/null; sleep 1
 python -m pytest tests/ --timeout=10 --ignore=tests/test_gui --ignore=tests/test_mcp --ignore=tests/test_e2e_integration.py -x --tb=short -q
 pkill -f "python.*pytest" 2>/dev/null
 
-# ===== Sprint 結束 =====
 sprint_finalize "✅" ""
 git push origin main 2>/dev/null
 
@@ -266,13 +281,8 @@ echo "✅ Sprint ${SPRINT} 完成 → 下一步: PROMPT_D1-S2.md"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 殭屍清理 + offscreen
-☑ ★ 鐵律 1: 100% CLAUDE.md MANDATORY
-☑ ★ 鐵律 2: 啟動讀取 PROJECT.md
-☑ ★ 鐵律 3: task_done → PROJECT.md sed + sprint_finalize
-☑ 通知多行 + 啟動順序 + pytest 安全
-☑ 命名: [D1-S1] commit prefix
-☑ 不修改 CLAUDE.md / SKILL.md
-☑ notify log: /tmp/zigma-notify.log
+☑ notify(v2) + get_mem + check_mem + xcode_lock/unlock + task/part + sprint_finalize
+☑ ★ xcodebuild 互斥鎖: mkdir atomic + 300s timeout + trap EXIT
+☑ xcodebuild 前後包裹 xcode_lock/xcode_unlock
+☑ 鐵律 1/2/3 全通過
 ```

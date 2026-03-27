@@ -3,7 +3,7 @@
 > **Sprint:** W0 | **版本:** v2.11.0 + v2.12.0 | **Tasks:** 5 | **Parts:** 2
 > **目標:** P24 pytest OOM 修復 + tag, P25 pytest + tag, Win 環境確認
 > **平台:** Mac Mini (M4) + Win RTX 4090
-> **前置:** CLAUDE.md v1.23.1 | SKILL.md v4.0 | PROJECT.md v1.3
+> **前置:** CLAUDE.md v1.23.3 | SKILL.md v4.0 | PROJECT.md v1.3
 
 ---
 
@@ -75,6 +75,28 @@ check_mem() {
     return 0
 }
 
+# --- xcodebuild 互斥鎖 (v1.23.3 — 多 Claude Code 實例安全) ---
+XCODE_LOCK="/tmp/zigma-xcodebuild.lock"
+xcode_lock() {
+    local timeout=300 waited=0
+    while ! mkdir "$XCODE_LOCK" 2>/dev/null; do
+        if [ $waited -ge $timeout ]; then
+            notify "⛔ xcodebuild lock timeout (${timeout}s) — 另一個 Claude Code 佔用中"
+            return 1
+        fi
+        sleep 5; waited=$((waited + 5))
+        [ $((waited % 30)) -eq 0 ] && echo "⏳ Waiting for xcodebuild lock... ${waited}s"
+    done
+    echo "$$" > "$XCODE_LOCK/pid"
+    echo "🔒 xcodebuild lock acquired (PID $$)"
+    return 0
+}
+xcode_unlock() {
+    rm -rf "$XCODE_LOCK" 2>/dev/null
+    echo "🔓 xcodebuild lock released"
+}
+trap 'xcode_unlock' EXIT
+
 # --- Task/Part 封裝函數 (v1.23.0) ---
 task_start() {
     local num=$1; local desc="$2"
@@ -143,13 +165,9 @@ echo "✅ 全部函數+環境已就緒"
 cat PROJECT.md | head -50
 echo "--- PROJECT.md 已讀取 ---"
 
-# ===== check_mem =====
 check_mem || exit 1
-
-# ===== git pull =====
 git pull origin main
 
-# ===== 啟動通知 =====
 MEM=$(get_mem)
 MSG="🏗️ Zigma Sprint ${SPRINT} 啟動
 📋 ${SPRINT_DESC}
@@ -158,14 +176,10 @@ MSG="🏗️ Zigma Sprint ${SPRINT} 啟動
 📍 $(hostname -s) | $(date '+%m/%d %H:%M')"
 notify "$MSG"
 
-# ===== 文件檢查 =====
 [ $(wc -c < CLAUDE.md) -ge 5000 ] || { echo "❌ CLAUDE.md 太小"; exit 1; }
 [ $(wc -c < SKILL.md) -ge 20000 ] || { echo "❌ SKILL.md 太小"; exit 1; }
-echo "✅ 文件檢查通過"
-
-# ===== 環境檢查 =====
 [ -n "$ANTHROPIC_API_KEY" ] || { echo "❌ ANTHROPIC_API_KEY 未設定"; exit 1; }
-echo "✅ 環境檢查通過"
+echo "✅ 檢查通過"
 
 # ============================================================
 # Part A: P24 + P25 收尾 (4 tasks)
@@ -206,7 +220,6 @@ part_start "B" "Win RTX 4090 環境" 1
 
 task_start 5 "Win RTX 4090 conda + PyVista OpenGL 確認"
 echo "⚠️ W0-T5 需在 Windows RTX 4090 上執行"
-echo "檢查項目: conda env + PyVista OpenGL + Revit 2026 MCP"
 task_done
 
 part_done "Sprint 完成"
@@ -232,18 +245,9 @@ echo "✅ Sprint ${SPRINT} 完成"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
-☑ ★ 鐵律 1: 100% 符合 CLAUDE.md 所有 MANDATORY 規則
-☑ ★ 鐵律 2: 啟動時讀取 PROJECT.md
-☑ ★ 鐵律 3: 每個 task_done() 後更新 PROJECT.md (sed ⬜→🔵→✅)
-☑ ★ 鐵律 3: sprint_finalize() 更新 PROJECT.md
-☑ 啟動順序: 函數→清理→讀PROJECT→check_mem→git pull→notify→文件→環境
-☑ 通知多行格式
-☑ 每個 Task 用 task_start/task_done 包夾
-☑ 每個 Part 用 part_start/part_done 包夾
-☑ pytest: offscreen + --timeout=10 + --ignore + -x + pkill
-☑ 命名規則遵循
-☑ 不修改 CLAUDE.md / SKILL.md
+☑ notify(v2 heredoc) + get_mem + check_mem + xcode_lock/unlock + task_start + task_done + part_start + part_done + sprint_finalize
+☑ 殭屍清理 + offscreen
+☑ ★ xcodebuild 互斥鎖: mkdir atomic lock + 300s timeout + trap EXIT cleanup
+☑ 鐵律 1/2/3 全通過
 ☑ notify log: /tmp/zigma-notify.log
 ```

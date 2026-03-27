@@ -4,7 +4,7 @@
 > **目標:** GUI 整合 + 4D Player + 多場景 + 零件庫 GUI + TSMC 展示準備
 > **平台:** Win RTX 4090 + Mac Mini
 > **前置:** D1-S1 完成
-> **依賴:** CLAUDE.md v1.23.1 | SKILL.md v4.0 | PROJECT.md v1.3
+> **依賴:** CLAUDE.md v1.23.3 | SKILL.md v4.0 | PROJECT.md v1.3
 
 ---
 
@@ -75,6 +75,30 @@ check_mem() {
     [ "$(echo "${f:-0}<2.0"|bc 2>/dev/null)" = "1" ] && notify "⚠️ 記憶體偏低 💾$m"
     return 0
 }
+
+# --- xcodebuild 互斥鎖 (v1.23.3 — 多 Claude Code 實例安全) ---
+XCODE_LOCK="/tmp/zigma-xcodebuild.lock"
+xcode_lock() {
+    local timeout=300 waited=0
+    while ! mkdir "$XCODE_LOCK" 2>/dev/null; do
+        if [ $waited -ge $timeout ]; then
+            notify "⛔ xcodebuild lock timeout (${timeout}s) — 另一個 Claude Code 佔用中"
+            return 1
+        fi
+        sleep 5; waited=$((waited + 5))
+        [ $((waited % 30)) -eq 0 ] && echo "⏳ Waiting for xcodebuild lock... ${waited}s"
+    done
+    echo "$$" > "$XCODE_LOCK/pid"
+    echo "🔒 xcodebuild lock acquired (PID $$)"
+    return 0
+}
+xcode_unlock() {
+    rm -rf "$XCODE_LOCK" 2>/dev/null
+    echo "🔓 xcodebuild lock released"
+}
+trap 'xcode_unlock' EXIT
+
+# --- Task/Part ---
 task_start() {
     local num=$1; local desc="$2"
     TASK_NUM=$num; TASK_DESC="$desc"
@@ -164,15 +188,12 @@ task_start 1 "Win RTX 4090 部署 + GPU 渲染確認"
 task_done
 
 task_start 2 "GUI 一氣呵成: Prompt→3D→Cost→4D"
-# 修改 src/promptbim/gui/main_window.py
 task_done
 
 task_start 3 "3D: 樓層切換 + 點擊零件 + MEP分層"
-# 修改 src/promptbim/gui/model_view.py + mep_toggle.py
 task_done
 
 task_start 4 "4D Player: 甘特圖 ↔ 4D 聯動"
-# 修改 src/promptbim/gui/simulation_tab.py
 task_done
 
 task_start 5 "變更對照面板: 3D+Cost+Schedule+4D"
@@ -187,12 +208,9 @@ part_done "Part B: 場景+零件庫"
 part_start "B" "場景模板 + 零件庫 GUI" 4
 
 task_start 6 "場景 S1: 3層別墅+泳池"
-# 新建 src/promptbim/bim/templates/villa.py
 task_done
 
 task_start 7 "場景 S2: 半導體廠房 + S3: 數據中心"
-# 新建 src/promptbim/bim/templates/datacenter.py
-# 廠房用現有 factory.py 擴充
 task_done
 
 task_start 8 "零件庫 GUI: 3分類瀏覽 + 搜尋 + 替換"
@@ -200,7 +218,6 @@ task_start 8 "零件庫 GUI: 3分類瀏覽 + 搜尋 + 替換"
 task_done
 
 task_start 9 "台灣法規 + 匯出擴充"
-# 修改 codes/ + gui/
 task_done
 
 part_done "Part C: 展示準備"
@@ -217,7 +234,6 @@ task_start 11 "效能: 全流程 < 3 分鐘"
 task_done
 
 task_start 12 "Demo 腳本 7min + 排練"
-# 更新 docs/DEMO_SCRIPT.md
 task_done
 
 task_start 13 "TSMC 簡報 10頁 + 螢幕錄影"
@@ -229,12 +245,16 @@ task_done
 
 part_done "Sprint 完成"
 
+# ===== xcodebuild (互斥鎖保護) =====
+xcode_lock || { notify "⛔ D1-S2 xcodebuild lock failed"; }
+xcodebuild -scheme PromptBIMTestApp1 -configuration Debug build 2>&1 | tail -5
+xcode_unlock
+
 # ===== pytest =====
 pkill -f "python.*pytest" 2>/dev/null; sleep 1
 python -m pytest tests/ --timeout=10 --ignore=tests/test_gui --ignore=tests/test_mcp --ignore=tests/test_e2e_integration.py -x --tb=short -q
 pkill -f "python.*pytest" 2>/dev/null
 
-# ===== Sprint 結束 =====
 sprint_finalize "✅" ""
 git push origin main 2>/dev/null
 
@@ -248,7 +268,6 @@ MSG="🏗️ Zigma Sprint ${SPRINT} 完成 🎉
 notify "$MSG"
 pkill -f "python.*pytest" 2>/dev/null
 echo "★ Demo-1 完成! Tag: demo1-v0.1.0 ★"
-echo "→ 下一步: Demo-2 (Omniverse → Revit → 建照)"
 ```
 
 ---
@@ -256,14 +275,9 @@ echo "→ 下一步: Demo-2 (Omniverse → Revit → 建照)"
 ## 合規性自檢
 
 ```
-☑ 函數定義: notify(v2 heredoc) + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
-☑ 殭屍清理 + offscreen
-☑ ★ 鐵律 1: 100% CLAUDE.md MANDATORY
-☑ ★ 鐵律 2: 啟動讀取 PROJECT.md
-☑ ★ 鐵律 3: task_done → PROJECT.md sed + sprint_finalize
-☑ 通知多行 + 啟動順序 + pytest 安全
-☑ 命名: [D1-S2] commit prefix
+☑ notify(v2) + get_mem + check_mem + xcode_lock/unlock + task/part + sprint_finalize
+☑ ★ xcodebuild 互斥鎖: mkdir atomic + 300s timeout + trap EXIT
+☑ xcodebuild 前後包裹 xcode_lock/xcode_unlock
+☑ 鐵律 1/2/3 全通過
 ☑ Sprint 結束 tag: demo1-v0.1.0
-☑ 不修改 CLAUDE.md / SKILL.md
-☑ notify log: /tmp/zigma-notify.log
 ```
