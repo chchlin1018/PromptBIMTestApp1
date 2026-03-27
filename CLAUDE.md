@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code 自動開發指引
 
-> **版本:** v1.22.0 | **更新:** 2026-03-27
+> **版本:** v1.23.0 | **更新:** 2026-03-27
 > **版本控制:** 本文件由人工維護，Claude Code 不得直接修改
 > ⚠️ 標記 **[MANDATORY]** 的規則必須嚴格執行，不得跳過
 
@@ -21,35 +21,73 @@
 
 ---
 
-## [MANDATORY] PROJECT_STATUS.md — 專案狀態追蹤 (v1.22.0)
+## [MANDATORY] Zigma 品牌識別 (v1.23.0 新增)
 
-> ⚠️ **Sprint 啟動時必須先讀取 `docs/PROJECT_STATUS.md`，了解專案最新狀態**
-> ⚠️ **Sprint 結束時（無論成功或失敗）必須更新 `docs/PROJECT_STATUS.md`**
-> ⚠️ **錯誤、中斷、OOM 等異常也必須記錄到 PROJECT_STATUS.md**
+> ⚠️ **所有文件、commit message、通知中使用 Zigma 品牌名稱**
 
-### 啟動時讀取（MANDATORY）
-
-```bash
-echo "📋 讀取 PROJECT_STATUS.md..."
-cat docs/PROJECT_STATUS.md
-echo "✅ 專案狀態已讀取"
+```
+Zigma（整體解決方案品牌）
+├── Zigma Core          — 共用底層框架
+├── Zigma PromptToBuild — 設計→建造→交付
+├── Zigma PromptToOperate — 交付→營運→退役
+├── Zigma Cloud         — 雲端基礎設施
+└── Zigma NDH           — IDTF Neutral Data Hub
 ```
 
-### 結束時更新（MANDATORY — 成功/失敗/中斷都要）
+- **倉庫:** PromptBIMTestApp1（待重命名 → zigma）
+- **Python package:** promptbim（待重命名 → zigma_build）
+- **重命名在 RS-S1 Sprint 統一執行，此前維持現狀**
 
-```bash
-# Sprint 結束時更新狀態
-cat >> docs/PROJECT_STATUS.md << EOF
+---
 
-### Sprint P${SPRINT} 執行結果 — $(date '+%Y-%m-%d %H:%M')
-- **狀態:** ✅ 完成 / ❌ 失敗 / ⚠️ 中斷
-- **版本:** v${VERSION}
-- **Tasks:** ${TASK_DONE}/${TASK_TOTAL}
-- **記憶體:** $(get_mem)
-- **錯誤:** （如有）
-EOF
-git add docs/PROJECT_STATUS.md && git commit -m "[status] P${SPRINT} result" && git push origin main 2>/dev/null
+## [MANDATORY] Sprint PROMPT 合規性三大鐵律 (v1.23.0 新增)
+
+> ⚠️ **此規則為最高優先級，違反者 PROMPT 視為不合規，禁止執行**
+
+| # | 鐵律 | 說明 |
+|---|------|------|
+| **鐵律 1** | **嚴格遵守 CLAUDE.md** | 所有 Claude Code 產生的 Sprint PROMPT 必須 100% 符合本文件所有 [MANDATORY] 規則，無一例外 |
+| **鐵律 2** | **遵循 PROJECT.md 管理** | Sprint 啟動時讀取 PROJECT.md 確認當前狀態；所有 Task/Sprint 狀態變更必須即時反映到 PROJECT.md |
+| **鐵律 3** | **回報執行進度到 PROJECT.md** | 每個 Task 完成後更新 PROJECT.md 對應狀態（⬜→🔵→✅/❌）；Sprint 結束時寫入最終結果（版本、日期、錯誤摘要） |
+
+### 合規性驗證流程（Claude Code 自檢）
+
 ```
+★ PROMPT 生成後，Claude Code 必須自檢以下項目：
+☐ 鐵律 1: PROMPT 包含本文件所有 MANDATORY 函數定義與流程
+☐ 鐵律 2: PROMPT 包含「讀取 PROJECT.md」步驟（啟動時）
+☐ 鐵律 3: PROMPT 每個 task_done() 後包含「更新 PROJECT.md」步驟
+☐ 鐵律 3: PROMPT Sprint 結束包含「最終更新 PROJECT.md 結果摘要」步驟
+☐ 不合規的 PROMPT 禁止交付給 Claude Code 執行
+```
+
+---
+
+## [MANDATORY] PROJECT.md 同步規則 (v1.23.0 新增)
+
+> ⚠️ **PROJECT.md 是專案狀態的唯一真相來源（Single Source of Truth）**
+> ⚠️ **Claude Code 可以且應該更新 PROJECT.md**
+> ⚠️ **Claude Code 禁止修改 CLAUDE.md / SKILL.md**
+
+### 10 條同步規則
+
+| # | 規則 | 觸發時機 |
+|---|------|--------|
+| 1 | PROJECT.md 是專案狀態的唯一真相來源 | 永遠 |
+| 2 | 每 Task 開始前：PROJECT.md 對應狀態 → 🔵 | task_start() |
+| 3 | 每 Task 完成後：PROJECT.md 對應狀態 → ✅ | task_done() |
+| 4 | Sprint 完成：更新 PROJECT.md + SKILL.md + AuditReport | part_done(last) |
+| 5 | Demo 完成：更新 PROJECT.md + Demo_AuditReport + git tag | Demo 結束 |
+| 6 | 命名規則：全部遵循 PROJECT.md §7 | 永遠 |
+| 7 | Claude Code 禁止修改 CLAUDE.md / SKILL.md | 永遠 |
+| 8 | Claude Code 可以且應該更新 PROJECT.md | 每個 Task |
+| 9 | Sprint 錯誤/中斷：立即更新 PROJECT.md 記錄異常 | 異常發生時 |
+| 10 | Sprint PROMPT 必須內建 PROJECT.md 進度回報機制 | PROMPT 生成時 |
+
+### PROJECT_STATUS.md 遷移
+
+> ⚠️ **docs/PROJECT_STATUS.md 已 deprecated，功能合併到根目錄 PROJECT.md**
+> ⚠️ **Sprint 啟動/結束讀寫目標：PROJECT.md（不再是 docs/PROJECT_STATUS.md）**
 
 ---
 
@@ -62,7 +100,7 @@ git add docs/PROJECT_STATUS.md && git commit -m "[status] P${SPRINT} result" && 
 
 ```bash
 MEM=$(get_mem)
-MSG="🏗️ PromptBIM Sprint P${SPRINT} 啟動
+MSG="🏗️ Zigma Sprint P${SPRINT} 啟動
 📋 ${SPRINT_DESC}
 🎯 ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts → v${VERSION}
 💾 ${MEM}
@@ -74,7 +112,7 @@ notify "$MSG"
 
 ```bash
 MEM=$(get_mem)
-MSG="🏗️ PromptBIM Sprint P${SPRINT} 完成 🎉
+MSG="🏗️ Zigma Sprint P${SPRINT} 完成 🎉
 🏷️ v${VERSION} | ${TASK_TOTAL} Tasks / ${PART_TOTAL} Parts
 📊 完成度: 100% ✅
 💾 ${MEM}
@@ -109,7 +147,7 @@ notify() {
             send \"$msg\" to targetBuddy
         end tell
     " 2>/dev/null || \
-    osascript -e "display notification \"$msg\" with title \"PromptBIM\"" 2>/dev/null || \
+    osascript -e "display notification \"$msg\" with title \"Zigma\"" 2>/dev/null || \
     echo "[NOTIFY FALLBACK] $msg"
 }
 
@@ -132,12 +170,14 @@ check_mem() {
     return 0
 }
 
-# --- Task/Part 封裝函數 (v1.21.0) ---
+# --- Task/Part 封裝函數 (v1.23.0 — 含 PROJECT.md 進度回報) ---
 task_start() {
     local num=$1; local desc="$2"
     TASK_NUM=$num; TASK_DESC="$desc"
     PCT=$((TASK_DONE * 100 / TASK_TOTAL))
     local m=$(get_mem)
+    # ★ 鐵律 3: 更新 PROJECT.md 狀態 → 🔵
+    sed -i '' "s/| \(.*T${num}\b.*\) | ⬜/| \1 | 🔵/" PROJECT.md 2>/dev/null
     MSG="🏗️ P${SPRINT} ▶️ Task ${num}/${TASK_TOTAL}: ${desc}
 📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
 💾 ${m} | $(hostname -s) $(date '+%m/%d %H:%M')"
@@ -146,6 +186,8 @@ task_start() {
 task_done() {
     TASK_DONE=$((TASK_DONE + 1))
     PCT=$((TASK_DONE * 100 / TASK_TOTAL))
+    # ★ 鐵律 3: 更新 PROJECT.md 狀態 → ✅
+    sed -i '' "s/| \(.*T${TASK_NUM}\b.*\) | 🔵/| \1 | ✅/" PROJECT.md 2>/dev/null
     MSG="🏗️ P${SPRINT} ✅ Task ${TASK_NUM}/${TASK_TOTAL}: ${TASK_DESC}
 📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
 $(hostname -s) $(date '+%m/%d %H:%M')"
@@ -165,11 +207,28 @@ part_done() {
     PART_DONE=$((PART_DONE + 1))
     PCT=$((TASK_DONE * 100 / TASK_TOTAL))
     local next="$1"
+    # ★ 鐵律 3: commit 包含 PROJECT.md 進度
     git add -A && git commit -m "[P${SPRINT}] Part ${PART_ID}: ${PART_DESC}" 2>/dev/null && git push origin main 2>/dev/null
     MSG="🏗️ P${SPRINT} Part ${PART_ID} ✅ ${PART_DESC}
 📊 ${TASK_DONE}/${TASK_TOTAL} | Part ${PART_DONE}/${PART_TOTAL} | ${PCT}%
 ⏭️ ${next} | $(hostname -s) $(date '+%m/%d %H:%M')"
     echo "$MSG" && notify "$MSG"
+}
+
+# --- Sprint 結束: 最終 PROJECT.md 更新 (v1.23.0 鐵律 3) ---
+sprint_finalize() {
+    local status="$1"  # ✅ / ❌ / ⚠️
+    local errors="$2"  # 錯誤摘要
+    cat >> PROJECT.md << EOF
+
+### Sprint P${SPRINT} 執行結果 — $(date '+%Y-%m-%d %H:%M')
+- **狀態:** ${status}
+- **版本:** v${VERSION}
+- **Tasks:** ${TASK_DONE}/${TASK_TOTAL}
+- **記憶體:** $(get_mem)
+- **錯誤:** ${errors:-無}
+EOF
+    git add PROJECT.md && git commit -m "[P${SPRINT}] update PROJECT.md final status" && git push origin main 2>/dev/null
 }
 
 # --- 殭屍清理 + 環境 ---
@@ -193,9 +252,9 @@ echo "✅ 全部函數+環境已就緒"
 
 ```
  1. 讀 PROMPT
- 2. ★ 定義函數(notify+get_mem+check_mem+task_start+task_done+part_start+part_done)
+ 2. ★ 定義函數(notify+get_mem+check_mem+task_start+task_done+part_start+part_done+sprint_finalize)
  3. ★ 殭屍清理 + QT_QPA_PLATFORM=offscreen
- 4. ★ 讀取 docs/PROJECT_STATUS.md
+ 4. ★ 讀取 PROJECT.md 確認當前 Sprint 狀態（鐵律 2）
  5. ★ check_mem（<1GB 中止）
  6. ★ git pull origin main
  7. 啟動 notify（含 💾，多行格式）
@@ -203,6 +262,21 @@ echo "✅ 全部函數+環境已就緒"
  9. 環境檢查（ANTHROPIC_API_KEY）
 10. 開始 Part A → Task 1
 ```
+
+---
+
+## [MANDATORY] 命名規則速查 (v1.23.0 新增)
+
+> ⚠️ **所有 Task ID、commit message、branch、tag 必須遵循此規則**
+> 詳細定義見: docs/architecture/PromptToBuild_Governance_Framework_v1.0.md
+
+| 類型 | 格式 | 範例 |
+|------|------|------|
+| Demo Task | `D{N}-S{X}-P{Y}-T{Z}` | D1-S1-PA-T4 |
+| Sprint Task | `P{XX}-P{Y}-T{Z}` | P26-PA-T1 |
+| Git Tag | `v{M}.{m}.{p}` / `demo{N}-v{M}.{m}.{p}` | v3.0.0 / demo1-v0.1.0 |
+| Git Branch | `sprint/{XX}` / `demo/{N}` | sprint/26 / demo/1 |
+| Commit | `[{scope}] {type}: {desc}` | [P26] feat: IPlugin base |
 
 ---
 
@@ -236,43 +310,50 @@ pkill -f "python.*pytest" 2>/dev/null
 | Sprint 結束 | `git tag v{X} && git push --tags` |
 | CLAUDE.md | ≥5000B，不可修改 |
 | SKILL.md | ≥20000B，不可修改 |
+| PROJECT.md | Claude Code 應主動更新（鐵律 3） |
 
 ---
 
 ## [MANDATORY] PROMPT 合規性檢查
 
 ```
-☐ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done
+☐ 函數定義: notify + get_mem + check_mem + task_start + task_done + part_start + part_done + sprint_finalize
 ☐ 殭屍清理 (pkill) + export QT_QPA_PLATFORM=offscreen
-☐ ★ 啟動時讀取 docs/PROJECT_STATUS.md ★
-☐ 啟動順序: 函數→清理→讀STATUS→check_mem→git pull→notify→文件檢查→環境檢查
+☐ ★ 鐵律 1: PROMPT 100% 符合 CLAUDE.md 所有 MANDATORY 規則 ★
+☐ ★ 鐵律 2: 啟動時讀取 PROJECT.md 確認當前狀態 ★
+☐ ★ 鐵律 3: 每個 task_done() 後更新 PROJECT.md 狀態 ★
+☐ ★ 鐵律 3: Sprint 結束呼叫 sprint_finalize() 更新 PROJECT.md 最終結果 ★
+☐ 啟動順序: 函數→清理→讀PROJECT.md→check_mem→git pull→notify→文件檢查→環境檢查
 ☐ ★ 啟動/完成/錯誤通知必須多行格式（不得單行簡化）★
 ☐ ★ 每個 Task 用 task_start/task_done 包夾 ★
 ☐ ★ 每個 Part 用 part_start/part_done 包夾 ★
 ☐ pytest: offscreen + --timeout=10 + --ignore gui/mcp/e2e + -x + pkill 前後
-☐ ★ Sprint 結束時更新 docs/PROJECT_STATUS.md（成功/失敗/錯誤）★
-☐ ★ 錯誤/中斷時也必須更新 docs/PROJECT_STATUS.md ★
+☐ ★ 命名規則遵循 §命名規則速查（v1.23.0 新增）★
 ☐ Sprint 結束產生下一個 PROMPT
 ☐ 不修改 CLAUDE.md / SKILL.md
 ```
 
 ---
 
-## [MANDATORY] 執行流程（28 步）
+## [MANDATORY] 執行流程（30 步, v1.23.0 更新）
 
 ```
  1. 讀 PROMPT → 2. 定義函數 → 3. pkill + offscreen
- 4. ★ 讀取 docs/PROJECT_STATUS.md ★
+ 4. ★ 讀取 PROJECT.md 確認狀態（鐵律 2）★
  5. check_mem → 6. git pull → 7. 啟動 notify(💾，多行)
  8. 文件檢查 → 9. 環境檢查
-10. part_start → 11. task_start → 12. 執行 → 13. task_done
-14. 重複 11-13 → 15. Part git commit+push → 16. part_done
-17. 重複 10-16 → 18. 錯誤 notify(💾)
-19. xcodebuild → 20. pytest(安全模式，單進程) → 21. pbxproj
-22. 文件同步 → 23. 審計報告 → 24. git push+tag
-25. 產生下一個 PROMPT
-26. ★ 更新 docs/PROJECT_STATUS.md（結果+錯誤）★
-27. Sprint ✅ notify(多行) → 28. pkill 清理
+10. part_start → 11. task_start（PROJECT.md → 🔵）
+12. 執行 → 13. task_done（PROJECT.md → ✅）
+14. ★ 確認 PROJECT.md 已更新 ★
+15. 重複 11-14 → 16. Part git commit+push（含 PROJECT.md）→ 17. part_done
+18. 重複 10-17 → 19. 錯誤 notify(💾)
+20. xcodebuild → 21. pytest(安全模式，單進程) → 22. pbxproj
+23. 文件同步 → 24. 審計報告
+25. ★ sprint_finalize() — 最終更新 PROJECT.md（版本+結果+錯誤）★
+26. git push+tag
+27. 產生下一個 PROMPT（必須通過合規性檢查）
+28. ★ 確認 PROJECT.md 已 push ★
+29. Sprint ✅ notify(多行) → 30. pkill 清理
 ```
 
 ---
@@ -286,9 +367,10 @@ pkill -f "python.*pytest" 2>/dev/null
 | v1.19.0 | 歷史教訓 + Git 安全 + 26 步 |
 | v1.20.0 | P24b 殭屍 → pkill + offscreen + pytest 安全 |
 | v1.21.0 | P24d Task 通知跳過 → task_start/task_done |
-| **v1.22.0** | **PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步** |
+| v1.22.0 | PROJECT_STATUS.md 追蹤 + 通知格式規範(多行) + 28 步 |
+| **v1.23.0** | **Sprint PROMPT 合規性三大鐵律 + Zigma 品牌 + PROJECT.md 10 條同步規則 + 命名規則 + sprint_finalize() + 30 步** |
 
 ---
 
-*CLAUDE.md v1.22.0 | 2026-03-27*
+*CLAUDE.md v1.23.0 | 2026-03-27*
 *★ 主要收件人: +886972535899 | 備用: chchlin1018@icloud.com*
