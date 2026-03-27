@@ -321,7 +321,7 @@ class USDGenerator:
     def _create_mesh_prim(self, prim_path: str, mesh_data: Mesh) -> UsdGeom.Mesh:
         usd_mesh = UsdGeom.Mesh.Define(self._stage, prim_path)
 
-        points = [Gf.Vec3f(*v) for v in mesh_data.vertices]
+        points = [Gf.Vec3f(float(v[0]), float(v[1]), float(v[2])) for v in mesh_data.vertices]
         usd_mesh.GetPointsAttr().Set(Vt.Vec3fArray(points))
 
         # Each face is a triangle (3 vertices)
