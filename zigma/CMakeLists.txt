@@ -18,25 +18,25 @@ qt_add_executable(zigma_app
 )
 set_target_properties(zigma_app PROPERTIES OUTPUT_NAME ZigmaApp)
 
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/qml/ThemeManager.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/ThemeManager.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(zigma_app
     URI Zigma
     VERSION 1.0
     QML_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/main.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/BIMView3D.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/ChatPanel.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/PropertyPanel.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/CostPanel.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/DeltaPanel.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/SchedulePanel.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/StatusBar.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/ScenePicker.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/AssetBrowser.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/ThemeManager.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/LoadingOverlay.qml
-        ${CMAKE_CURRENT_SOURCE_DIR}/qml/SplashScreen.qml
+        qml/main.qml
+        qml/BIMView3D.qml
+        qml/ChatPanel.qml
+        qml/PropertyPanel.qml
+        qml/CostPanel.qml
+        qml/DeltaPanel.qml
+        qml/SchedulePanel.qml
+        qml/StatusBar.qml
+        qml/ScenePicker.qml
+        qml/AssetBrowser.qml
+        qml/ThemeManager.qml
+        qml/LoadingOverlay.qml
+        qml/SplashScreen.qml
 )
 
 target_include_directories(zigma_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
