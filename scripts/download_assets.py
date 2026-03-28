@@ -178,10 +178,10 @@ POLYHAVEN_TEXTURES = {
     "TX-002": {"slug": "concrete_floor_02", "name": "Concrete Floor", "priority": "red"},
     "TX-003": {"slug": "metal_plate", "name": "Metal Plate", "priority": "red"},
     "TX-004": {"slug": "corrugated_iron", "name": "Corrugated Steel", "priority": "red"},
-    "TX-005": {"slug": "glass_window_002", "name": "Glass Window", "priority": "yellow"},
+    "TX-005": {"slug": "long_white_tiles", "name": "Glass/White Tiles", "priority": "yellow"},
     "TX-006": {"slug": "wood_floor_deck", "name": "Wood Floor", "priority": "yellow"},
-    "TX-007": {"slug": "white_plaster", "name": "White Plaster", "priority": "yellow"},
-    "TX-008": {"slug": "large_square_tiles", "name": "Ceramic Tiles", "priority": "yellow"},
+    "TX-007": {"slug": "white_plaster_02", "name": "White Plaster", "priority": "yellow"},
+    "TX-008": {"slug": "square_tiles", "name": "Square Tiles", "priority": "yellow"},
     "TX-009": {"slug": "asphalt_04", "name": "Asphalt", "priority": "yellow"},
     "TX-010": {"slug": "grass_path_2", "name": "Grass", "priority": "green"},
 }
@@ -193,13 +193,32 @@ POLYHAVEN_HDRI = {
 }
 
 RESOLUTION = "1k"
+_HEADERS = {"User-Agent": "ZigmaDownloader/1.0 (PromptBIM)"}
+
+
+def _urlopen(url: str, timeout: int = 30):
+    """Open URL with proper User-Agent to avoid 403."""
+    req = urllib.request.Request(url, headers=_HEADERS)
+    return urllib.request.urlopen(req, timeout=timeout)
+
+
+def _download(url: str, dest: str):
+    """Download file with proper User-Agent."""
+    req = urllib.request.Request(url, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        with open(dest, "wb") as f:
+            while True:
+                chunk = resp.read(65536)
+                if not chunk:
+                    break
+                f.write(chunk)
 
 
 def download_polyhaven_texture(slug: str, output_dir: Path) -> bool:
     """Download Poly Haven PBR texture set."""
     api_url = f"https://api.polyhaven.com/files/{slug}"
     try:
-        with urllib.request.urlopen(api_url, timeout=30) as resp:
+        with _urlopen(api_url) as resp:
             data = json.loads(resp.read())
     except Exception as e:
         print(f"  \u274c API failed: {e}")
@@ -228,7 +247,7 @@ def download_polyhaven_texture(slug: str, output_dir: Path) -> bool:
             continue
         print(f"  \u2b07\ufe0f  {m} -> {out.name} ...")
         try:
-            urllib.request.urlretrieve(url, str(out))
+            _download(url, str(out))
             print(f"  \u2705 {out.name} ({out.stat().st_size // 1024}KB)")
             ok += 1
         except Exception as e:
@@ -240,7 +259,7 @@ def download_polyhaven_hdri(slug: str, output_dir: Path) -> bool:
     """Download Poly Haven HDRI."""
     api_url = f"https://api.polyhaven.com/files/{slug}"
     try:
-        with urllib.request.urlopen(api_url, timeout=30) as resp:
+        with _urlopen(api_url) as resp:
             data = json.loads(resp.read())
     except Exception as e:
         print(f"  \u274c API failed: {e}")
@@ -261,7 +280,7 @@ def download_polyhaven_hdri(slug: str, output_dir: Path) -> bool:
         return True
     print(f"  \u2b07\ufe0f  HDRI -> {out.name} ...")
     try:
-        urllib.request.urlretrieve(url, str(out))
+        _download(url, str(out))
         print(f"  \u2705 {out.name} ({out.stat().st_size // 1024}KB)")
         return True
     except Exception as e:
