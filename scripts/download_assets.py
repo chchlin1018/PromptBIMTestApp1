@@ -269,14 +269,34 @@ def download_polyhaven_hdri(slug: str, output_dir: Path) -> bool:
         return False
 
 
+def resolve_output_dir(args) -> Path:
+    """Resolve output directory, with --icloud support for macOS/Windows."""
+    if args.icloud:
+        if sys.platform == "darwin":
+            base = Path.home() / "ZigmaMedia"
+            # Also check the iCloud Drive path directly
+            icloud_path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs" / "ZigmaMedia"
+            if icloud_path.exists() and not base.exists():
+                base = icloud_path
+        elif sys.platform == "win32":
+            base = Path(os.environ.get("USERPROFILE", "")) / "iCloudDrive" / "ZigmaMedia"
+        else:
+            base = Path.home() / "ZigmaMedia"
+        return base
+    return Path(args.output_dir)
+
+
 def main():
     p = argparse.ArgumentParser(description="Zigma Demo-1 Asset Downloader")
     p.add_argument("--priority", choices=["red", "yellow", "green", "all"], default="red")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--output-dir", default="assets")
+    p.add_argument("--icloud", action="store_true", help="Use iCloud ZigmaMedia/ as output")
+    p.add_argument("--category", choices=["textures", "hdri", "models", "all"], default="all",
+                   help="Download only specific category")
     args = p.parse_args()
 
-    base = Path(args.output_dir)
+    base = resolve_output_dir(args)
     for d in ["models/construction", "models/industrial", "models/building", "textures", "hdri"]:
         (base / d).mkdir(parents=True, exist_ok=True)
 
@@ -284,55 +304,59 @@ def main():
     print(f"\U0001f4c1 Output: {base.resolve()}")
     print(f"\U0001f3af Priority: {args.priority}\n")
 
+    cat = args.category
     stats = {"auto": 0, "fail": 0, "manual": 0}
 
     # Poly Haven Textures
-    print("=" * 50)
-    print("\U0001f3a8 PBR Textures (Poly Haven CC0)")
-    print("=" * 50)
-    for tid, info in POLYHAVEN_TEXTURES.items():
-        if args.priority != "all" and info["priority"] != args.priority:
-            continue
-        e = {"red": "\U0001f534", "yellow": "\U0001f7e1", "green": "\U0001f7e2"}.get(info["priority"], "")
-        print(f"\n{e} {tid}: {info['name']} ({info['slug']})")
-        if args.dry_run:
-            continue
-        if download_polyhaven_texture(info["slug"], base / "textures"):
-            stats["auto"] += 1
-        else:
-            stats["fail"] += 1
+    if cat in ("textures", "all"):
+        print("=" * 50)
+        print("\U0001f3a8 PBR Textures (Poly Haven CC0)")
+        print("=" * 50)
+        for tid, info in POLYHAVEN_TEXTURES.items():
+            if args.priority != "all" and info["priority"] != args.priority:
+                continue
+            e = {"red": "\U0001f534", "yellow": "\U0001f7e1", "green": "\U0001f7e2"}.get(info["priority"], "")
+            print(f"\n{e} {tid}: {info['name']} ({info['slug']})")
+            if args.dry_run:
+                continue
+            if download_polyhaven_texture(info["slug"], base / "textures"):
+                stats["auto"] += 1
+            else:
+                stats["fail"] += 1
 
     # Poly Haven HDRI
-    print("\n" + "=" * 50)
-    print("\U0001f305 HDRI (Poly Haven CC0)")
-    print("=" * 50)
-    for hid, info in POLYHAVEN_HDRI.items():
-        if args.priority != "all" and info["priority"] != args.priority:
-            continue
-        e = {"red": "\U0001f534", "yellow": "\U0001f7e1"}.get(info["priority"], "")
-        print(f"\n{e} {hid}: {info['name']} ({info['slug']})")
-        if args.dry_run:
-            continue
-        if download_polyhaven_hdri(info["slug"], base / "hdri"):
-            stats["auto"] += 1
-        else:
-            stats["fail"] += 1
+    if cat in ("hdri", "all"):
+        print("\n" + "=" * 50)
+        print("\U0001f305 HDRI (Poly Haven CC0)")
+        print("=" * 50)
+        for hid, info in POLYHAVEN_HDRI.items():
+            if args.priority != "all" and info["priority"] != args.priority:
+                continue
+            e = {"red": "\U0001f534", "yellow": "\U0001f7e1"}.get(info["priority"], "")
+            print(f"\n{e} {hid}: {info['name']} ({info['slug']})")
+            if args.dry_run:
+                continue
+            if download_polyhaven_hdri(info["slug"], base / "hdri"):
+                stats["auto"] += 1
+            else:
+                stats["fail"] += 1
 
     # Sketchfab (manual)
-    print("\n" + "=" * 50)
-    print("\U0001f4e6 Sketchfab GLB Models (manual download)")
-    print("=" * 50)
-    print("Login to Sketchfab -> Download glTF -> save to path:\n")
-    for mid, info in SKETCHFAB_MODELS.items():
-        if args.priority != "all" and info["priority"] != args.priority:
-            continue
-        e = {"red": "\U0001f534", "yellow": "\U0001f7e1", "green": "\U0001f7e2"}.get(info["priority"], "")
-        exists = "\u2705" if Path(info["output"]).exists() else "\u2b1c"
-        print(f"  {e} {exists} {mid}: {info['name']}")
-        print(f"     URL: {info['url']}")
-        print(f"     Save: {info['output']}")
-        print()
-        stats["manual"] += 1
+    if cat in ("models", "all"):
+        print("\n" + "=" * 50)
+        print("\U0001f4e6 Sketchfab GLB Models (manual download)")
+        print("=" * 50)
+        print("Login to Sketchfab -> Download glTF -> save to path:\n")
+        for mid, info in SKETCHFAB_MODELS.items():
+            if args.priority != "all" and info["priority"] != args.priority:
+                continue
+            e = {"red": "\U0001f534", "yellow": "\U0001f7e1", "green": "\U0001f7e2"}.get(info["priority"], "")
+            exists = "\u2705" if Path(info["output"]).exists() else "\u2b1c"
+            print(f"  {e} {exists} {mid}: {info['name']}")
+            print(f"     URL: {info['url']}")
+            print(f"     Save: {info['output']}")
+            print()
+            stats["manual"] += 1
 
     # Summary
     print("=" * 50)
