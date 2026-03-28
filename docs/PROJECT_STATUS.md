@@ -9,7 +9,7 @@
 
 | 項目 | 狀態 |
 |------|------|
-| 當前版本 | **mvp-v0.2.0** (M1-SCENE Sprint 完成) |
+| 當前版本 | **mvp-v0.2.1** (M2-ENV Sprint 完成) |
 | 下一版本 | **mvp-v0.3.0** (M1-FIX Sprint) |
 | POC 版本 | v2.12.0 ✅ **已 tag** |
 | CLAUDE.md | **v1.23.3** |
@@ -30,6 +30,7 @@
 | **M1-MVP** | **mvp-v0.1.0** | **✅ 完成** | **68T/9Parts Qt Quick 3D** |
 | **MEDIA-DL** | **media-v1.0** | **✅ 完成** | **37 files/81MB iCloud** |
 | **M1-SCENE** | **mvp-v0.2.0** | **✅ 完成** | **22T: 3D Demo + Debug Logging** |
+| **M2-ENV** | **mvp-v0.2.1** | **✅ 完成** | **8T: 環境驗證 + Agent Runner** |
 | M1-FIX | — | ⬜ 待規劃 | Windows build + 整合 |
 | M1-DEMO | — | ⬜ 待規劃 | TSMC Demo 排練 |
 
@@ -64,6 +65,18 @@
 - **Part B (T10-16):** DemoScene.qml — TSMC fab 3D 場景 ✅
 - **Part C (T17-22):** 收尾 + tag ✅
 - **產出:** ZigmaLogger.h/.cpp + DemoScene.qml + BIMView3D rewrite + Python logging
+
+### M2-ENV Sprint — 2026-03-28 完成
+
+- **Tasks:** 8/8 ✅
+- **版本:** mvp-v0.2.1
+- **環境檢查結果:**
+  - .env: ✅ API_TIMEOUT_SECONDS=120 + ANTHROPIC_API_KEY present
+  - conda promptbim: ✅ Python 3.11.15 + anthropic 0.86 + PySide6 6.11 + usd-core 26.3
+  - agent_runner.py: ✅ import OK (root-level)
+  - CMake+Ninja: ✅ 6 targets built, 14/14 ctests PASS
+  - ~/ZigmaMedia/: ✅ exists (10 subdirs from MEDIA-DL)
+- **GTest:** installed via brew (was missing)
 
 ---
 
@@ -143,5 +156,5 @@
 
 ---
 
-*docs/PROJECT_STATUS.md v1.9 | 2026-03-28 CST*
-*M1-MVP ✅ | MEDIA-DL ✅ | M1-SCENE ✅ | Repo ~/Dev/ ✅*
+*docs/PROJECT_STATUS.md v1.10 | 2026-03-28 CST*
+*M1-MVP ✅ | MEDIA-DL ✅ | M1-SCENE ✅ | M2-ENV ✅ | Repo ~/Dev/ ✅*
