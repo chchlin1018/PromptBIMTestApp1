@@ -16,12 +16,8 @@ Rectangle {
     signal dayClicked(int day)
     signal phaseClicked(string phaseName)
 
-    onPhasesChanged: ganttChart.requestPaint()
     onCurrentDayChanged: ganttChart.requestPaint()
-
-    function captureScreenshot() {
-        // Placeholder for screenshot export
-    }
+    onPhasesChanged: ganttChart.requestPaint()
 
     Timer {
         id: playTimer
@@ -59,7 +55,6 @@ Rectangle {
             }
         }
 
-        // Timeline slider
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -107,7 +102,6 @@ Rectangle {
             }
         }
 
-        // Speed control
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
@@ -127,7 +121,6 @@ Rectangle {
             }
         }
 
-        // Gantt chart
         Canvas {
             id: ganttChart
             Layout.fillWidth: true
@@ -135,8 +128,7 @@ Rectangle {
 
             property var phaseColors: ["#4a9eff", "#4ade80", "#f59e0b", "#ef4444",
                                         "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16",
-                                        "#f97316", "#6366f1", "#14b8a6", "#e11d48",
-                                        "#a855f7", "#eab308", "#0ea5e9", "#d946ef"]
+                                        "#f97316", "#6366f1", "#14b8a6", "#e11d48"]
 
             onPaint: {
                 var ctx = getContext("2d")
@@ -152,12 +144,10 @@ Rectangle {
                     var x = 120 + (p.start_day || 0) * scale
                     var w = ((p.end_day || 0) - (p.start_day || 0)) * scale
 
-                    // Phase label
                     ctx.fillStyle = "#8892b0"
                     ctx.font = "10px sans-serif"
                     ctx.fillText((p.phase || "").substring(0, 15), 4, y + barH - 4)
 
-                    // Bar
                     var day = root.currentDay
                     var startDay = p.start_day || 0
                     var endDay = p.end_day || 0
@@ -177,7 +167,6 @@ Rectangle {
                     ctx.globalAlpha = 1.0
                 }
 
-                // Current day line
                 var dayX = 120 + root.currentDay * scale
                 ctx.strokeStyle = "#ef4444"
                 ctx.lineWidth = 2
