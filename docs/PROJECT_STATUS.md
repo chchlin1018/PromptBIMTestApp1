@@ -9,8 +9,8 @@
 
 | 項目 | 狀態 |
 |------|------|
-| 當前版本 | **mvp-v0.1.0** (M1-MVP Sprint 完成) |
-| 下一版本 | **mvp-v0.2.0** (M1-SCENE Sprint 執行中) |
+| 當前版本 | **mvp-v0.2.0** (M1-SCENE Sprint 完成) |
+| 下一版本 | **mvp-v0.3.0** (M1-FIX Sprint) |
 | POC 版本 | v2.12.0 ✅ **已 tag** |
 | CLAUDE.md | **v1.23.3** |
 | SKILL.md | **v4.2** |
@@ -29,7 +29,7 @@
 | D1-S2 | demo1-v0.1.0 | ✅ 完成 | GUI+TSMC展示 |
 | **M1-MVP** | **mvp-v0.1.0** | **✅ 完成** | **68T/9Parts Qt Quick 3D** |
 | **MEDIA-DL** | **media-v1.0** | **✅ 完成** | **37 files/81MB iCloud** |
-| **M1-SCENE** | **mvp-v0.2.0** | **🔄 執行中** | **22T: 3D Demo + Debug Logging** |
+| **M1-SCENE** | **mvp-v0.2.0** | **✅ 完成** | **22T: 3D Demo + Debug Logging** |
 | M1-FIX | — | ⬜ 待規劃 | Windows build + 整合 |
 | M1-DEMO | — | ⬜ 待規劃 | TSMC Demo 排練 |
 
@@ -54,13 +54,16 @@
 - **ctest:** ✅ 2/2 PASS
 - **ZigmaApp:** ✅ GUI 三欄佈局 + Metal 渲染正常
 
-### M1-SCENE Sprint — 2026-03-28 22:45 啟動
+### M1-SCENE Sprint — 2026-03-28 完成
 
-- **Tasks:** 22T / 3 Parts → mvp-v0.2.0
-- **狀態:** 🔄 Mac Mini Claude Code 執行中
-- **Part A (T1-9):** ZigmaLogger C++ singleton — Debug Log to File
-- **Part B (T10-16):** DemoScene.qml — TSMC fab 3D 場景
-- **Part C (T17-22):** 收尾 + tag
+- **Tasks:** 22/22 ✅
+- **時間:** ~10 分鐘 (Opus 4.6)
+- **Tags:** mvp-v0.2.0
+- **Build:** CMake+Ninja OK, 2 ctests PASS
+- **Part A (T1-9):** ZigmaLogger C++ singleton — Debug Log to File ✅
+- **Part B (T10-16):** DemoScene.qml — TSMC fab 3D 場景 ✅
+- **Part C (T17-22):** 收尾 + tag ✅
+- **產出:** ZigmaLogger.h/.cpp + DemoScene.qml + BIMView3D rewrite + Python logging
 
 ---
 
@@ -120,7 +123,7 @@
 
 | 優先級 | 項目 | 時間 |
 |--------|------|------|
-| 🔴 | M1-SCENE Sprint 完成 (執行中) | 今晚 |
+| ✅ | M1-SCENE Sprint 完成 | 2026-03-28 |
 | 🔴 | Sketchfab 8 GLB 手動下載 | 30 min |
 | 🔴 | .env 補 ANTHROPIC_API_KEY | 2 min |
 | 🟡 | Sprint M1-FIX (15T): Windows build + MediaManager | 本週 |
@@ -140,5 +143,5 @@
 
 ---
 
-*docs/PROJECT_STATUS.md v1.8 | 2026-03-28 23:00 CST*
-*M1-MVP ✅ | MEDIA-DL ✅ | Repo ~/Dev/ ✅ | M1-SCENE 🔄 執行中*
+*docs/PROJECT_STATUS.md v1.9 | 2026-03-28 CST*
+*M1-MVP ✅ | MEDIA-DL ✅ | M1-SCENE ✅ | Repo ~/Dev/ ✅*
