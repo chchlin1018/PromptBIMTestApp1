@@ -10,6 +10,8 @@ Rectangle {
     property double totalCost: costData ? (costData.total_cost_twd || 0) : 0
     property var breakdown: costData ? (costData.breakdown || []) : []
 
+    onBreakdownChanged: pieChart.requestPaint()
+
     function formatNTD(value) {
         var str = Math.round(value).toString()
         return "NT$ " + str.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -65,16 +67,16 @@ Rectangle {
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.clearRect(0, 0, width, height)
-                if (breakdown.length === 0) return
+                if (root.breakdown.length === 0) return
 
                 var cx = width / 2, cy = height / 2, r = Math.min(cx, cy) - 10
                 var total = 0
-                for (var i = 0; i < breakdown.length; i++)
-                    total += (breakdown[i].cost_twd || breakdown[i].ratio || 1)
+                for (var i = 0; i < root.breakdown.length; i++)
+                    total += (root.breakdown[i].cost_twd || root.breakdown[i].ratio || 1)
 
                 var startAngle = -Math.PI / 2
-                for (var j = 0; j < breakdown.length; j++) {
-                    var value = breakdown[j].cost_twd || breakdown[j].ratio || 1
+                for (var j = 0; j < root.breakdown.length; j++) {
+                    var value = root.breakdown[j].cost_twd || root.breakdown[j].ratio || 1
                     var sweep = (value / total) * 2 * Math.PI
                     ctx.beginPath()
                     ctx.moveTo(cx, cy)
@@ -85,8 +87,6 @@ Rectangle {
                     startAngle += sweep
                 }
             }
-
-            onBreakdownChanged: requestPaint()
         }
 
         // Breakdown list

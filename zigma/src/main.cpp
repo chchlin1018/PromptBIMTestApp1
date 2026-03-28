@@ -17,27 +17,10 @@ int main(int argc, char *argv[])
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    // Try known Qt6 QML module resource paths
-    QStringList paths = {
-        "qrc:/qt/qml/Zigma/qml/main.qml",
-        "qrc:/qt/qml/Zigma/main.qml",
-        "qrc:/Zigma/qml/main.qml",
-        "qrc:/Zigma/main.qml",
-    };
+    engine.load(QUrl(QStringLiteral("qrc:/Zigma/qml/main.qml")));
 
-    for (const auto &p : paths) {
-        engine.load(QUrl(p));
-        if (!engine.rootObjects().isEmpty()) {
-            qDebug() << "Loaded QML from:" << p;
-            return app.exec();
-        }
-    }
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
-    // Fallback: loadFromModule
-    engine.loadFromModule("Zigma", "Main");
-    if (!engine.rootObjects().isEmpty())
-        return app.exec();
-
-    qCritical() << "Failed to load main.qml from any path";
-    return -1;
+    return app.exec();
 }
