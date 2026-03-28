@@ -1,12 +1,13 @@
-# PROJECT_STATUS v2.0
+# PROJECT_STATUS v2.1
 
-> Last updated: 2026-03-28 | HEAD: 1b5307f
+> Last updated: 2026-03-29 | HEAD: ba2fae2
 
 ## Current State
 
 **Version:** mvp-v0.2.1 (M2-ENV complete)
 **Build:** ✅ OK (cmake + ninja) | ctest 2/2 PASS
-**Repo:** ~/Dev/PromptBIMTestApp1 (migrated from ~/Documents/MyProjects/)
+**Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini + MacBook)
+**Next Sprint:** M2-BRIDGE (25T → mvp-v0.3.0)
 
 ## Sprint History
 
@@ -21,21 +22,14 @@
 
 ## Planned Sprints (PROMPTs on GitHub)
 
-| # | Sprint | Tasks | Tag | Goal | PROMPT |
-|:-:|--------|:-----:|:---:|------|:------:|
-| 5 | M2-BRIDGE | 25T | mvp-v0.3.0 | AgentBridge bidirectional + BIMEntity + SceneGraph | ✅ |
-| 6 | M2-ENTITY | 20T | mvp-v0.4.0 | Named DemoScene + CUB equipment catalog | ✅ |
-| 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0 | Full chiller Demo + MEP pipes + cost | ✅ |
-| 8 | P30-USD-REVIT | 25T | v3.0.0 | USD→Revit→IFC pipeline | ✅ |
+| # | Sprint | Tasks | Tag | Goal |
+|:-:|--------|:-----:|:---:|------|
+| 5 | M2-BRIDGE | 25T | mvp-v0.3.0 | AgentBridge bidirectional + BIMEntity + SceneGraph |
+| 6 | M2-ENTITY | 20T | mvp-v0.4.0 | Named DemoScene + CUB equipment catalog |
+| 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0 | Full chiller Demo + MEP pipes + cost linkage |
+| 8 | P30-USD-REVIT | 25T | v3.0.0 | USD→Revit→IFC+Omniverse pipeline |
 
-## Key Deliverables (M1-SCENE)
-
-- `zigma/src/ZigmaLogger.h/.cpp` — C++ singleton debug logging (5-level, file+stderr, rotation)
-- `zigma/qml/DemoScene.qml` — TSMC fab 3D scene (11 building elements)
-- `zigma/qml/BIMView3D.qml` — Camera + 3-Light + OrbitController
-- `debuglog/` — Runtime log directory with .gitkeep
-
-## Architecture Overview
+## Architecture
 
 ```
 ┌─ Qt Quick 3D Frontend (C++) ─────────────────┐
@@ -58,26 +52,28 @@
 ## TSMC Demo Target
 
 **核心場景:** 「請將那台冰水主機移動到右側柱子旁邊」
-- 每個 3D 物件 = BIMEntity (id/type/name/position/cost)
-- AI 可查詢 + 操作場景 (scene.query / scene.move)
-- 管線自動重路由 + 碰撞檢測
-- 成本差異即時回報 (NT$)
-- USD → Omniverse / Revit / IFC 三條管線
+- BIMEntity (id/type/name/position/cost) — M2-ENTITY
+- Scene Query/Operate API — M2-BRIDGE
+- MEP 管線重路由 + 碰撞檢測 — M2-MEP-DEMO
+- 成本即時回報 (NT$) — M2-MEP-DEMO
+- USD→Omniverse/Revit/IFC — P30
+
+**IDTF v3.5:** Python 後端 90% 已完成 (agents 100KB + mep 54KB + cost 38KB + io_usd 31KB)
 
 ## Known Issues
 
-| ID | Issue | Severity | Fix Sprint |
-|----|-------|:--------:|:----------:|
-| BUILD-005 | Repo migrated to ~/Dev/ (resolved) | ✅ Fixed | — |
-| BUILD-006 | MikeRunClaudeSafe path still ~/Documents/ | Medium | Manual fix |
-| BUILD-007 | Sprint PROMPT too long for shell -p | ✅ Fixed | Use file |
-| BUILD-008 | DemoScene objects are anonymous Primitives | High | M2-ENTITY |
+| ID | Issue | Status |
+|----|-------|:------:|
+| BUILD-005 | Repo migrated to ~/Dev/ | ✅ Fixed |
+| BUILD-006 | MikeRunClaudeSafe path ~/Documents/ | ⚠️ Pending |
+| BUILD-007 | Sprint PROMPT too long for shell | ✅ Fixed (file) |
+| BUILD-008 | DemoScene anonymous Primitives | 🔵 M2-ENTITY |
 
-## File Statistics
+## Governance Documents
 
-- C++ source: 8 files (zigma/src/)
-- QML files: 7 files (zigma/qml/)
-- Python backend: ~40 files (src/promptbim/)
-- Sprint PROMPTs: 5 files (sprints/)
-- Docs: 25+ files (docs/)
-- Tests: 2 ctest (C++) + pytest (Python)
+| File | Version |
+|------|---------|
+| CLAUDE.md | v1.23.3 |
+| SKILL.md | v4.3 |
+| PROJECT_STATUS.md | v2.1 (this) |
+| Context Prompt | v5.7 |
