@@ -16,6 +16,9 @@ Rectangle {
     signal dayClicked(int day)
     signal phaseClicked(string phaseName)
 
+    onPhasesChanged: ganttChart.requestPaint()
+    onCurrentDayChanged: ganttChart.requestPaint()
+
     function captureScreenshot() {
         // Placeholder for screenshot export
     }
@@ -62,7 +65,7 @@ Rectangle {
             spacing: 8
 
             Button {
-                text: playing ? "⏸" : "▶"
+                text: playing ? "\u23F8" : "\u25B6"
                 implicitWidth: 36; implicitHeight: 28
                 onClicked: playing = !playing
                 background: Rectangle { color: "#333355"; radius: 4 }
@@ -138,13 +141,13 @@ Rectangle {
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.clearRect(0, 0, width, height)
-                if (phases.length === 0) return
+                if (root.phases.length === 0) return
 
-                var barH = Math.min(20, (height - 20) / phases.length - 2)
-                var scale = (width - 120) / totalDays
+                var barH = Math.min(20, (height - 20) / root.phases.length - 2)
+                var scale = (width - 120) / root.totalDays
 
-                for (var i = 0; i < phases.length; i++) {
-                    var p = phases[i]
+                for (var i = 0; i < root.phases.length; i++) {
+                    var p = root.phases[i]
                     var y = i * (barH + 2) + 2
                     var x = 120 + (p.start_day || 0) * scale
                     var w = ((p.end_day || 0) - (p.start_day || 0)) * scale
@@ -183,9 +186,6 @@ Rectangle {
                 ctx.lineTo(dayX, height)
                 ctx.stroke()
             }
-
-            onCurrentDayChanged: requestPaint()
-            onPhasesChanged: requestPaint()
 
             MouseArea {
                 anchors.fill: parent
