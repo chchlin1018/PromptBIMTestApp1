@@ -66,7 +66,7 @@ pyarrow==23.0.1
 pycparser==3.0
 pydantic==2.12.5
 pydantic-settings==2.13.1
-pydantic_core==2.41.5
+pydantic_core==2.42.0
 pydeck==0.9.1
 pygeoif==1.6.0
 Pygments==2.19.2
