@@ -1,4 +1,5 @@
 #include "AgentBridge.h"
+#include "ZigmaLogger.h"
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QCoreApplication>
@@ -33,6 +34,7 @@ void AgentBridge::startPython()
 
     m_process = new QProcess(this);
     connect(m_process, &QProcess::readyReadStandardOutput, this, &AgentBridge::onReadyRead);
+    connect(m_process, &QProcess::readyReadStandardError, this, &AgentBridge::onReadyReadStderr);
     connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &AgentBridge::onProcessFinished);
 
@@ -140,6 +142,9 @@ void AgentBridge::onReadyRead()
 
         if (line.isEmpty()) continue;
 
+        // Log every stdout line from Python
+        ZigmaLogger::instance()->logPythonStdout(QString::fromUtf8(line));
+
         QJsonParseError err;
         QJsonDocument doc = QJsonDocument::fromJson(line, &err);
         if (err.error != QJsonParseError::NoError) {
@@ -212,4 +217,15 @@ void AgentBridge::restartPython()
     emit statusUpdate("AI reconnecting... (attempt " + QString::number(m_restartCount) + "/3)", 0.0);
     stopPython();
     QTimer::singleShot(1000 * m_restartCount, this, &AgentBridge::startPython);
+}
+
+void AgentBridge::onReadyReadStderr()
+{
+    if (!m_process) return;
+    QByteArray data = m_process->readAllStandardError();
+    QString text = QString::fromUtf8(data);
+    const QStringList lines = text.split('\n', Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        ZigmaLogger::instance()->logPythonStderr(line.trimmed());
+    }
 }

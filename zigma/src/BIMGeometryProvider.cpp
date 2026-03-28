@@ -1,4 +1,5 @@
 #include "BIMGeometryProvider.h"
+#include "ZigmaLogger.h"
 #include <QJsonArray>
 #include <QVector3D>
 #include <cmath>

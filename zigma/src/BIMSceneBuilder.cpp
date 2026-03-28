@@ -1,4 +1,5 @@
 #include "BIMSceneBuilder.h"
+#include "ZigmaLogger.h"
 #include <QJsonDocument>
 
 BIMSceneBuilder::BIMSceneBuilder(QObject *parent)

@@ -41,6 +41,7 @@ signals:
 
 private slots:
     void onReadyRead();
+    void onReadyReadStderr();
     void onProcessFinished(int exitCode, QProcess::ExitStatus status);
     void onHeartbeatTimeout();
 

@@ -1,4 +1,5 @@
 #include "BIMMaterialLibrary.h"
+#include "ZigmaLogger.h"
 
 BIMMaterialLibrary::BIMMaterialLibrary(QObject *parent)
     : QObject(parent)

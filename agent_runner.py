@@ -8,12 +8,25 @@ Protocol:
 from __future__ import annotations
 
 import json
+import logging
 import sys
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 # Ensure promptbim is importable
 sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+# --- Debug logging to file ---
+_log_dir = Path(__file__).parent / "debuglog"
+_log_dir.mkdir(exist_ok=True)
+_log_file = _log_dir / f"python_agent_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+_file_handler = logging.FileHandler(_log_file, encoding="utf-8")
+_file_handler.setFormatter(logging.Formatter("[%(asctime)s.%(msecs)03d] [%(levelname)-5s] [%(name)-12s] %(message)s",
+                                             datefmt="%Y-%m-%d %H:%M:%S"))
+logging.root.addHandler(_file_handler)
+logging.root.setLevel(logging.DEBUG)
+_logger = logging.getLogger("AgentRunner")
 
 from mesh_serializer import serialize_plan_to_mesh
 from promptbim.agents.orchestrator import Orchestrator, PipelineStatus
@@ -22,6 +35,7 @@ from promptbim.schemas.land import LandParcel
 
 def emit(obj: dict) -> None:
     """Write a JSON line to stdout and flush."""
+    _logger.debug("emit: %s", json.dumps(obj, ensure_ascii=False)[:200])
     sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
     sys.stdout.flush()
 
@@ -205,6 +219,7 @@ def main() -> None:
         on_status=make_status_callback(),
     )
 
+    _logger.info("Agent runner ready, log: %s", _log_file)
     emit({"type": "status", "message": "Agent runner ready", "progress": 0.0})
 
     for line in sys.stdin:

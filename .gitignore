@@ -34,6 +34,10 @@ output/
 *.glb
 *.obj
 
+# Debug logs
+debuglog/*
+!debuglog/.gitkeep
+
 # Test artifacts
 .pytest_cache/
 htmlcov/
