@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QUrl>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
@@ -16,10 +17,7 @@ int main(int argc, char *argv[])
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    // Qt6 qt_add_qml_module puts files at :/qt/qml/{URI}/{relative_path}
-    const QUrl url(QStringLiteral("qrc:/qt/qml/Zigma/qml/main.qml"));
-
-    // Try multiple resource paths for compatibility
+    // Try known Qt6 QML module resource paths
     QStringList paths = {
         "qrc:/qt/qml/Zigma/qml/main.qml",
         "qrc:/qt/qml/Zigma/main.qml",
@@ -27,27 +25,19 @@ int main(int argc, char *argv[])
         "qrc:/Zigma/main.qml",
     };
 
-    bool loaded = false;
     for (const auto &p : paths) {
-        QUrl u(p);
-        engine.load(u);
+        engine.load(QUrl(p));
         if (!engine.rootObjects().isEmpty()) {
-            loaded = true;
-            break;
+            qDebug() << "Loaded QML from:" << p;
+            return app.exec();
         }
     }
 
-    if (!loaded) {
-        qCritical() << "Failed to load main.qml from any resource path";
-        qCritical() << "Available resources:";
-        QDirIterator it(":", QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QString path = it.next();
-            if (path.contains("qml", Qt::CaseInsensitive) || path.contains("Zigma"))
-                qCritical() << "  " << path;
-        }
-        return -1;
-    }
+    // Fallback: loadFromModule
+    engine.loadFromModule("Zigma", "Main");
+    if (!engine.rootObjects().isEmpty())
+        return app.exec();
 
-    return app.exec();
+    qCritical() << "Failed to load main.qml from any path";
+    return -1;
 }
