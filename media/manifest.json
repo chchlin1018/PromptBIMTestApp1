@@ -1,0 +1,245 @@
+{
+  "version": "1.0",
+  "generated": "2026-03-28T02:45:41.966386+00:00",
+  "media_root": "/Users/michaellin/ZigmaMedia",
+  "total_files": 37,
+  "total_size_mb": 81.44,
+  "categories": {
+    "branding": {
+      "count": 4,
+      "size_mb": 0.03
+    },
+    "hdri": {
+      "count": 3,
+      "size_mb": 3.96
+    },
+    "textures": {
+      "count": 30,
+      "size_mb": 77.43
+    }
+  },
+  "files": [
+    {
+      "path": "branding/splash_background.png",
+      "category": "branding",
+      "size_bytes": 16371,
+      "size_kb": 16.0
+    },
+    {
+      "path": "branding/zigma_icon_512.png",
+      "category": "branding",
+      "size_bytes": 7925,
+      "size_kb": 7.7
+    },
+    {
+      "path": "branding/zigma_logo.svg",
+      "category": "branding",
+      "size_bytes": 356,
+      "size_kb": 0.3
+    },
+    {
+      "path": "branding/zigma_logo_dark.svg",
+      "category": "branding",
+      "size_bytes": 406,
+      "size_kb": 0.4
+    },
+    {
+      "path": "hdri/industrial_sunset_02_puresky_1k.hdr",
+      "category": "hdri",
+      "size_bytes": 1075650,
+      "size_kb": 1050.4
+    },
+    {
+      "path": "hdri/kloofendal_48d_partly_cloudy_puresky_1k.hdr",
+      "category": "hdri",
+      "size_bytes": 1435119,
+      "size_kb": 1401.5
+    },
+    {
+      "path": "hdri/photo_studio_loft_hall_1k.hdr",
+      "category": "hdri",
+      "size_bytes": 1640243,
+      "size_kb": 1601.8
+    },
+    {
+      "path": "textures/asphalt_04/asphalt_04_ao.png",
+      "category": "textures",
+      "size_bytes": 1776302,
+      "size_kb": 1734.7
+    },
+    {
+      "path": "textures/asphalt_04/asphalt_04_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5839817,
+      "size_kb": 5702.9
+    },
+    {
+      "path": "textures/asphalt_04/asphalt_04_displacement.png",
+      "category": "textures",
+      "size_bytes": 1769117,
+      "size_kb": 1727.7
+    },
+    {
+      "path": "textures/concrete_floor_02/concrete_floor_02_ao.png",
+      "category": "textures",
+      "size_bytes": 702605,
+      "size_kb": 686.1
+    },
+    {
+      "path": "textures/concrete_floor_02/concrete_floor_02_diffuse.png",
+      "category": "textures",
+      "size_bytes": 2502798,
+      "size_kb": 2444.1
+    },
+    {
+      "path": "textures/concrete_floor_02/concrete_floor_02_displacement.png",
+      "category": "textures",
+      "size_bytes": 1752250,
+      "size_kb": 1711.2
+    },
+    {
+      "path": "textures/concrete_wall_008/concrete_wall_008_ao.png",
+      "category": "textures",
+      "size_bytes": 1309246,
+      "size_kb": 1278.6
+    },
+    {
+      "path": "textures/concrete_wall_008/concrete_wall_008_diffuse.png",
+      "category": "textures",
+      "size_bytes": 3913395,
+      "size_kb": 3821.7
+    },
+    {
+      "path": "textures/concrete_wall_008/concrete_wall_008_displacement.png",
+      "category": "textures",
+      "size_bytes": 1108458,
+      "size_kb": 1082.5
+    },
+    {
+      "path": "textures/corrugated_iron/corrugated_iron_ao.png",
+      "category": "textures",
+      "size_bytes": 1523974,
+      "size_kb": 1488.3
+    },
+    {
+      "path": "textures/corrugated_iron/corrugated_iron_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5517082,
+      "size_kb": 5387.8
+    },
+    {
+      "path": "textures/corrugated_iron/corrugated_iron_displacement.png",
+      "category": "textures",
+      "size_bytes": 1407076,
+      "size_kb": 1374.1
+    },
+    {
+      "path": "textures/grass_path_2/grass_path_2_ao.png",
+      "category": "textures",
+      "size_bytes": 801880,
+      "size_kb": 783.1
+    },
+    {
+      "path": "textures/grass_path_2/grass_path_2_diffuse.png",
+      "category": "textures",
+      "size_bytes": 2444406,
+      "size_kb": 2387.1
+    },
+    {
+      "path": "textures/grass_path_2/grass_path_2_displacement.png",
+      "category": "textures",
+      "size_bytes": 1945062,
+      "size_kb": 1899.5
+    },
+    {
+      "path": "textures/long_white_tiles/long_white_tiles_ao.png",
+      "category": "textures",
+      "size_bytes": 1661102,
+      "size_kb": 1622.2
+    },
+    {
+      "path": "textures/long_white_tiles/long_white_tiles_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5237597,
+      "size_kb": 5114.8
+    },
+    {
+      "path": "textures/long_white_tiles/long_white_tiles_displacement.png",
+      "category": "textures",
+      "size_bytes": 1588739,
+      "size_kb": 1551.5
+    },
+    {
+      "path": "textures/metal_plate/metal_plate_ao.png",
+      "category": "textures",
+      "size_bytes": 1817601,
+      "size_kb": 1775.0
+    },
+    {
+      "path": "textures/metal_plate/metal_plate_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5362786,
+      "size_kb": 5237.1
+    },
+    {
+      "path": "textures/metal_plate/metal_plate_displacement.png",
+      "category": "textures",
+      "size_bytes": 1700688,
+      "size_kb": 1660.8
+    },
+    {
+      "path": "textures/square_tiles/square_tiles_ao.png",
+      "category": "textures",
+      "size_bytes": 1910909,
+      "size_kb": 1866.1
+    },
+    {
+      "path": "textures/square_tiles/square_tiles_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5934678,
+      "size_kb": 5795.6
+    },
+    {
+      "path": "textures/square_tiles/square_tiles_displacement.png",
+      "category": "textures",
+      "size_bytes": 1729671,
+      "size_kb": 1689.1
+    },
+    {
+      "path": "textures/white_plaster_02/white_plaster_02_ao.png",
+      "category": "textures",
+      "size_bytes": 2369707,
+      "size_kb": 2314.2
+    },
+    {
+      "path": "textures/white_plaster_02/white_plaster_02_diffuse.png",
+      "category": "textures",
+      "size_bytes": 6464656,
+      "size_kb": 6313.1
+    },
+    {
+      "path": "textures/white_plaster_02/white_plaster_02_displacement.png",
+      "category": "textures",
+      "size_bytes": 2142823,
+      "size_kb": 2092.6
+    },
+    {
+      "path": "textures/wood_floor_deck/wood_floor_deck_ao.png",
+      "category": "textures",
+      "size_bytes": 1847833,
+      "size_kb": 1804.5
+    },
+    {
+      "path": "textures/wood_floor_deck/wood_floor_deck_diffuse.png",
+      "category": "textures",
+      "size_bytes": 5607880,
+      "size_kb": 5476.4
+    },
+    {
+      "path": "textures/wood_floor_deck/wood_floor_deck_displacement.png",
+      "category": "textures",
+      "size_bytes": 1534967,
+      "size_kb": 1499.0
+    }
+  ]
+}

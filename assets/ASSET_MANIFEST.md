@@ -2,7 +2,10 @@
 
 > **更新:** 2026-03-28
 > **下載腳本:** `scripts/download_assets.py`
-> **存放:** `assets/models/`, `assets/textures/`, `assets/hdri/`
+> **同步腳本:** `scripts/media_sync.py`
+> **實際檔案:** iCloud Drive `~/ZigmaMedia/`（不在 GitHub）
+> **自動同步清單:** `media/manifest.json`（SSOT，由 media_sync.py 產生）
+> **舊路徑:** `assets/models/`, `assets/textures/`, `assets/hdri/`（已遷移到 iCloud）
 
 ---
 

@@ -166,3 +166,21 @@
 - ✅ io_usd: ILOS USD import/export
 - ✅ E2E: 3 scenes × 2 modifications = 6 scenarios PASS
 - ✅ Demo Script v2.0 + TSMC Presentation v2.0
+
+### Sprint MEDIA-DL 執行結果 — 2026-03-28 10:46
+- **狀態:** ✅ 完成
+- **版本:** media-v1.0
+- **Tasks:** 12/12
+- **Parts:** 3/3
+- **記憶體:** ~9GB used / 16GB(free:~7GB)
+- **錯誤:** 無（3 Poly Haven slug 404 已修正）
+
+#### MEDIA-DL 成果摘要
+- ✅ PBR 紋理: 10 套 (30 files, 77MB) — Poly Haven CC0
+- ✅ HDRI: 3 個 (4MB) — Poly Haven CC0
+- ✅ 品牌素材: logo SVG + icon 512px + splash 1920x1080
+- ✅ media/manifest.json SSOT (37 files, 81.44MB)
+- ✅ download_assets.py --icloud + --category 支援
+- ✅ scripts/media_sync.py 自動掃描 + manifest 產生
+- ✅ Sketchfab 手動清單: 16 models (需登入下載)
+- 📁 所有媒體存放: ~/ZigmaMedia/ (iCloud Drive)
