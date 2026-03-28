@@ -16,10 +16,38 @@ int main(int argc, char *argv[])
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/Zigma/qml/main.qml")));
+    // Qt6 qt_add_qml_module puts files at :/qt/qml/{URI}/{relative_path}
+    const QUrl url(QStringLiteral("qrc:/qt/qml/Zigma/qml/main.qml"));
 
-    if (engine.rootObjects().isEmpty())
+    // Try multiple resource paths for compatibility
+    QStringList paths = {
+        "qrc:/qt/qml/Zigma/qml/main.qml",
+        "qrc:/qt/qml/Zigma/main.qml",
+        "qrc:/Zigma/qml/main.qml",
+        "qrc:/Zigma/main.qml",
+    };
+
+    bool loaded = false;
+    for (const auto &p : paths) {
+        QUrl u(p);
+        engine.load(u);
+        if (!engine.rootObjects().isEmpty()) {
+            loaded = true;
+            break;
+        }
+    }
+
+    if (!loaded) {
+        qCritical() << "Failed to load main.qml from any resource path";
+        qCritical() << "Available resources:";
+        QDirIterator it(":", QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString path = it.next();
+            if (path.contains("qml", Qt::CaseInsensitive) || path.contains("Zigma"))
+                qCritical() << "  " << path;
+        }
         return -1;
+    }
 
     return app.exec();
 }
