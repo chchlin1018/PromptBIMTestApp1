@@ -47,6 +47,12 @@ public:
     // Full scene cost summary
     Q_INVOKABLE QJsonObject sceneCostSummary() const;
 
+    // Auto-arrange: find open position near existing entities of same type
+    Q_INVOKABLE QVector3D autoArrangePosition(const QString &type) const;
+
+    // Add entity with auto-arrange
+    Q_INVOKABLE QJsonObject addEntityAutoArrange(const QString &type, const QString &name);
+
 signals:
     void animatingChanged();
     void lastActionChanged();

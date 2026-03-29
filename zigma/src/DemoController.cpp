@@ -233,6 +233,42 @@ QJsonObject DemoController::costDelta(double previousTotal) const
     return delta;
 }
 
+QVector3D DemoController::autoArrangePosition(const QString &type) const
+{
+    if (!m_sceneGraph) return QVector3D(0, 0, 0);
+
+    // Find all entities of same type
+    QVariantList same = m_sceneGraph->queryByType(type);
+    if (same.isEmpty())
+        return QVector3D(55, 3, 0); // Default CUB area
+
+    // Find the rightmost entity of this type and place next to it
+    float maxX = -1e9f;
+    QVector3D lastPos;
+    float spacing = 8.0f;
+
+    for (const auto &v : same) {
+        QJsonObject json = v.toJsonObject();
+        QJsonArray pos = json["position"].toArray();
+        float x = static_cast<float>(pos[0].toDouble());
+        if (x > maxX) {
+            maxX = x;
+            lastPos = QVector3D(
+                static_cast<float>(pos[0].toDouble()),
+                static_cast<float>(pos[1].toDouble()),
+                static_cast<float>(pos[2].toDouble()));
+        }
+    }
+
+    return QVector3D(lastPos.x() + spacing, lastPos.y(), lastPos.z());
+}
+
+QJsonObject DemoController::addEntityAutoArrange(const QString &type, const QString &name)
+{
+    QVector3D pos = autoArrangePosition(type);
+    return addEntity(type, pos, name);
+}
+
 QJsonObject DemoController::sceneCostSummary() const
 {
     QJsonObject summary;
