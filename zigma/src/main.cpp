@@ -4,22 +4,27 @@
 #include <QUrl>
 #include <QDebug>
 #include "ZigmaLogger.h"
+#include "BIMSceneGraph.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     app.setApplicationName("Zigma PromptToBuild");
-    app.setApplicationVersion("0.2.0");
+    app.setApplicationVersion("0.3.0");
     app.setOrganizationName("Zigma");
 
     // Install ZigmaLogger before anything else
     ZigmaLogger::install();
-    ZLOG_INFO("Main", "Zigma PromptToBuild v0.2.0 starting");
+    ZLOG_INFO("Main", "Zigma PromptToBuild v0.3.0 starting");
 
     QQmlApplicationEngine engine;
 
-    // Register ZigmaLogger as QML context property
+    // Register context properties
     engine.rootContext()->setContextProperty("zigmaLogger", ZigmaLogger::instance());
+
+    // Register BIMSceneGraph as global QML context
+    auto *sceneGraph = new BIMSceneGraph(&engine);
+    engine.rootContext()->setContextProperty("sceneGraph", sceneGraph);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

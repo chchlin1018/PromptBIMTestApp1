@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Zigma VERSION 0.2.0 LANGUAGES CXX)
+project(Zigma VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +16,8 @@ qt_add_executable(zigma_app
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMMaterialLibrary.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMMaterialLibrary.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneBuilder.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneBuilder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.h ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.cpp
 )
 set_target_properties(zigma_app PROPERTIES OUTPUT_NAME ZigmaApp)
 

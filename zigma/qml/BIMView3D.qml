@@ -111,6 +111,7 @@ Item {
             // Demo scene — visible when demoMode is on
             DemoScene {
                 visible: root.demoMode
+                sceneGraph: typeof sceneGraph !== "undefined" ? sceneGraph : null
             }
 
             // BIM dynamic root — visible when demoMode is off
