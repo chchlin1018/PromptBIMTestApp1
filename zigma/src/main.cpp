@@ -7,6 +7,7 @@
 #include "BIMSceneGraph.h"
 #include "BIMEntityModel.h"
 #include "SceneGraphModel.h"
+#include "SpatialParser.h"
 #include "AgentBridge.h"
 
 int main(int argc, char *argv[])
@@ -38,6 +39,10 @@ int main(int argc, char *argv[])
     auto *sceneTreeModel = new SceneGraphModel(&engine);
     sceneTreeModel->setSceneGraph(sceneGraph);
     engine.rootContext()->setContextProperty("sceneTreeModel", sceneTreeModel);
+
+    // Register SpatialParser — NL direction → coordinate offset
+    auto *spatialParser = new SpatialParser(&engine);
+    engine.rootContext()->setContextProperty("spatialParser", spatialParser);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

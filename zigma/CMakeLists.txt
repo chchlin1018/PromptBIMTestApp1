@@ -20,6 +20,7 @@ qt_add_executable(zigma_app
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntityModel.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntityModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SceneGraphModel.h ${CMAKE_CURRENT_SOURCE_DIR}/src/SceneGraphModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SpatialParser.h ${CMAKE_CURRENT_SOURCE_DIR}/src/SpatialParser.cpp
 )
 set_target_properties(zigma_app PROPERTIES OUTPUT_NAME ZigmaApp)
 
