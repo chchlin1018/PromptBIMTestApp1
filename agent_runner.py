@@ -32,6 +32,22 @@ from mesh_serializer import serialize_plan_to_mesh
 from promptbim.agents.orchestrator import Orchestrator, PipelineStatus
 from promptbim.schemas.land import LandParcel
 
+# IDTF module imports (best-effort)
+try:
+    from promptbim.bim.cost.cost_delta import CostDeltaTracker
+except ImportError:
+    CostDeltaTracker = None
+
+try:
+    from promptbim.bim.mep.clash_detect import ClashDetector
+except ImportError:
+    ClashDetector = None
+
+try:
+    from promptbim.bim.mep.pathfinder import MEPPathfinder
+except ImportError:
+    MEPPathfinder = None
+
 
 def emit(obj: dict) -> None:
     """Write a JSON line to stdout and flush."""
@@ -212,6 +228,85 @@ def handle_get_schedule(orch: Orchestrator) -> None:
         emit({"type": "error", "message": f"Schedule computation failed: {e}"})
 
 
+def handle_scene_action(orch: Orchestrator, data: dict) -> None:
+    """Handle scene_action requests forwarded from C++ AgentBridge.
+
+    These include move/rotate/resize/add/delete operations.
+    We run IDTF modules (cost_delta, clash_detect, pathfinder) and return results.
+    """
+    action = data.get("action", "")
+    scene_data = data.get("scene_data", {})
+
+    result: dict = {"type": "scene_result", "action": action}
+
+    # Cost delta calculation
+    if action == "cost_delta" or action in ("move", "rotate", "resize", "add", "delete"):
+        try:
+            if CostDeltaTracker and orch.plan:
+                tracker = CostDeltaTracker()
+                delta = tracker.compute_delta(orch.plan)
+                result["cost_delta"] = {
+                    "total_delta_ntd": getattr(delta, "total_delta_ntd", 0),
+                    "items": getattr(delta, "items", []),
+                }
+            else:
+                result["cost_delta"] = {"total_delta_ntd": 0, "items": []}
+        except Exception as e:
+            _logger.warning("cost_delta failed: %s", e)
+            result["cost_delta"] = {"total_delta_ntd": 0, "error": str(e)}
+
+    # Clash detection for move/resize/add
+    if action in ("move", "resize", "add"):
+        try:
+            if ClashDetector:
+                detector = ClashDetector()
+                entities = scene_data.get("entities", [])
+                clashes = detector.detect(entities) if entities else []
+                result["clashes"] = clashes
+            else:
+                result["clashes"] = []
+        except Exception as e:
+            _logger.warning("clash_detect failed: %s", e)
+            result["clashes"] = []
+
+    # Schedule impact
+    if action == "schedule_impact":
+        try:
+            if orch.plan:
+                sched = orch.compute_schedule()
+                if sched:
+                    result["schedule_impact"] = {
+                        "total_days": sched.total_days,
+                        "phases": [
+                            {
+                                "phase": p.phase.value if hasattr(p.phase, "value") else str(p.phase),
+                                "duration_days": p.duration_days,
+                            }
+                            for p in sched.phases
+                        ],
+                    }
+        except Exception as e:
+            _logger.warning("schedule_impact failed: %s", e)
+            result["schedule_impact"] = {"error": str(e)}
+
+    emit(result)
+
+
+def handle_scene_query(orch: Orchestrator, data: dict) -> None:
+    """Handle scene query requests that need Python-side processing."""
+    action = data.get("action", "")
+    result: dict = {"type": "scene_result", "action": action}
+
+    if action == "cost_delta":
+        handle_scene_action(orch, data)
+        return
+    elif action == "schedule_impact":
+        handle_scene_action(orch, data)
+        return
+
+    emit(result)
+
+
 def main() -> None:
     """Main loop: read JSON lines from stdin, dispatch to handlers."""
     orch = Orchestrator(
@@ -244,6 +339,8 @@ def main() -> None:
                 handle_get_cost(orch)
             elif req_type == "get_schedule":
                 handle_get_schedule(orch)
+            elif req_type == "scene_action":
+                handle_scene_action(orch, data)
             else:
                 emit({"type": "error", "message": f"Unknown request type: {req_type}"})
         except Exception as e:

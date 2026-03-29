@@ -5,6 +5,7 @@
 #include <QDebug>
 #include "ZigmaLogger.h"
 #include "BIMSceneGraph.h"
+#include "AgentBridge.h"
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +40,14 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty()) {
         ZLOG_ERROR("Main", "No root objects loaded");
         return -1;
+    }
+
+    // Wire AgentBridge ↔ SceneGraph after QML loads
+    auto *rootObj = engine.rootObjects().first();
+    auto *agentBridge = rootObj->findChild<AgentBridge*>();
+    if (agentBridge) {
+        agentBridge->setSceneGraph(sceneGraph);
+        ZLOG_INFO("Main", "AgentBridge connected to SceneGraph");
     }
 
     ZLOG_INFO("Main", "Application ready");

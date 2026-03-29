@@ -14,7 +14,6 @@ ApplicationWindow {
     AgentBridge { id: agentBridge }
     BIMSceneBuilder { id: sceneBuilder }
     BIMMaterialLibrary { id: materialLibrary }
-    BIMSceneGraph { id: localSceneGraph }
 
     // Keyboard shortcuts (Task 59)
     Shortcut { sequence: "F"; onActivated: bimView.fitToScene() }

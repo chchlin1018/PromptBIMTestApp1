@@ -1,4 +1,6 @@
 #include "AgentBridge.h"
+#include "BIMSceneGraph.h"
+#include "BIMEntity.h"
 #include "ZigmaLogger.h"
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -111,6 +113,219 @@ void AgentBridge::getSchedule()
     sendRequest(req);
 }
 
+void AgentBridge::setSceneGraph(BIMSceneGraph *sg)
+{
+    m_sceneGraph = sg;
+}
+
+// --- Scene Query actions (M2-BRIDGE) ---
+
+void AgentBridge::queryByType(const QString &type)
+{
+    QJsonObject req;
+    req["action"] = "query";
+    req["type"] = type;
+    handleSceneAction(req);
+}
+
+void AgentBridge::queryByName(const QString &name)
+{
+    QJsonObject req;
+    req["action"] = "query";
+    req["name"] = name;
+    handleSceneAction(req);
+}
+
+void AgentBridge::getPosition(const QString &id)
+{
+    QJsonObject req;
+    req["action"] = "get_position";
+    req["id"] = id;
+    handleSceneAction(req);
+}
+
+void AgentBridge::getNearby(const QString &id, double radius)
+{
+    QJsonObject req;
+    req["action"] = "nearby";
+    req["id"] = id;
+    req["radius"] = radius;
+    handleSceneAction(req);
+}
+
+void AgentBridge::getSceneInfo()
+{
+    QJsonObject req;
+    req["action"] = "scene_info";
+    handleSceneAction(req);
+}
+
+// --- Scene Operate actions (M2-BRIDGE) ---
+
+void AgentBridge::moveEntity(const QString &id, const QVector3D &position)
+{
+    QJsonObject req;
+    req["action"] = "move";
+    req["id"] = id;
+    req["position"] = QJsonArray{position.x(), position.y(), position.z()};
+    handleSceneAction(req);
+}
+
+void AgentBridge::rotateEntity(const QString &id, const QVector3D &rotation)
+{
+    QJsonObject req;
+    req["action"] = "rotate";
+    req["id"] = id;
+    req["rotation"] = QJsonArray{rotation.x(), rotation.y(), rotation.z()};
+    handleSceneAction(req);
+}
+
+void AgentBridge::resizeEntity(const QString &id, const QVector3D &dimensions)
+{
+    QJsonObject req;
+    req["action"] = "resize";
+    req["id"] = id;
+    req["dimensions"] = QJsonArray{dimensions.x(), dimensions.y(), dimensions.z()};
+    handleSceneAction(req);
+}
+
+void AgentBridge::addEntity(const QString &type, const QVector3D &position, const QJsonObject &properties)
+{
+    QJsonObject req;
+    req["action"] = "add";
+    req["type"] = type;
+    req["position"] = QJsonArray{position.x(), position.y(), position.z()};
+    req["properties"] = properties;
+    handleSceneAction(req);
+}
+
+void AgentBridge::deleteEntity(const QString &id)
+{
+    QJsonObject req;
+    req["action"] = "delete";
+    req["id"] = id;
+    handleSceneAction(req);
+}
+
+void AgentBridge::connectEntities(const QString &fromId, const QString &toId)
+{
+    QJsonObject req;
+    req["action"] = "connect";
+    req["from"] = fromId;
+    req["to"] = toId;
+    handleSceneAction(req);
+}
+
+void AgentBridge::getCostDelta()
+{
+    QJsonObject req;
+    req["action"] = "cost_delta";
+    // Forward to Python for IDTF cost_delta.py
+    req["type"] = "scene_action";
+    sendRequest(req);
+}
+
+void AgentBridge::getScheduleImpact()
+{
+    QJsonObject req;
+    req["action"] = "schedule_impact";
+    req["type"] = "scene_action";
+    sendRequest(req);
+}
+
+void AgentBridge::handleSceneAction(const QJsonObject &request)
+{
+    if (!m_sceneGraph) {
+        emit errorOccurred("SceneGraph not available");
+        return;
+    }
+
+    QString action = request["action"].toString();
+    QJsonObject result;
+    result["action"] = action;
+    result["success"] = true;
+
+    if (action == "query") {
+        if (request.contains("type") && !request["type"].toString().isEmpty()) {
+            QVariantList list = m_sceneGraph->queryByType(request["type"].toString());
+            QJsonArray arr;
+            for (const auto &v : list) arr.append(v.toJsonValue());
+            result["entities"] = arr;
+            result["count"] = arr.size();
+        } else if (request.contains("name")) {
+            QVariantList list = m_sceneGraph->queryByName(request["name"].toString());
+            QJsonArray arr;
+            for (const auto &v : list) arr.append(v.toJsonValue());
+            result["entities"] = arr;
+            result["count"] = arr.size();
+        }
+    } else if (action == "get_position") {
+        BIMEntity *e = m_sceneGraph->findEntity(request["id"].toString());
+        if (e) {
+            result["id"] = e->entityId();
+            result["position"] = QJsonArray{e->position().x(), e->position().y(), e->position().z()};
+        } else {
+            result["success"] = false;
+            result["error"] = "Entity not found: " + request["id"].toString();
+        }
+    } else if (action == "nearby") {
+        QVariantList list = m_sceneGraph->nearbyEntities(request["id"].toString(), request["radius"].toDouble());
+        QJsonArray arr;
+        for (const auto &v : list) arr.append(v.toJsonValue());
+        result["entities"] = arr;
+        result["count"] = arr.size();
+    } else if (action == "scene_info") {
+        result["scene"] = m_sceneGraph->sceneInfo();
+    } else if (action == "move") {
+        QJsonArray posArr = request["position"].toArray();
+        QVector3D pos(posArr[0].toDouble(), posArr[1].toDouble(), posArr[2].toDouble());
+        result["success"] = m_sceneGraph->moveEntity(request["id"].toString(), pos);
+    } else if (action == "rotate") {
+        QJsonArray rotArr = request["rotation"].toArray();
+        QVector3D rot(rotArr[0].toDouble(), rotArr[1].toDouble(), rotArr[2].toDouble());
+        result["success"] = m_sceneGraph->rotateEntity(request["id"].toString(), rot);
+    } else if (action == "resize") {
+        QJsonArray dimArr = request["dimensions"].toArray();
+        QVector3D dims(dimArr[0].toDouble(), dimArr[1].toDouble(), dimArr[2].toDouble());
+        result["success"] = m_sceneGraph->resizeEntity(request["id"].toString(), dims);
+    } else if (action == "add") {
+        QString id = request.contains("id") ? request["id"].toString()
+                     : "entity-" + QString::number(m_sceneGraph->entityCount() + 1);
+        QJsonArray posArr = request["position"].toArray();
+        QVector3D pos(posArr[0].toDouble(), posArr[1].toDouble(), posArr[2].toDouble());
+        QVariantMap props;
+        QJsonObject propsObj = request["properties"].toObject();
+        for (auto it = propsObj.constBegin(); it != propsObj.constEnd(); ++it)
+            props[it.key()] = it.value().toVariant();
+        m_sceneGraph->registerEntity(id, request["type"].toString(),
+                                      request.value("name").toString(id),
+                                      pos, QVector3D(), props);
+        result["id"] = id;
+    } else if (action == "delete") {
+        result["success"] = m_sceneGraph->removeEntity(request["id"].toString());
+    } else if (action == "connect") {
+        result["success"] = m_sceneGraph->connectEntities(request["from"].toString(), request["to"].toString());
+    } else {
+        result["success"] = false;
+        result["error"] = "Unknown scene action: " + action;
+    }
+
+    // For query actions emit queryResult, for operate emit operateResult
+    if (action == "query" || action == "get_position" || action == "nearby" || action == "scene_info") {
+        emit queryResult(result);
+    } else {
+        emit operateResult(result);
+    }
+
+    // Also forward operate actions to Python for cost recalculation
+    if (action == "move" || action == "rotate" || action == "resize" || action == "add" || action == "delete") {
+        QJsonObject pyReq = request;
+        pyReq["type"] = "scene_action";
+        pyReq["scene_data"] = m_sceneGraph->toJson();
+        sendRequest(pyReq);
+    }
+}
+
 void AgentBridge::sendRequest(const QJsonObject &request)
 {
     if (!m_process || m_process->state() != QProcess::Running) {
@@ -172,6 +387,10 @@ void AgentBridge::handleResponse(const QJsonObject &response)
         m_busy = false;
         emit busyChanged();
         emit deltaReady(response);
+    } else if (type == "scene_result") {
+        m_busy = false;
+        emit busyChanged();
+        emit operateResult(response);
     } else if (type == "error") {
         m_busy = false;
         emit busyChanged();

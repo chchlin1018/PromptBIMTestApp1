@@ -69,6 +69,8 @@ find_package(Qt6 REQUIRED COMPONENTS Test)
 qt_add_executable(test_agent_bridge
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_agent_bridge.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AgentBridge.h ${CMAKE_CURRENT_SOURCE_DIR}/src/AgentBridge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.h ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.cpp)
 target_link_libraries(test_agent_bridge PRIVATE Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick)
 add_test(NAME AgentBridgeTests COMMAND test_agent_bridge)
