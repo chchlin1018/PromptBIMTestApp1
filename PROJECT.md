@@ -1,9 +1,9 @@
 # Zigma PromptToBuild 專案管理
 
-> **版本:** v1.8 | **最後更新:** 2026-03-30
+> **版本:** v1.9 | **最後更新:** 2026-03-30
 > **專案:** Zigma PromptToBuild (PromptBIMTestApp1)
 > **組織:** Reality Matrix Inc.
-> **HEAD Tag:** mvp-v0.2.1
+> **HEAD Tag:** mvp-v0.3.0
 
 ---
 
@@ -18,8 +18,8 @@
 | mvp-v0.1.0 | M1-MVP | 2026-03-28 | ✅ Qt Quick 3D MVP |
 | mvp-v0.2.0 | M1-SCENE | 2026-03-28 | ✅ DemoScene + Logger |
 | mvp-v0.2.1 | M2-ENV | 2026-03-28 | ✅ 環境驗證 |
-| **mvp-v0.3.0** | **M2-BRIDGE** | **2026-03-30** | **⬜ 待手動啟動** |
-| mvp-v0.4.0 | M2-ENTITY | — | ⬜ |
+| mvp-v0.3.0 | M2-BRIDGE | 2026-03-30 | ✅ BIMEntity + AgentBridge 雙向 |
+| **mvp-v0.4.0** | **M2-ENTITY** | **—** | **⬜ 下一個** |
 | mvp-v0.5.0 | M2-MEP-DEMO | — | ⬜ |
 | v3.0.0 | P30-USD-REVIT | — | ⬜ |
 
@@ -29,7 +29,7 @@
 |------|------|
 | CLAUDE.md | v1.23.3 |
 | SKILL.md | v4.3 |
-| PROJECT.md | **v1.8** |
+| PROJECT.md | **v1.9** |
 
 ## 3. 開發路線圖
 
@@ -42,31 +42,23 @@
 | MEDIA-DL | 12/12 | media-v1.0 | ✅ | 03-27 |
 | M1-SCENE | 22/22 | mvp-v0.2.0 | ✅ | 03-28 |
 | M2-ENV | 8/8 | mvp-v0.2.1 | ✅ | 03-28 |
-| **M2-BRIDGE** | **0/25** | **mvp-v0.3.0** | **⬜** | **—** |
-| M2-ENTITY | 20T | mvp-v0.4.0 | ⬜ | — |
+| M2-BRIDGE | 25/25 | mvp-v0.3.0 | ✅ | 03-30 |
+| **M2-ENTITY** | **20T** | **mvp-v0.4.0** | **⬜** | **—** |
 | M2-MEP-DEMO | 25T | mvp-v0.5.0 | ⬜ | — |
 | P30-USD-REVIT | 25T | v3.0.0 | ⬜ | — |
 
-**已完成: 110 Tasks | 待啟動: M2-BRIDGE 25T | 待排: 70T**
+**已完成: 135 Tasks | 下一個: M2-ENTITY 20T | 待排: 70T**
 
-## 4. M2-BRIDGE Sprint 內容 (待手動啟動)
+## 4. M2-BRIDGE Sprint 成果
 
 > TSMC Demo 核心:「把冰水主機移到右側柱子旁邊」
 
 | Part | Tasks | 內容 | 狀態 |
 |------|:-----:|------|:----:|
-| PA | T1-T7 | BIMEntity C++ QObject + BIMSceneGraph + DemoScene 具名化 | ⬜ |
-| PB | T8-T14 | AgentBridge JSON protocol (query/operate/cost) + IDTF 對接 | ⬜ |
-| PC | T15-T20 | QML 即時更新 (PropertyPanel + CostPanel + ChatPanel) | ⬜ |
-| PD | T21-T25 | ctest + PROJECT_STATUS 更新 + tag mvp-v0.3.0 | ⬜ |
-
-**啟動指令:**
-```bash
-cd ~/Dev/PromptBIMTestApp1
-claude --dangerously-skip-permissions -p "Read sprints/PROMPT_M2-BRIDGE.md and execute all 25 tasks. Notify +886972535899 on start and completion."
-```
-
-**注意:** mike-launch.sh PTB 自動模式會搜尋 Notion workspace 找 PROMPT，但 M2-BRIDGE 不在 PTB workspace 搜尋範圍內，需直接指定 PROMPT 檔案。
+| PA | T1-T7 | BIMEntity C++ QObject + BIMSceneGraph + 22 named DemoScene entities | ✅ |
+| PB | T8-T14 | AgentBridge 雙向協議: 13 Q_INVOKABLE scene actions (query/move/rotate/resize/cost_delta/clash) + IDTF 對接 | ✅ |
+| PC | T15-T20 | QML 即時更新 (BIMView3D picking + PropertyPanel + CostPanel + ChatPanel undo/redo) | ✅ |
+| PD | T21-T25 | ctest 4/4 PASS (18 test cases: 8 entity + 10 graph) + tag mvp-v0.3.0 | ✅ |
 
 ## 5. 已知問題
 
@@ -82,8 +74,8 @@ claude --dangerously-skip-permissions -p "Read sprints/PROMPT_M2-BRIDGE.md and e
 
 | 能力 | Sprint | 狀態 |
 |------|--------|:----:|
-| 空間查詢 (SceneQuery) | M2-BRIDGE | ⬜ |
-| 即時移動 (SceneOperate) | M2-BRIDGE | ⬜ |
+| 空間查詢 (SceneQuery) | M2-BRIDGE | ✅ |
+| 即時移動 (SceneOperate) | M2-BRIDGE | ✅ |
 | 實體辨識 (BIMEntity) | M2-ENTITY | ⬜ |
 | 管線重路由 (pathfinder) | M2-MEP-DEMO | ⬜ |
 | 碰撞檢測 (clash_detect) | M2-MEP-DEMO | ⬜ |
@@ -93,7 +85,7 @@ claude --dangerously-skip-permissions -p "Read sprints/PROMPT_M2-BRIDGE.md and e
 ## 7. 里程碑
 
 ```
-2026 Q2: W0✅→D1✅→M1-MVP✅→M1-SCENE✅→M2-ENV✅→M2-BRIDGE⬜→M2-ENTITY→M2-MEP-DEMO→Demo-2★
+2026 Q2: W0✅→D1✅→M1-MVP✅→M1-SCENE✅→M2-ENV✅→M2-BRIDGE✅→M2-ENTITY⬜→M2-MEP-DEMO→Demo-2★
 2026 Q3: P26-P29 → v3.0.0
 2026 Q4: P30-P33 Windows+ILOS
 2027 Q1: P34-P41 Web+Mobile
@@ -107,8 +99,9 @@ claude --dangerously-skip-permissions -p "Read sprints/PROMPT_M2-BRIDGE.md and e
 | v1.5 | Demo-1 完成 (34T). pytest 60/60. OOM診斷. |
 | v1.6 | M1-MVP 完成 (68T). Qt Quick 3D + AgentBridge. mvp-v0.1.0. |
 | v1.7 | M1-SCENE(22T)+M2-ENV(8T) 完成. 累計110T. |
-| **v1.8** | **M2-BRIDGE 待手動啟動. mike-launch.sh PTB 自動模式找不到 PROMPT (Notion workspace 範圍問題), 需直接 claude -p 指定 PROMPT_M2-BRIDGE.md.** |
+| v1.8 | M2-BRIDGE 待手動啟動. mike-launch.sh PTB 自動模式 Notion 範圍問題. |
+| **v1.9** | **M2-BRIDGE 完成 (25/25T, ctest 4/4 PASS). BIMEntity+BIMSceneGraph+AgentBridge雙向+QML即時更新. 累計135T. HEAD=mvp-v0.3.0.** |
 
 ---
 
-*PROJECT.md v1.8 | Zigma PromptToBuild | 2026-03-30*
+*PROJECT.md v1.9 | Zigma PromptToBuild | 2026-03-30*
