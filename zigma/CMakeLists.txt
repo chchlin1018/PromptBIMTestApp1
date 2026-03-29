@@ -101,3 +101,15 @@ qt_add_executable(test_scene_graph
 target_include_directories(test_scene_graph PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(test_scene_graph PRIVATE Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick)
 add_test(NAME SceneGraphTests COMMAND test_scene_graph)
+
+qt_add_executable(test_entity_model
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_entity_model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMSceneGraph.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntityModel.h ${CMAKE_CURRENT_SOURCE_DIR}/src/BIMEntityModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SceneGraphModel.h ${CMAKE_CURRENT_SOURCE_DIR}/src/SceneGraphModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SpatialParser.h ${CMAKE_CURRENT_SOURCE_DIR}/src/SpatialParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.h ${CMAKE_CURRENT_SOURCE_DIR}/src/ZigmaLogger.cpp)
+target_include_directories(test_entity_model PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(test_entity_model PRIVATE Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick)
+add_test(NAME EntityModelTests COMMAND test_entity_model)
