@@ -1,13 +1,13 @@
-# PROJECT_STATUS v2.2
+# PROJECT_STATUS v2.3
 
-> Last updated: 2026-03-29 | HEAD: (M2-BRIDGE)
+> Last updated: 2026-03-30 | HEAD: (CHAIN-DEMO)
 
 ## Current State
 
-**Version:** mvp-v0.3.0 (M2-BRIDGE complete)
-**Build:** ✅ OK (cmake + ninja) | ctest 4/4 PASS
+**Version:** mvp-v0.5.0-demo (CHAIN-DEMO complete)
+**Build:** ✅ OK (cmake) | ctest 5/5 PASS
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini + MacBook)
-**Next Sprint:** M2-ENTITY (20T → mvp-v0.4.0)
+**Next Sprint:** D1-S2 (Demo polish) or P30-USD-REVIT
 
 ## Sprint History
 
@@ -18,8 +18,10 @@
 | 3 | M1-SCENE | 22T | mvp-v0.2.0 | 2026-03-28 | ✅ |
 | 4 | M2-ENV | 8T | mvp-v0.2.1 | 2026-03-28 | ✅ |
 | 5 | M2-BRIDGE | 25T | mvp-v0.3.0 | 2026-03-29 | ✅ |
+| 6 | M2-ENTITY | 20T | mvp-v0.4.0-entity | 2026-03-30 | ✅ |
+| 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0-demo | 2026-03-30 | ✅ |
 
-**Total completed: 135 Tasks across 5 Sprints**
+**Total completed: 180 Tasks across 7 Sprints (CHAIN-DEMO: 45T in 2 phases)**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -46,9 +48,18 @@
 
 | # | Sprint | Tasks | Tag | Goal |
 |:-:|--------|:-----:|:---:|------|
-| 6 | M2-ENTITY | 20T | mvp-v0.4.0 | Named DemoScene + CUB equipment catalog |
-| 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0 | Full chiller Demo + MEP pipes + cost linkage |
 | 8 | P30-USD-REVIT | 25T | v3.0.0 | USD→Revit→IFC+Omniverse pipeline |
+
+### CHAIN-DEMO (M2-ENTITY + M2-MEP-DEMO) — 2026-03-30
+
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.5.0-demo
+- **Tasks:** 45/45 (Phase 2: 20T + Phase 3: 25T)
+- **ctest:** 5/5 PASS
+- **新增 C++ 類:** BIMEntityModel, SceneGraphModel, SpatialParser, DemoController, DemoScript
+- **新增 Data:** equipment_catalog.json (7 types)
+- **新增 QML:** MEP pipes, selection highlight
+- **TSMC Demo:** 4-step scenario (info → move → add → resize)
 
 ## Architecture
 
@@ -102,5 +113,5 @@
 |------|---------|
 | CLAUDE.md | v1.23.3 |
 | SKILL.md | v4.3 |
-| PROJECT_STATUS.md | v2.2 (this) |
+| PROJECT_STATUS.md | v2.3 (this) |
 | Context Prompt | v5.7 |

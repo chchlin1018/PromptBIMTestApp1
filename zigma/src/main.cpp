@@ -16,12 +16,12 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     app.setApplicationName("Zigma PromptToBuild");
-    app.setApplicationVersion("0.4.0");
+    app.setApplicationVersion("0.5.0");
     app.setOrganizationName("Zigma");
 
     // Install ZigmaLogger before anything else
     ZigmaLogger::install();
-    ZLOG_INFO("Main", "Zigma PromptToBuild v0.4.0 starting");
+    ZLOG_INFO("Main", "Zigma PromptToBuild v0.5.0-demo starting");
 
     QQmlApplicationEngine engine;
 
