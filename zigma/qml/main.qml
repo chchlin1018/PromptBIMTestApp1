@@ -269,7 +269,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         standardButtons: Dialog.Ok
         Label {
-            text: "Zigma PromptToBuild v0.3.0\nBIM generation powered by AI"
+            text: "Zigma PromptToBuild v0.5.0-demo\nTSMC CUB Demo — BIM powered by AI"
             color: ThemeManager.textPrimary
         }
     }

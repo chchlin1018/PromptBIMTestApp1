@@ -9,6 +9,7 @@
 #include "SceneGraphModel.h"
 #include "SpatialParser.h"
 #include "DemoController.h"
+#include "DemoScript.h"
 #include "AgentBridge.h"
 
 int main(int argc, char *argv[])
@@ -50,6 +51,11 @@ int main(int argc, char *argv[])
     demoCtrl->setSceneGraph(sceneGraph);
     demoCtrl->setSpatialParser(spatialParser);
     engine.rootContext()->setContextProperty("demoController", demoCtrl);
+
+    // Register DemoScript — 4-step TSMC demo scenario + NL parser
+    auto *demoScript = new DemoScript(&engine);
+    demoScript->setDemoController(demoCtrl);
+    engine.rootContext()->setContextProperty("demoScript", demoScript);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,
