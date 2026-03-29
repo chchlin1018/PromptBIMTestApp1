@@ -8,6 +8,7 @@
 #include "BIMEntityModel.h"
 #include "SceneGraphModel.h"
 #include "SpatialParser.h"
+#include "DemoController.h"
 #include "AgentBridge.h"
 
 int main(int argc, char *argv[])
@@ -43,6 +44,12 @@ int main(int argc, char *argv[])
     // Register SpatialParser — NL direction → coordinate offset
     auto *spatialParser = new SpatialParser(&engine);
     engine.rootContext()->setContextProperty("spatialParser", spatialParser);
+
+    // Register DemoController — orchestrates move/add/delete + clash + cost
+    auto *demoCtrl = new DemoController(&engine);
+    demoCtrl->setSceneGraph(sceneGraph);
+    demoCtrl->setSpatialParser(spatialParser);
+    engine.rootContext()->setContextProperty("demoController", demoCtrl);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,
