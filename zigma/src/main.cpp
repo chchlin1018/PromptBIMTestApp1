@@ -5,18 +5,20 @@
 #include <QDebug>
 #include "ZigmaLogger.h"
 #include "BIMSceneGraph.h"
+#include "BIMEntityModel.h"
+#include "SceneGraphModel.h"
 #include "AgentBridge.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     app.setApplicationName("Zigma PromptToBuild");
-    app.setApplicationVersion("0.3.0");
+    app.setApplicationVersion("0.4.0");
     app.setOrganizationName("Zigma");
 
     // Install ZigmaLogger before anything else
     ZigmaLogger::install();
-    ZLOG_INFO("Main", "Zigma PromptToBuild v0.3.0 starting");
+    ZLOG_INFO("Main", "Zigma PromptToBuild v0.4.0 starting");
 
     QQmlApplicationEngine engine;
 
@@ -26,6 +28,16 @@ int main(int argc, char *argv[])
     // Register BIMSceneGraph as global QML context
     auto *sceneGraph = new BIMSceneGraph(&engine);
     engine.rootContext()->setContextProperty("sceneGraph", sceneGraph);
+
+    // Register BIMEntityModel — list model for QML binding
+    auto *entityModel = new BIMEntityModel(&engine);
+    entityModel->setSceneGraph(sceneGraph);
+    engine.rootContext()->setContextProperty("entityModel", entityModel);
+
+    // Register SceneGraphModel — tree model for hierarchy view
+    auto *sceneTreeModel = new SceneGraphModel(&engine);
+    sceneTreeModel->setSceneGraph(sceneGraph);
+    engine.rootContext()->setContextProperty("sceneTreeModel", sceneTreeModel);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

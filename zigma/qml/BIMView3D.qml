@@ -132,6 +132,37 @@ Item {
             }
         }
 
+        // Selection highlight — wireframe bounding box around selected entity
+        Node {
+            id: selectionHighlight
+            visible: root.selectedEntityId !== ""
+            property vector3d targetPos: Qt.vector3d(0, 0, 0)
+            property vector3d targetScale: Qt.vector3d(0.01, 0.01, 0.01)
+
+            position: targetPos
+            scale: targetScale
+
+            Model {
+                source: "#Cube"
+                materials: PrincipledMaterial {
+                    baseColor: "#00ff88"
+                    opacity: 0.15
+                    alphaMode: PrincipledMaterial.Blend
+                }
+            }
+            // Wireframe outline effect — slightly larger box
+            Model {
+                source: "#Cube"
+                scale: Qt.vector3d(1.05, 1.05, 1.05)
+                materials: PrincipledMaterial {
+                    baseColor: "#00ff88"
+                    opacity: 0.4
+                    alphaMode: PrincipledMaterial.Blend
+                    roughness: 1.0
+                }
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton
@@ -145,6 +176,9 @@ Item {
                         if (entity) {
                             root.selectedEntityId = hitObj.objectName
                             var entityJson = entity.toJson()
+                            // Update selection highlight position/scale
+                            selectionHighlight.targetPos = hitObj.position
+                            selectionHighlight.targetScale = hitObj.scale
                             root.elementPicked(hitObj.objectName, entityJson)
                             return
                         }
@@ -156,6 +190,9 @@ Item {
                             hitObj.elementData
                         )
                     }
+                } else {
+                    // Deselect when clicking empty space
+                    root.selectedEntityId = ""
                 }
             }
         }

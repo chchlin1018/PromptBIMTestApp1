@@ -1,0 +1,106 @@
+{
+  "version": "1.0",
+  "currency": "NTD",
+  "equipment_types": {
+    "MEP.Chiller": {
+      "display_name": "冰水主機",
+      "category": "MEP",
+      "default_dimensions": [6.0, 6.0, 4.0],
+      "default_properties": {
+        "capacity_rt": 500,
+        "power_kw": 350,
+        "cost_ntd": 2800000,
+        "weight_kg": 8500,
+        "refrigerant": "R-134a",
+        "cop": 5.8
+      },
+      "connections": ["chilled_water_supply", "chilled_water_return", "condenser_water_supply", "condenser_water_return", "power"],
+      "color": "#4a9eff",
+      "primitive": "Cube"
+    },
+    "MEP.CoolingTower": {
+      "display_name": "冷卻水塔",
+      "category": "MEP",
+      "default_dimensions": [6.0, 12.0, 6.0],
+      "default_properties": {
+        "capacity_rt": 600,
+        "power_kw": 45,
+        "cost_ntd": 1200000,
+        "weight_kg": 3200,
+        "fan_type": "axial"
+      },
+      "connections": ["condenser_water_in", "condenser_water_out", "power"],
+      "color": "#a9a9a9",
+      "primitive": "Cylinder"
+    },
+    "MEP.Compressor": {
+      "display_name": "壓縮空氣機",
+      "category": "MEP",
+      "default_dimensions": [3.0, 5.0, 3.0],
+      "default_properties": {
+        "pressure_bar": 7,
+        "power_kw": 150,
+        "cost_ntd": 800000,
+        "weight_kg": 2100,
+        "type": "screw"
+      },
+      "connections": ["compressed_air_out", "power"],
+      "color": "#ff9e4a",
+      "primitive": "Cylinder"
+    },
+    "MEP.ExhaustStack": {
+      "display_name": "排氣管",
+      "category": "MEP",
+      "default_dimensions": [2.0, 35.0, 2.0],
+      "default_properties": {
+        "height_m": 35,
+        "cost_ntd": 600000,
+        "weight_kg": 1500,
+        "material": "stainless_steel"
+      },
+      "connections": ["exhaust_in"],
+      "color": "#cd5c5c",
+      "primitive": "Cylinder"
+    },
+    "Structural.Column": {
+      "display_name": "結構柱",
+      "category": "Structural",
+      "default_dimensions": [0.8, 16.0, 0.8],
+      "default_properties": {
+        "cost_ntd": 150000,
+        "material": "reinforced_concrete",
+        "load_capacity_ton": 200
+      },
+      "connections": [],
+      "color": "#888888",
+      "primitive": "Cylinder"
+    },
+    "Building.Fab": {
+      "display_name": "Fab 主廠房",
+      "category": "Building",
+      "default_dimensions": [80.0, 25.0, 50.0],
+      "default_properties": {
+        "area_sqm": 4000,
+        "cleanroom_class": "1000",
+        "cost_ntd": 500000000,
+        "floors": 2
+      },
+      "connections": [],
+      "color": "#e8e8e8",
+      "primitive": "Cube"
+    },
+    "Building.CUB": {
+      "display_name": "CUB 中央設施大樓",
+      "category": "Building",
+      "default_dimensions": [30.0, 16.0, 25.0],
+      "default_properties": {
+        "capacity_mw": 12,
+        "cost_ntd": 80000000,
+        "floors": 3
+      },
+      "connections": [],
+      "color": "#90ee90",
+      "primitive": "Cube"
+    }
+  }
+}
