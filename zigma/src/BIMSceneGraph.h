@@ -40,6 +40,11 @@ public:
                                      const QVector3D &position, const QVector3D &dimensions,
                                      const QVariantMap &properties);
 
+    // Cost calculations (Phase 3)
+    Q_INVOKABLE double totalCost() const;
+    Q_INVOKABLE double pipeCost(const QString &fromId, const QString &toId, double costPerMeter = 3500.0) const;
+    Q_INVOKABLE double totalPipeCost() const;
+
 signals:
     void entityCountChanged();
     void entityAdded(const QString &id);

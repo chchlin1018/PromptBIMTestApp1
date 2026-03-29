@@ -235,6 +235,61 @@ Node {
         materials: PrincipledMaterial { baseColor: "#cd5c5c"; roughness: 0.5; metalness: 0.3 }
     }
 
+    // === MEP Pipes (Phase 3) ===
+
+    // Chilled water supply — Chillers to pipe rack (blue)
+    Repeater3D {
+        model: 3
+        Model {
+            source: "#Cylinder"
+            position: Qt.vector3d(48 + index * 7, 4.5, 10)
+            scale: Qt.vector3d(0.005, 0.15, 0.005)
+            eulerRotation.x: 90
+            materials: PrincipledMaterial { baseColor: "#2196F3"; roughness: 0.3; metalness: 0.7; opacity: 0.8 }
+        }
+    }
+
+    // Condenser water — Chillers to CoolingTowers (green)
+    Repeater3D {
+        model: 3
+        Model {
+            source: "#Cylinder"
+            position: Qt.vector3d(48 + index * 7, 5, 12.5)
+            scale: Qt.vector3d(0.005, 0.35, 0.005)
+            materials: PrincipledMaterial { baseColor: "#4CAF50"; roughness: 0.3; metalness: 0.7; opacity: 0.8 }
+        }
+    }
+
+    // Condenser water horizontal header — connecting all cooling towers
+    Model {
+        source: "#Cylinder"
+        position: Qt.vector3d(55, 5, 30)
+        scale: Qt.vector3d(0.005, 0.25, 0.005)
+        eulerRotation.z: 90
+        materials: PrincipledMaterial { baseColor: "#4CAF50"; roughness: 0.3; metalness: 0.7; opacity: 0.8 }
+    }
+
+    // Power cables — Compressors to CUB (red)
+    Repeater3D {
+        model: 2
+        Model {
+            source: "#Cylinder"
+            position: Qt.vector3d(50 + index * 10, 1.5, 2.5)
+            scale: Qt.vector3d(0.003, 0.05, 0.003)
+            eulerRotation.x: 90
+            materials: PrincipledMaterial { baseColor: "#F44336"; roughness: 0.4; metalness: 0.5; opacity: 0.8 }
+        }
+    }
+
+    // Chilled water main header — connecting all chillers horizontally
+    Model {
+        source: "#Cylinder"
+        position: Qt.vector3d(55, 3, -5)
+        scale: Qt.vector3d(0.005, 0.15, 0.005)
+        eulerRotation.z: 90
+        materials: PrincipledMaterial { baseColor: "#2196F3"; roughness: 0.3; metalness: 0.7; opacity: 0.8 }
+    }
+
     // === Infrastructure ===
 
     // Pipe rack corridor 60x5x4m

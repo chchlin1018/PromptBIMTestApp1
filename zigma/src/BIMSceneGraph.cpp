@@ -200,3 +200,43 @@ void BIMSceneGraph::registerEntity(const QString &id, const QString &type, const
     entity->setProperties(properties);
     addEntity(entity);
 }
+
+double BIMSceneGraph::totalCost() const
+{
+    double total = 0;
+    for (auto *e : m_entities) {
+        QVariant costVar = e->properties().value("cost_ntd");
+        if (costVar.isValid())
+            total += costVar.toDouble();
+    }
+    return total;
+}
+
+double BIMSceneGraph::pipeCost(const QString &fromId, const QString &toId, double costPerMeter) const
+{
+    BIMEntity *from = findEntity(fromId);
+    BIMEntity *to = findEntity(toId);
+    if (!from || !to) return 0;
+    double dist = from->distanceTo(to);
+    return dist * costPerMeter;
+}
+
+double BIMSceneGraph::totalPipeCost() const
+{
+    // Calculate total pipe cost from all connected pairs
+    double total = 0;
+    const double costPerMeter = 3500.0; // NTD per meter
+    QSet<QString> counted;
+
+    for (auto *e : m_entities) {
+        for (const auto &connId : e->connections()) {
+            QString pairKey = (e->entityId() < connId)
+                ? e->entityId() + "-" + connId
+                : connId + "-" + e->entityId();
+            if (counted.contains(pairKey)) continue;
+            counted.insert(pairKey);
+            total += pipeCost(e->entityId(), connId, costPerMeter);
+        }
+    }
+    return total;
+}
