@@ -13,6 +13,7 @@ Item {
     property var materialLibrary: null
     property int currentView: 0
     property bool demoMode: true
+    property string selectedEntityId: ""
 
     function fitToScene() {
         perspCamera.position = Qt.vector3d(-80, 60, 100)
@@ -136,11 +137,25 @@ Item {
             acceptedButtons: Qt.LeftButton
             onClicked: function(mouse) {
                 var result = view3d.pick(mouse.x, mouse.y)
-                if (result.objectHit && result.objectHit.elementData) {
-                    root.elementPicked(
-                        result.objectHit.elementData.id || "",
-                        result.objectHit.elementData
-                    )
+                if (result.objectHit) {
+                    var hitObj = result.objectHit
+                    // Check for named entity (objectName from DemoScene)
+                    if (hitObj.objectName && hitObj.objectName !== "" && typeof sceneGraph !== "undefined") {
+                        var entity = sceneGraph.findEntity(hitObj.objectName)
+                        if (entity) {
+                            root.selectedEntityId = hitObj.objectName
+                            var entityJson = entity.toJson()
+                            root.elementPicked(hitObj.objectName, entityJson)
+                            return
+                        }
+                    }
+                    // Fallback to elementData for dynamic BIM models
+                    if (hitObj.elementData) {
+                        root.elementPicked(
+                            hitObj.elementData.id || "",
+                            hitObj.elementData
+                        )
+                    }
                 }
             }
         }

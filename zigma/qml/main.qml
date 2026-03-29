@@ -245,6 +245,21 @@ ApplicationWindow {
             loadingOverlay.hide()
             chatPanel.addMessage("system", "Error: " + error)
         }
+        function onOperateResult(result) {
+            var action = result.action || ""
+            chatPanel.addOperationResult(action, result)
+            if (result.cost_delta) {
+                costPanel.applyCostDelta(result.cost_delta)
+            }
+        }
+        function onQueryResult(result) {
+            var action = result.action || ""
+            if (action === "scene_info") {
+                chatPanel.addMessage("ai", "Scene: " + (result.scene ? result.scene.total_entities : 0) + " entities")
+            } else {
+                chatPanel.addMessage("ai", action + ": " + (result.count || 0) + " results")
+            }
+        }
     }
 
     Dialog {
@@ -254,7 +269,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         standardButtons: Dialog.Ok
         Label {
-            text: "Zigma PromptToBuild v0.1.0\nBIM generation powered by AI"
+            text: "Zigma PromptToBuild v0.3.0\nBIM generation powered by AI"
             color: ThemeManager.textPrimary
         }
     }
