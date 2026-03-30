@@ -521,23 +521,31 @@ def ensure_fallback_ifc(output_dir: Path = DEMO_RESOURCES_DIR) -> Path:
 
 def generate_all_demo_resources() -> dict[str, Path]:
     """Generate all demo resources: JSON + IFC + USDA + SVG."""
+    import logging
+
+    _logger = logging.getLogger("promptbim.demo.demo_data")
+
     paths = save_demo_resources()
     try:
         paths["ifc"] = generate_demo_ifc()
-    except Exception:
+    except (ImportError, OSError, ValueError, RuntimeError) as exc:
+        _logger.warning("IFC generation failed, trying fallback: %s", exc)
         # Fallback to simple sample house
         try:
             paths["ifc"] = ensure_fallback_ifc()
-        except Exception:
+        except (ImportError, OSError, ValueError, RuntimeError) as exc2:
+            _logger.warning("Fallback IFC generation also failed: %s", exc2)
             paths["ifc"] = None
     try:
         paths["usda"] = generate_demo_usda()
-    except Exception:
+    except (ImportError, OSError, ValueError, RuntimeError) as exc:
+        _logger.warning("USDA generation failed: %s", exc)
         paths["usda"] = None
     try:
         svg_paths = generate_demo_svg()
         paths["svg"] = svg_paths
-    except Exception:
+    except (OSError, ValueError) as exc:
+        _logger.warning("SVG generation failed: %s", exc)
         paths["svg"] = None
     return paths
 

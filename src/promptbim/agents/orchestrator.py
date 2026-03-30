@@ -124,8 +124,8 @@ class Orchestrator:
                     self._emit("cache", "Cache hit — loading previous result", 1.0)
                     logger.info("Cache hit for key %s", cache_key[:12])
                     return zoning, cache_key, GenerationResult(**cached)
-            except Exception:
-                logger.debug("Cache lookup failed, proceeding with generation", exc_info=True)
+            except (ImportError, OSError, KeyError, TypeError, ValueError) as exc:
+                logger.debug("Cache lookup failed, proceeding with generation: %s", exc)
 
         return zoning, cache_key, None
 
@@ -171,8 +171,8 @@ class Orchestrator:
                 store = CacheStore()
                 store.put(cache_key, result.model_dump(mode="json", exclude={"ifc_path", "usd_path"}))
                 logger.info("Cached result for key %s", cache_key[:12])
-            except Exception:
-                logger.debug("Cache store failed", exc_info=True)
+            except (ImportError, OSError, TypeError, ValueError) as exc:
+                logger.debug("Cache store failed: %s", exc)
 
     # --- Main pipeline ---
 
@@ -245,15 +245,15 @@ class Orchestrator:
         self._emit("builder", "Generating IFC + USD files...", 0.8)
         try:
             self._build_result = self._builder.build(self._plan)
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, TypeError) as e:
             logger.error("Builder failed: %s", e)
             if self._output_dir:
                 try:
                     plan_json = self._output_dir / "plan_partial.json"
                     plan_json.write_text(self._plan.model_dump_json(indent=2))
                     logger.info("Saved partial plan to %s", plan_json)
-                except Exception:
-                    pass
+                except OSError as io_exc:
+                    logger.debug("Failed to save partial plan: %s", io_exc)
             return GenerationResult(
                 success=False,
                 building_name=self._plan.name if self._plan else "",
@@ -369,7 +369,7 @@ class Orchestrator:
                     history_path = self._output_dir / "modification_history.json"
                     self._modifier.history.save_history(history_path)
                     logger.debug("Saved modification history to %s", history_path)
-                except Exception:
+                except OSError:
                     logger.warning("Failed to save modification history", exc_info=True)
         else:
             self._emit("modifier", f"Modification failed: {record.error}", 1.0)
@@ -429,8 +429,8 @@ class Orchestrator:
                 self._cost_estimate.total_cost_twd,
                 self._cost_estimate.cost_per_sqm_twd,
             )
-        except Exception:
-            logger.warning("Cost estimation failed", exc_info=True)
+        except (ImportError, ValueError, TypeError, AttributeError) as exc:
+            logger.warning("Cost estimation failed: %s", exc)
         return self._cost_estimate
 
     def compute_schedule(self, total_days: int = 360) -> "ConstructionSchedule | None":
@@ -454,8 +454,8 @@ class Orchestrator:
                 num_stories=len(self._plan.stories),
             )
             logger.info("Schedule: %d phases, %d days", len(self._schedule.phases), self._schedule.total_days)
-        except Exception:
-            logger.warning("Schedule generation failed", exc_info=True)
+        except (ImportError, ValueError, TypeError) as exc:
+            logger.warning("Schedule generation failed: %s", exc)
         return self._schedule
 
     def export_4d_gif(self, output_path: "str | Path | None" = None, fps: int = 5) -> "Path | None":
@@ -480,8 +480,8 @@ class Orchestrator:
             anim.export_gif(str(output_path), fps=fps)
             logger.info("4D GIF exported to %s", output_path)
             return output_path
-        except Exception:
-            logger.warning("4D GIF export failed", exc_info=True)
+        except (ImportError, OSError, ValueError, RuntimeError) as exc:
+            logger.warning("4D GIF export failed: %s", exc)
             return None
 
     def _emit(self, stage: str, message: str, progress: float) -> None:

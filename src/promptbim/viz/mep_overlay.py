@@ -86,6 +86,7 @@ def _segment_to_polydata(
     try:
         tube = line.tube(radius=max(radius, 0.02), n_sides=8)
         return tube
-    except Exception:
+    except (ValueError, RuntimeError) as exc:
         # Fallback: just return the line as-is
+        logger.debug("Tube creation failed, using line fallback: %s", exc)
         return line

@@ -185,6 +185,7 @@ def clip_model_at_elevation(
             result = pd.clip(normal="z", origin=(0, 0, elevation), invert=False)
             if result.n_points > 0:
                 clipped.append((result, color, label))
-        except Exception:
+        except (ValueError, RuntimeError) as exc:
+            logger.debug("Clip failed for '%s', keeping original: %s", label, exc)
             clipped.append((pd, color, label))
     return clipped

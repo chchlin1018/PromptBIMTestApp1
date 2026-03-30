@@ -10,10 +10,12 @@ import importlib
 from typing import TYPE_CHECKING
 
 try:
-    from importlib.metadata import version
+    from importlib.metadata import PackageNotFoundError, version
 
     __version__ = version("promptbim")
-except Exception:
+except PackageNotFoundError:
+    __version__ = "2.12.0"
+except ImportError:
     __version__ = "2.12.0"
 
 __author__ = "Michael Lin (Reality Matrix Inc.)"

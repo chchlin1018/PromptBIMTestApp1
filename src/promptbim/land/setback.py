@@ -73,10 +73,10 @@ def per_side_setback(
     back = setbacks.get("back", 0.0)
     left = setbacks.get("left", 0.0)
 
-    # Fallback for non-quad polygons
-    if len(polygon) > 4:
+    # ISS-L003: Handle non-quad polygons correctly (including triangles)
+    if len(polygon) != 4:
         avg = (front + right + back + left) / 4.0
-        logger.debug("Polygon has %d sides (> 4), falling back to uniform %.1fm", len(polygon), avg)
+        logger.debug("Polygon has %d sides (!= 4), falling back to uniform %.1fm", len(polygon), avg)
         return uniform_setback(polygon, avg)
 
     poly = Polygon(polygon)

@@ -212,8 +212,8 @@ class CheckerAgent(BaseAgent):
                                 message="Building footprint extends beyond buildable area (setback violation)",
                             )
                         )
-            except Exception:
-                logger.warning("Could not verify footprint containment")
+            except (ValueError, TypeError, AttributeError) as exc:
+                logger.warning("Could not verify footprint containment: %s", exc)
         return violations
 
     def _get_suggestions(
@@ -241,8 +241,8 @@ class CheckerAgent(BaseAgent):
             response = self.run(prompt)
             if response.ok and response.json_data:
                 return response.json_data.get("suggestions", [])
-        except Exception:
-            logger.warning("Could not get AI suggestions for violations")
+        except (KeyError, ValueError, TypeError, OSError) as exc:
+            logger.warning("Could not get AI suggestions for violations: %s", exc)
 
         # Fallback: use code engine suggestions directly
         if code_suggestions:

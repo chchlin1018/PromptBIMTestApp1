@@ -61,8 +61,8 @@ def get_all_rules() -> list[BaseRule]:
             if hasattr(plugin, "instance") and isinstance(plugin.instance, BaseRule):
                 rules.append(plugin.instance)
                 logger.debug("Added plugin rule: %s", plugin.name)
-    except Exception:
-        pass
+    except (ImportError, AttributeError, TypeError) as exc:
+        logger.debug("Plugin rule loading failed: %s", exc)
     return rules
 
 

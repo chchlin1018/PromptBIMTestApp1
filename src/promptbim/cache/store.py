@@ -2,10 +2,37 @@
 
 from __future__ import annotations
 
-import fcntl
 import json
+import os
 import time
 from pathlib import Path
+
+# ISS-R004: Cross-platform file locking (fcntl is Unix-only)
+if os.name == "nt":
+    import msvcrt
+
+    def _lock_shared(f):
+        msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+
+    def _lock_exclusive(f):
+        msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+
+    def _unlock(f):
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass
+else:
+    import fcntl
+
+    def _lock_shared(f):
+        fcntl.flock(f, fcntl.LOCK_SH)
+
+    def _lock_exclusive(f):
+        fcntl.flock(f, fcntl.LOCK_EX)
+
+    def _unlock(f):
+        fcntl.flock(f, fcntl.LOCK_UN)
 
 from promptbim.constants import CACHE_MAX_ENTRIES, CACHE_TTL_DAYS
 from promptbim.debug import get_logger
@@ -31,11 +58,11 @@ class CacheStore:
         try:
             # Use shared read lock to prevent reading truncated writes
             with open(path, encoding="utf-8") as f:
-                fcntl.flock(f, fcntl.LOCK_SH)
+                _lock_shared(f)
                 try:
                     data = json.loads(f.read())
                 finally:
-                    fcntl.flock(f, fcntl.LOCK_UN)
+                    _unlock(f)
         except (json.JSONDecodeError, OSError):
             logger.warning("Corrupt cache entry: %s", key[:12])
             path.unlink(missing_ok=True)
@@ -76,11 +103,11 @@ class CacheStore:
         content = json.dumps(data, ensure_ascii=False, default=str)
         # Use exclusive file lock to prevent concurrent write corruption
         with open(path, "w", encoding="utf-8") as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
+            _lock_exclusive(f)
             try:
                 f.write(content)
             finally:
-                fcntl.flock(f, fcntl.LOCK_UN)
+                _unlock(f)
         logger.debug("Cached: %s", key[:12])
 
     def invalidate(self, key: str) -> bool:

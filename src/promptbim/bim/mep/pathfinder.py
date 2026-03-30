@@ -6,6 +6,7 @@ turns.  A turn penalty discourages excessive bends.
 
 from __future__ import annotations
 
+import enum
 import heapq
 from dataclasses import dataclass, field
 
@@ -14,6 +15,15 @@ import numpy as np
 from promptbim.debug import get_logger
 
 logger = get_logger("mep.pathfinder")
+
+
+class PathError(enum.Enum):
+    """ISS-L002: Error classification for failed pathfinding."""
+    NONE = "none"
+    NO_PATH = "no_path"
+    BLOCKED = "blocked"
+    INVALID_ENDPOINT = "invalid_endpoint"
+    MAX_ITERATIONS = "max_iterations"
 
 
 @dataclass
@@ -33,6 +43,7 @@ class RoutePath:
     waypoints: list[tuple[float, float, float]]
     segments: list[PathSegment] = field(default_factory=list)
     total_length_m: float = 0.0
+    error: PathError = PathError.NONE
 
     @classmethod
     def from_waypoints(
@@ -169,6 +180,14 @@ class MEPPathfinder:
         start_g = self._to_grid(start)
         end_g = self._to_grid(end)
 
+        # ISS-L002: Validate endpoints are not inside obstacles
+        if start_g in self.obstacles:
+            logger.warning("Start point %s is inside an obstacle", start)
+            return RoutePath(waypoints=[], error=PathError.INVALID_ENDPOINT)
+        if end_g in self.obstacles:
+            logger.warning("End point %s is inside an obstacle", end)
+            return RoutePath(waypoints=[], error=PathError.INVALID_ENDPOINT)
+
         if start_g == end_g:
             w = self._to_world(start_g)
             return RoutePath.from_waypoints([w], self.grid)
@@ -220,8 +239,12 @@ class MEPPathfinder:
                     came_from[neighbor] = current
                     direction_at[neighbor] = curr_dir
 
-        logger.debug("No path found after %d iterations", iterations)
-        return RoutePath(waypoints=[])  # no path found
+        # ISS-L002: Classify the failure reason
+        if iterations >= max_iterations:
+            logger.warning("No path found: max iterations (%d) reached", max_iterations)
+            return RoutePath(waypoints=[], error=PathError.MAX_ITERATIONS)
+        logger.debug("No path found after %d iterations (blocked)", iterations)
+        return RoutePath(waypoints=[], error=PathError.BLOCKED)
 
     @staticmethod
     def _reconstruct(

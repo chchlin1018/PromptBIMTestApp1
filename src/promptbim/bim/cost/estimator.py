@@ -267,7 +267,10 @@ class CostEstimator:
         self,
         plan: BuildingPlan,
         monitor_plan: MonitorPlan | None = None,
+        quality_level: float = 1.0,
     ) -> CostEstimate:
+        # ISS-L001: Clamp quality_level to valid range to prevent division/multiplication errors
+        quality_level = max(0.0, min(1.0, float(quality_level)))
         qto_items = self._qto.extract(plan)
         line_items = self._price_items(qto_items)
 
@@ -283,6 +286,10 @@ class CostEstimator:
             monitor_items = self._monitoring_cost_items(monitor_plan)
             line_items.extend(monitor_items)
             total += sum(li.total_twd for li in monitor_items)
+
+        # ISS-L001: Apply quality_level scaling (0.0=minimum, 1.0=standard)
+        if quality_level < 1.0:
+            total = total * (0.5 + 0.5 * quality_level)  # scale 50%-100%
 
         # Calculate total floor area
         total_floor_area = sum(qi.quantity for qi in qto_items if qi.category == "slab")
@@ -406,7 +413,8 @@ class CostEstimator:
                 vendor_price_low=sup.price.min_price,
                 vendor_price_high=sup.price.max_price,
             )
-        except Exception:
+        except (ImportError, AttributeError, IndexError, TypeError) as exc:
+            logger.debug("Component substitution failed for %s: %s", component_id, exc)
             return None
 
     def _lookup_vendor(
@@ -434,8 +442,8 @@ class CostEstimator:
                 price_low = sup.price.min_price if sup.price else unit_price * 0.7
                 price_high = sup.price.max_price if sup.price else unit_price * 1.3
                 return (sup.name, sup.brand or "", sup.country or "", price_low, price_high)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, IndexError, TypeError) as exc:
+            logger.debug("Vendor lookup failed for %s: %s", qto_category, exc)
         return ("", "", "", unit_price * 0.7, unit_price * 1.3)
 
     def _monitoring_cost_items(self, monitor_plan: MonitorPlan) -> list[CostLineItem]:

@@ -78,8 +78,11 @@ class AudioRecorder:
                 callback=self._audio_callback,
             )
             self._stream.start()
-        except Exception as exc:
+        except ImportError as exc:
             logger.warning("sounddevice unavailable, recording disabled: %s", exc)
+            self._recording = False
+        except OSError as exc:
+            logger.warning("Audio device error, recording disabled: %s", exc)
             self._recording = False
 
     def stop(self) -> bytes:
@@ -91,8 +94,8 @@ class AudioRecorder:
             try:
                 self._stream.stop()
                 self._stream.close()
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.debug("Error closing audio stream: %s", exc)
             self._stream = None
         if not self._frames:
             return b""
@@ -187,14 +190,18 @@ class Transcriber:
                 len(seg_list),
             )
             return text.strip()
-        except Exception as exc:
+        except (OSError, RuntimeError, ValueError) as exc:
             logger.error("Transcription failed: %s", exc)
             return ""
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
     def _transcribe_macos_native(self, wav_bytes: bytes) -> str:
-        """Fallback: use macOS SFSpeechRecognizer via subprocess (Task 22)."""
+        """Fallback: use macOS SFSpeechRecognizer via subprocess (Task 22).
+
+        ISS-S001: Fixed command injection vulnerability by using subprocess.run
+        with argument list instead of f-string interpolation into AppleScript.
+        """
         import platform
         import subprocess
 
@@ -207,17 +214,21 @@ class Transcriber:
             tmp_path = tmp.name
 
         try:
-            # Use macOS built-in speech recognition via AppleScript bridge
-            script = (
-                f'do shell script "/usr/bin/python3 -c \\"'
-                f"import speech_recognition as sr; "
-                f"r = sr.Recognizer(); "
-                f"with sr.AudioFile('{tmp_path}') as source: audio = r.record(source); "
-                f"print(r.recognize_sphinx(audio))"
-                f'\\""'
+            # ISS-S001: Use subprocess.run with proper argument separation
+            # instead of interpolating paths into AppleScript shell commands
+            py_script = (
+                "import speech_recognition as sr; "
+                "import sys; "
+                "r = sr.Recognizer(); "
+                "f = sys.argv[1]; "
+                "a = sr.AudioFile(f); "
+                "src = a.__enter__(); "
+                "audio = r.record(src); "
+                "a.__exit__(None, None, None); "
+                "print(r.recognize_sphinx(audio))"
             )
             result = subprocess.run(
-                ["osascript", "-e", script],
+                ["/usr/bin/python3", "-c", py_script, tmp_path],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -227,7 +238,9 @@ class Transcriber:
                 logger.info("macOS native STT: %s", text[:100])
                 self._backend = "macos-native"
                 return text
-        except Exception as exc:
+        except subprocess.TimeoutExpired:
+            logger.warning("macOS native STT timed out")
+        except OSError as exc:
             logger.debug("macOS native STT failed: %s", exc)
         finally:
             Path(tmp_path).unlink(missing_ok=True)

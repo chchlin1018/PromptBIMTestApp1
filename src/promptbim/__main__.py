@@ -135,8 +135,8 @@ def _run_generate(args):
 
             CacheStore().clear_all()
             print("Cache cleared.")
-        except Exception:
-            pass
+        except (ImportError, OSError) as exc:
+            logger.warning("Failed to clear cache: %s", exc)
 
     # Generate
     orch = Orchestrator(output_dir=output_dir, on_status=_cli_status)
