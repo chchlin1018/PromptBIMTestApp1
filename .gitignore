@@ -71,3 +71,6 @@ assets/hdri/**/*.hdr
 assets/hdri/**/*.exr
 !assets/**/.gitkeep
 !assets/**/README.md
+
+.claude/
+zigma/build-win/
