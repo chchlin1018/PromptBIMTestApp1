@@ -6,13 +6,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
-[![C++17](https://img.shields.io/badge/C++-17-blue.svg)]()
-[![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-1060%2B%20passed-green.svg)]()
-[![GoogleTest](https://img.shields.io/badge/C++%20Tests-165%2B%20passed-green.svg)]()
-[![POC](https://img.shields.io/badge/Stage-POC%20v2.12.0-orange.svg)]()
+[![C++20](https://img.shields.io/badge/C++-20-blue.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-lightgrey.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-968%2B%20passed-green.svg)]()
+[![GoogleTest](https://img.shields.io/badge/C++%20Tests-14%20passed-green.svg)]()
+[![POC](https://img.shields.io/badge/Stage-POC%20mvp--v0.5.1--win-orange.svg)]()
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)]()
-[![Windows](https://img.shields.io/badge/Windows-Supported-blue.svg)]()
+[![Windows](https://img.shields.io/badge/Windows-MSVC%202022%20✓-blue.svg)]()
 
 ---
 

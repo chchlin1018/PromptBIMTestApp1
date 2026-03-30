@@ -1,13 +1,14 @@
-# PROJECT_STATUS v2.3
+# PROJECT_STATUS v2.4
 
-> Last updated: 2026-03-30 | HEAD: (CHAIN-DEMO)
+> Last updated: 2026-03-31 | HEAD: (S-PTBWIN-2)
 
 ## Current State
 
-**Version:** mvp-v0.5.0-demo (CHAIN-DEMO complete)
-**Build:** ✅ OK (cmake) | ctest 5/5 PASS
-**Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini + MacBook)
-**Next Sprint:** D1-S2 (Demo polish) or P30-USD-REVIT
+**Version:** mvp-v0.5.1-win (S-PTBWIN-2 complete)
+**Build:** ✅ MSVC 2022 Release | ctest 14/14 PASS | pytest 806/884 PASS
+**Repo:** C:\Dev\PromptBIMTestApp1 (ProArt13 Win11) + ~/Dev/ (Mac Mini)
+**Audit:** B (76/100) — Full 8-dimension audit completed
+**Next Sprint:** P30-USD-REVIT or further audit remediation
 
 ## Sprint History
 
@@ -20,8 +21,9 @@
 | 5 | M2-BRIDGE | 25T | mvp-v0.3.0 | 2026-03-29 | ✅ |
 | 6 | M2-ENTITY | 20T | mvp-v0.4.0-entity | 2026-03-30 | ✅ |
 | 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0-demo | 2026-03-30 | ✅ |
+| 8 | S-PTBWIN-2 | 25T | mvp-v0.5.1-win | 2026-03-31 | ✅ |
 
-**Total completed: 180 Tasks across 7 Sprints (CHAIN-DEMO: 45T in 2 phases)**
+**Total completed: 205 Tasks across 8 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
