@@ -15,6 +15,8 @@ class PluginType(str, Enum):
     AGENT = "agent"
     PARSER = "parser"
     CODE_RULE = "code_rule"
+    DEVICE = "device"       # T14: device extensibility
+    EXPORTER = "exporter"   # T16: export pipeline plugins
 
 
 class PluginInfo:
@@ -35,6 +37,9 @@ class PluginInfo:
         self.func = func
         self.description = description
         self.priority = priority
+
+    # T16: Optional instance for class-based plugins (agents, devices)
+    instance: Any = None
 
     def __repr__(self) -> str:
         return f"<Plugin {self.plugin_type.value}:{self.name}>"
@@ -81,6 +86,19 @@ class PluginRegistry:
         if info is None:
             raise KeyError(f"Plugin '{name}' not found")
         return info.func(*args, **kwargs)
+
+    @classmethod
+    def get_plugins(cls, plugin_type: PluginType) -> list[PluginInfo]:
+        """T16: Alias for discover() used by code rules and agent loaders."""
+        return cls.discover(plugin_type)
+
+    @classmethod
+    def register_agent(cls, name: str, agent_instance: Any, description: str = "", priority: int = 100) -> None:
+        """T16: Register an agent instance as a plugin for dynamic agent loading."""
+        info = PluginInfo(name, PluginType.AGENT, type(agent_instance), description, priority)
+        info.instance = agent_instance
+        cls._plugins[name] = info
+        logger.debug("Registered agent plugin: %s", name)
 
     @classmethod
     def count(cls) -> int:
