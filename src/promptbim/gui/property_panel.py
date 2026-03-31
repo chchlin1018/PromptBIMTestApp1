@@ -91,19 +91,19 @@ class PropertyPanel(QWidget):
         rows.append(("Name", entity.get("name", "")))
         rows.append(("Type", entity.get("type", "")))
 
-        pos = entity.get("position", {})
-        rows.append(("Position", f"({pos.get('x', 0):.2f}, {pos.get('y', 0):.2f}, {pos.get('z', 0):.2f})"))
+        pos = entity.get("position", [0, 0, 0])
+        rows.append(("Position", f"({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f})"))
 
-        rot = entity.get("rotation", {})
-        rows.append(("Rotation", f"({rot.get('x', 0):.1f}, {rot.get('y', 0):.1f}, {rot.get('z', 0):.1f})"))
+        rot = entity.get("rotation", [0, 0, 0])
+        rows.append(("Rotation", f"({rot[0]:.1f}, {rot[1]:.1f}, {rot[2]:.1f})"))
 
-        dims = entity.get("dimensions", {})
-        rows.append(("Dimensions", f"({dims.get('x', 0):.2f}, {dims.get('y', 0):.2f}, {dims.get('z', 0):.2f})"))
+        dims = entity.get("dimensions", [0, 0, 0])
+        rows.append(("Dimensions", f"({dims[0]:.2f}, {dims[1]:.2f}, {dims[2]:.2f})"))
 
         # Volume and surface area
-        dx = dims.get("x", 0)
-        dy = dims.get("y", 0)
-        dz = dims.get("z", 0)
+        dx = dims[0]
+        dy = dims[1]
+        dz = dims[2]
         vol = dx * dy * dz
         rows.append(("Volume", f"{vol:.2f} m\u00b3"))
 

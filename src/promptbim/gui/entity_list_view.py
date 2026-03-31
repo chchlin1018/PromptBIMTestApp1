@@ -70,8 +70,8 @@ class EntityListView(QWidget):
             self._table.setItem(row, 1, QTableWidgetItem(e.get("type", "")))
             self._table.setItem(row, 2, QTableWidgetItem(e.get("name", "")))
 
-            pos = e.get("position", {})
-            pos_str = f"({pos.get('x', 0):.1f}, {pos.get('y', 0):.1f}, {pos.get('z', 0):.1f})"
+            pos = e.get("position", [0, 0, 0])
+            pos_str = f"({pos[0]:.1f}, {pos[1]:.1f}, {pos[2]:.1f})"
             pos_item = QTableWidgetItem(pos_str)
             pos_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._table.setItem(row, 3, pos_item)

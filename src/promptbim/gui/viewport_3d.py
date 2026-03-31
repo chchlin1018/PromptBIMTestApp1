@@ -127,16 +127,16 @@ class _ViewportCanvas(QWidget):
 
         # Draw entities
         for e in self._entities:
-            pos = e.get("position", {})
-            dims = e.get("dimensions", {})
+            pos = e.get("position", [0, 0, 0])
+            dims = e.get("dimensions", [1, 1, 1])
             etype = e.get("type", "Generic")
             eid = e.get("id", "")
             name = e.get("name", "")
 
-            px = pos.get("x", 0) * scale + ox
-            py = pos.get("y", 0) * scale + oy
-            dx = max(dims.get("x", 1), 0.2) * scale
-            dy = max(dims.get("y", 1), 0.2) * scale
+            px = pos[0] * scale + ox
+            py = pos[1] * scale + oy
+            dx = max(dims[0], 0.2) * scale
+            dy = max(dims[1], 0.2) * scale
 
             color = QColor(_TYPE_COLORS.get(etype, "#BDBDBD"))
 
