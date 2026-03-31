@@ -1,13 +1,13 @@
-# PROJECT_STATUS v3.0
+# PROJECT_STATUS v3.1
 
-> Last updated: 2026-04-01 | HEAD: (S-PTB-DEMO-TSMC)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-FINAL-AUDIT)
 
 ## Current State
 
-**Version:** mvp-v1.0.0-demo (S-PTB-DEMO-TSMC complete)
-**Build:** ✅ cmake clean build | ctest 90/90 PASS | E2E 65/65 PASS | pytest N/A (ISS-042)
+**Version:** mvp-v1.0.1-audit (S-PTB-FINAL-AUDIT complete)
+**Build:** ✅ cmake clean build | ctest 90/90 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (96/100) — PTB-FAR-DEMO-001
+**Audit:** A (95/100) — PTB-FAR-FINAL-001 (6-dimension quality)
 **Next Sprint:** S-PTB-WIN-BUILD v1.0.0-win (Windows, ProArt13)
 
 ## Sprint History
@@ -28,8 +28,9 @@
 | 12 | S-PTB-AI-LAYER | 15T | mvp-v0.9.0-ai | 2026-04-01 | ✅ |
 | 13 | S-PTB-INTEGRATION | 15T | mvp-v0.10.0-integration | 2026-04-01 | ✅ |
 | 14 | S-PTB-DEMO-TSMC | 20T | mvp-v1.0.0-demo | 2026-04-01 | ✅ |
+| 15 | S-PTB-FINAL-AUDIT | 15T | mvp-v1.0.1-audit | 2026-04-01 | ✅ |
 
-**Total completed: 320 Tasks across 14 Sprints**
+**Total completed: 335 Tasks across 15 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -247,3 +248,26 @@
   - 4D 施工排程 (5 階段 / 220 天)
   - 10 個 AI 對話情境全部通過
   - 5 分鐘 Demo 流程不中斷
+
+### Sprint S-PTB-FINAL-AUDIT 執行結果 — 2026-04-01 00:45
+- **狀態:** ✅ 完成
+- **版本:** mvp-v1.0.1-audit
+- **Tasks:** 15/15
+- **ctest:** 90/90 PASS (⛔零pytest)
+- **記憶體:** 9.1/16.0GB(free:6.8GB)
+- **AuditReport:** PTB-FAR-FINAL-001 (A 95/100)
+- **審查範圍:** 97 C++ + 175 Python + 7 CMake files
+- **修復檔案:**
+  - `cpp/binding/bim_core_module.cpp` — pybind11 keep_alive (Critical fix)
+  - `cpp/core/AgentBridge.h` — [[nodiscard]] on mutation methods
+  - `cpp/core/BIMEntity.h` — noexcept on setters
+  - `cpp/core/BIMSceneGraph.cpp` — Specific exception handling
+  - `cpp/core/CMakeLists.txt` — C++20 alignment
+  - `CMakeLists.txt` — CMAKE_CXX_EXTENSIONS OFF
+  - `src/rdc_log_handler.h` — QNetworkReply null check
+  - `src/promptbim/gui/bim_core_bridge.py` — Specific exception types
+  - `src/promptbim/demo/tsmc_factory.py` — Safe float conversion
+  - `docs/PTB-FAR-FINAL-001.md` — Final audit report
+- **6維度評分:**
+  - C++ Quality: 18/20 | Security: 16/20 | Memory: 17/20
+  - Performance: 15/20 | Demo Stability: 15/15 | CMake: 14/15

@@ -6,6 +6,32 @@
 
 ---
 
+## [mvp-v1.0.1-audit] - 2026-04-01
+
+### Fixed (Sprint S-PTB-FINAL-AUDIT: Final Quality Audit)
+- **CRITICAL**: pybind11 use-after-free — added `py::keep_alive<1,2>()` to AgentBridge and CostCalculator bindings
+- **CRITICAL**: QNetworkReply null pointer dereference — added null check in rdc_log_handler
+- **MAJOR**: C++ standard mismatch — aligned bim_core_static to C++20 (was C++17)
+- **MAJOR**: Missing `[[nodiscard]]` on 6 AgentBridge mutation methods
+- **MAJOR**: Bare `except Exception:` in bim_core_bridge.py — replaced with specific exception types
+- **MINOR**: Missing `noexcept` on BIMEntity setters (setPosition/setRotation/setDimensions)
+- **MINOR**: Unsafe float conversion in tsmc_factory.py cost calculation
+- **MINOR**: Overly broad `catch(...)` in BIMSceneGraph::totalCost
+
+### Changed
+- Added `CMAKE_CXX_EXTENSIONS OFF` for strict standard compliance
+- Comprehensive 6-dimension quality audit (97 C++ + 175 Python + 7 CMake files)
+
+### Verified
+- ctest: 90/90 PASS
+- Build: clean on macOS (Clang)
+- Zero regressions from all fixes
+
+### Audit
+- PTB-FAR-FINAL-001: Score A (95/100) — C++ 18/20, Security 16/20, Memory 17/20, Perf 15/20, Demo 15/15, CMake 14/15
+
+---
+
 ## [mvp-v1.0.0-demo] - 2026-04-01
 
 ### Added (Sprint S-PTB-DEMO-TSMC: TSMC Demo Preparation)

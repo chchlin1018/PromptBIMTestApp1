@@ -1,6 +1,6 @@
 # PromptBIM Architecture — C++ Core + Python Binding
 
-> Version: mvp-v0.8.0-gui | Updated: 2026-03-31
+> Version: mvp-v1.0.1-audit | Updated: 2026-04-01
 
 ## Overview
 
