@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.6
+# PROJECT_STATUS v2.7
 
-> Last updated: 2026-03-31 | HEAD: (S-PTB-CODE-AUDIT)
+> Last updated: 2026-03-31 | HEAD: (S-PTB-GUI-CONNECT)
 
 ## Current State
 
-**Version:** mvp-v0.7.1-codeaudit (S-PTB-CODE-AUDIT complete)
+**Version:** mvp-v0.8.0-gui (S-PTB-GUI-CONNECT complete)
 **Build:** ✅ cmake clean build | ctest 69/69 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (97/100) — PTB-CAR-001
-**Next Sprint:** S-PTB-GUI-CONNECT v0.8.0
+**Audit:** A (95/100) — PTB-FAR-GUI-001
+**Next Sprint:** S-PTB-AI-LAYER v0.9.0
 
 ## Sprint History
 
@@ -24,8 +24,9 @@
 | 8 | S-PTBWIN-2 | 25T | mvp-v0.5.1-win | 2026-03-31 | ✅ |
 | 9 | S-PTB-RESTRUCTURE | 25T | mvp-v0.7.0-restructure | 2026-03-31 | ✅ |
 | 10 | S-PTB-CODE-AUDIT | 20T | mvp-v0.7.1-codeaudit | 2026-03-31 | ✅ |
+| 11 | S-PTB-GUI-CONNECT | 20T | mvp-v0.8.0-gui | 2026-03-31 | ✅ |
 
-**Total completed: 250 Tasks across 10 Sprints**
+**Total completed: 270 Tasks across 11 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -153,3 +154,26 @@
   - [[nodiscard]] + noexcept 50+ methods
   - Buffer overflow fix in executeJson
   - Removed duplicate cpp/bindings/
+
+### Sprint S-PTB-GUI-CONNECT 執行結果 — 2026-03-31 23:45
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.8.0-gui
+- **Tasks:** 20/20
+- **ctest:** 69/69 PASS (⛔零pytest)
+- **記憶體:** 9.7/16.0GB(free:6.2GB)
+- **AuditReport:** PTB-FAR-GUI-001 (A 95/100)
+- **新增檔案:**
+  - `src/promptbim/gui/bim_core_bridge.py` — C++ ↔ Python gateway (SceneGraph, AgentBridge, PropertyManager, CostCalculator)
+  - `src/promptbim/gui/scene_graph_widget.py` — Tree view of entities grouped by type
+  - `src/promptbim/gui/entity_list_view.py` — Flat table listing all BIMEntity
+  - `src/promptbim/gui/property_panel.py` — Right-side property inspector from C++ core
+  - `src/promptbim/gui/viewport_3d.py` — Top-down 2D projection of SceneGraph geometry
+- **修改檔案:**
+  - `main_window.py` — Bridge + 3 new panels + C++ 3D View tab
+  - `chat_panel.py` — AgentBridge scene command routing
+  - `cost_panel.py` — C++ CostCalculator integration
+  - CMake: bim_core_static rename, pybind11 build enabled
+- **關鍵改善:**
+  - 22-entity TSMC demo scene
+  - BIMCoreBridge singleton for shared state
+  - AgentBridge JSON action routing from ChatPanel

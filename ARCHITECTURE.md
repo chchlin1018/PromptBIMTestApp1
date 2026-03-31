@@ -1,12 +1,19 @@
 # PromptBIM Architecture — C++ Core + Python Binding
 
-> Version: mvp-v0.7.1-codeaudit | Updated: 2026-03-31
+> Version: mvp-v0.8.0-gui | Updated: 2026-03-31
 
 ## Overview
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Qt GUI (PySide6)                           │  ← Thin UI layer
+│  Qt GUI (PySide6) — v0.8.0                  │  ← Thin UI layer
+│  ├── BIMCoreBridge    (C++ ↔ Python gateway) │
+│  ├── SceneGraphWidget (tree view)           │
+│  ├── EntityListView   (flat table)          │
+│  ├── PropertyPanel    (entity inspector)    │
+│  ├── Viewport3D       (2D projection)       │
+│  ├── ChatPanel        (AgentBridge routing) │
+│  └── CostPanel        (CostCalculator)      │
 ├─────────────────────────────────────────────┤
 │  Python App Layer                           │  ← AI/LLM agents, orchestrator
 │  src/promptbim/ (7-agent pipeline)          │
@@ -14,7 +21,7 @@
 │  Python Binding (pybind11)                  │  ← import bim_core
 │  cpp/binding/bim_core_module.cpp            │
 ├─────────────────────────────────────────────┤
-│  C++ Core (bim_core)                        │  ← BIM logic, zero OOM risk
+│  C++ Core (bim_core_static)                 │  ← BIM logic, zero OOM risk
 │  cpp/core/                                  │
 │  ├── BIMEntity        (22 entity types)     │
 │  ├── BIMSceneGraph    (scene management)    │
@@ -33,6 +40,18 @@
 │  69 tests: 14 legacy + 55 bim_core         │
 └─────────────────────────────────────────────┘
 ```
+
+## GUI ↔ C++ Core Bridge (v0.8.0)
+
+| Widget | Source | Reads From |
+|--------|--------|------------|
+| BIMCoreBridge | bim_core_bridge.py | SceneGraph, AgentBridge, PropertyManager, CostCalculator |
+| SceneGraphWidget | scene_graph_widget.py | BIMSceneGraph.toJson() → tree grouped by type |
+| EntityListView | entity_list_view.py | BIMSceneGraph.toJson() → flat table |
+| PropertyPanel | property_panel.py | BIMEntity properties + PropertyManager |
+| Viewport3D | viewport_3d.py | BIMSceneGraph entities → 2D top-down projection |
+| ChatPanel | chat_panel.py | AgentBridge.executeJson() for scene commands |
+| CostPanel | cost_panel.py | CostCalculator + Python CostEstimator |
 
 ## C++ Core Modules (cpp/core/)
 
