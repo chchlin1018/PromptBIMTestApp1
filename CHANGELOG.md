@@ -6,6 +6,28 @@
 
 ---
 
+## [mvp-v0.10.0-integration] - 2026-04-01
+
+### Added (Sprint S-PTB-INTEGRATION: End-to-End NL→AI→C++→Qt Integration)
+- E2E integration test suite (`tests/test_e2e_integration_v2.py`) — 53 checks, zero failures
+- T01-T06: Full pipeline tests (create, modify, cost, delete, multi-turn, error handling)
+- T07-T08: Stability tests (20 consecutive ops, RAM growth <2%)
+- T09: Undo/rollback via JSON serialization/restore
+- T10: Offline mode verification (regex fast path, mock mode, error handler)
+- T11: ctest 69/69 ALL PASS maintained
+
+### Verified
+- NLParser regex: 12 pattern categories, CJK + English
+- IntentRouter: 14 IntentTypes → 13 AgentBridge actions
+- ConversationHistory: Token-aware trimming, max 20 messages
+- ErrorHandler: Bilingual error recovery, context-aware suggestions
+- bim_core pybind11: Full C++ ↔ Python round-trip
+
+### Audit
+- PTB-FAR-INTEGRATION-001: Score A (95/100) — 53/53 E2E + ctest 69/69
+
+---
+
 ## [mvp-v0.7.1-codeaudit] - 2026-03-31
 
 ### Changed (Sprint S-PTB-CODE-AUDIT: C++ Quality + Security Audit)

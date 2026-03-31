@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.8
+# PROJECT_STATUS v2.9
 
-> Last updated: 2026-04-01 | HEAD: (S-PTB-AI-LAYER)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-INTEGRATION)
 
 ## Current State
 
-**Version:** mvp-v0.9.0-ai (S-PTB-AI-LAYER complete)
-**Build:** ✅ cmake clean build | ctest 69/69 PASS | pytest N/A (ISS-042)
+**Version:** mvp-v0.10.0-integration (S-PTB-INTEGRATION complete)
+**Build:** ✅ cmake clean build | ctest 69/69 PASS | E2E 53/53 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (96/100) — PTB-FAR-AI-001
-**Next Sprint:** S-PTB-INTEGRATION v0.10.0
+**Audit:** A (95/100) — PTB-FAR-INTEGRATION-001
+**Next Sprint:** S-PTB-DEMO-TSMC v1.0.0
 
 ## Sprint History
 
@@ -26,8 +26,9 @@
 | 10 | S-PTB-CODE-AUDIT | 20T | mvp-v0.7.1-codeaudit | 2026-03-31 | ✅ |
 | 11 | S-PTB-GUI-CONNECT | 20T | mvp-v0.8.0-gui | 2026-03-31 | ✅ |
 | 12 | S-PTB-AI-LAYER | 15T | mvp-v0.9.0-ai | 2026-04-01 | ✅ |
+| 13 | S-PTB-INTEGRATION | 15T | mvp-v0.10.0-integration | 2026-04-01 | ✅ |
 
-**Total completed: 285 Tasks across 12 Sprints**
+**Total completed: 300 Tasks across 13 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -119,7 +120,7 @@
 |------|---------|
 | CLAUDE.md | v1.23.3 |
 | SKILL.md | v4.3 |
-| PROJECT_STATUS.md | v2.5 (this) |
+| PROJECT_STATUS.md | v2.9 (this) |
 | Context Prompt | v5.7 |
 
 ### Sprint S-PTB-RESTRUCTURE 執行結果 — 2026-03-31
@@ -200,3 +201,24 @@
   - 雙語支援 (中文+英文)
   - Claude LLM fallback for ambiguous inputs
   - Mock mode for API-free testing
+
+### Sprint S-PTB-INTEGRATION 執行結果 — 2026-04-01 00:13
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.10.0-integration
+- **Tasks:** 15/15
+- **ctest:** 69/69 PASS (⛔零pytest)
+- **E2E:** 53/53 checks PASS
+- **記憶體:** 9.7/16.0GB(free:6.3GB)
+- **AuditReport:** PTB-FAR-INTEGRATION-001 (A 95/100)
+- **新增檔案:**
+  - `tests/test_e2e_integration_v2.py` — 53-check E2E test suite (T01-T11)
+  - `docs/PTB-FAR-INTEGRATION-001.md` — Audit report
+- **修改檔案:**
+  - `docs/PROJECT_STATUS.md` — v2.8 → v2.9
+  - `CHANGELOG.md` — Added mvp-v0.10.0-integration entry
+- **關鍵驗證:**
+  - NL→AI→C++→Qt full pipeline (create/modify/cost/delete/multi-turn/error)
+  - 20 consecutive operations: zero crash
+  - Memory stability: RAM growth <2% after 60 ops
+  - Undo/rollback via JSON serialize/restore
+  - Offline mode: regex + mock + error handler
