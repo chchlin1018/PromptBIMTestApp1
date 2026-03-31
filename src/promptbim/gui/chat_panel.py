@@ -86,10 +86,83 @@ class _ModifyWorker(QThread):
         self.finished.emit(new_plan, record)
 
 
+class _AIWorker(QThread):
+    """Runs NL→Intent→AgentBridge in a background thread."""
+
+    finished = Signal(str, bool)  # (message, success)
+
+    def __init__(self, text: str, bridge, nl_parser, router, error_handler, history) -> None:
+        super().__init__()
+        self._text = text
+        self._bridge = bridge
+        self._parser = nl_parser
+        self._router = router
+        self._error_handler = error_handler
+        self._history = history
+
+    def run(self) -> None:
+        from promptbim.ai.nl_parser import IntentType
+        import json
+
+        try:
+            intent = self._parser.parse(self._text)
+
+            # Unknown intent
+            if intent.intent_type == IntentType.UNKNOWN:
+                msg = self._error_handler.handle_parse_failure(self._text)
+                self.finished.emit(msg, False)
+                return
+
+            # Low confidence
+            if intent.confidence < 0.5:
+                msg = self._error_handler.handle_low_confidence(intent)
+                self.finished.emit(msg, False)
+                return
+
+            # Missing required info
+            missing_msg = self._error_handler.handle_missing_info(intent)
+            if missing_msg:
+                self.finished.emit(missing_msg, False)
+                return
+
+            # Route to AgentBridge JSON
+            action_json = self._router.route_json(intent)
+            if action_json is None:
+                self.finished.emit("無法將意圖轉換為操作。", False)
+                return
+
+            # Execute via bridge
+            if self._bridge and self._bridge.available:
+                result = self._bridge.execute_action(action_json)
+                success = result.get("success", False)
+                message = result.get("message", "")
+                data = result.get("data", "")
+
+                if success:
+                    display = f"✅ {intent.intent_type.value}: {message}"
+                    if data:
+                        try:
+                            parsed = json.loads(data) if isinstance(data, str) else data
+                            display += f"\n{json.dumps(parsed, indent=2, ensure_ascii=False)}"
+                        except (json.JSONDecodeError, TypeError):
+                            display += f"\n{data}"
+                    self._history.add_assistant(display)
+                    self.finished.emit(display, True)
+                else:
+                    err_msg = self._error_handler.handle_execution_error(intent, message)
+                    self.finished.emit(err_msg, False)
+            else:
+                self.finished.emit("bim_core 不可用，無法執行操作。", False)
+
+        except Exception as e:
+            self.finished.emit(f"AI 處理錯誤: {e}", False)
+
+
 class ChatPanel(QWidget):
     """Bottom chat panel with message history, input, and generate button.
 
-    Integrates with bim_core.AgentBridge for C++ scene actions.
+    Integrates with bim_core.AgentBridge for C++ scene actions via
+    the AI layer (NLParser → IntentRouter → AgentBridge).
     """
 
     generation_finished = Signal(object)  # GenerationResult
@@ -101,6 +174,7 @@ class ChatPanel(QWidget):
         super().__init__(parent)
         self._worker: _PipelineWorker | None = None
         self._modify_worker: _ModifyWorker | None = None
+        self._ai_worker: _AIWorker | None = None
         self._bridge = bridge  # BIMCoreBridge
 
         from promptbim.agents.orchestrator import Orchestrator
@@ -108,6 +182,19 @@ class ChatPanel(QWidget):
         self._orchestrator = Orchestrator(
             on_status=lambda s: self._on_status(s.message, s.progress)
         )
+
+        # AI layer components
+        from promptbim.ai.nl_parser import NLParser
+        from promptbim.ai.intent_router import IntentRouter
+        from promptbim.ai.conversation_history import ConversationHistory
+        from promptbim.ai.error_handler import ErrorHandler
+
+        self._nl_parser = NLParser(use_llm=True)
+        self._intent_router = IntentRouter()
+        self._conversation = ConversationHistory(
+            system_message="You are a BIM assistant for the TSMC facility demo."
+        )
+        self._error_handler = ErrorHandler()
 
         # Voice input
         from promptbim.voice.stt import VoiceInput
@@ -197,9 +284,27 @@ class ChatPanel(QWidget):
 
         self._append_user(prompt)
         self._input.clear()
+        self._conversation.add_user(prompt)
 
-        # Try C++ bim_core action first (scene commands)
-        if self._bridge and self._bridge.available and self._try_core_action(prompt):
+        # Direct JSON passthrough
+        if prompt.strip().startswith("{"):
+            if self._bridge and self._bridge.available:
+                import json as _json
+                try:
+                    _json.loads(prompt)
+                    result = self._bridge.execute_action(prompt)
+                    success = result.get("success", False)
+                    msg = result.get("message", "")
+                    if success:
+                        self._append_ai(f"C++ Core: {msg}")
+                    else:
+                        self._append_system(f"C++ Core error: {msg}")
+                    return
+                except _json.JSONDecodeError:
+                    pass
+
+        # Try AI layer: NL → Intent → AgentBridge
+        if self._bridge and self._bridge.available and self._try_ai_action(prompt):
             return
 
         # If we already have a plan, treat as modification
@@ -208,46 +313,38 @@ class ChatPanel(QWidget):
         else:
             self._start_generate(prompt)
 
-    def _try_core_action(self, prompt: str) -> bool:
-        """Try to execute a bim_core AgentBridge action from natural language.
+    def _try_ai_action(self, prompt: str) -> bool:
+        """Try to parse and execute a BIM action via the AI layer.
 
-        Returns True if the command was handled by bim_core.
-        Routes JSON scene commands directly; otherwise returns False
-        so the Python orchestrator handles it.
+        Flow: NLParser → IntentRouter → AgentBridge (C++ core)
+        Returns True if handled (or being handled in background).
         """
-        import json
+        from promptbim.ai.nl_parser import IntentType
 
-        lower = prompt.strip().lower()
+        # Quick regex check — if it looks like a BIM command, route via AI
+        intent = self._nl_parser.parse(prompt)
 
-        # Direct JSON action passthrough
-        if prompt.strip().startswith("{"):
-            try:
-                json.loads(prompt)  # validate JSON
-                result = self._bridge.execute_action(prompt)
-                success = result.get("success", False)
-                msg = result.get("message", "")
-                if success:
-                    self._append_ai(f"C++ Core: {msg}")
-                else:
-                    self._append_system(f"C++ Core error: {msg}")
-                return True
-            except json.JSONDecodeError:
-                return False
+        if intent.intent_type == IntentType.UNKNOWN:
+            return False  # Let orchestrator handle it
 
-        # Scene info command
-        if any(kw in lower for kw in ["scene info", "scene status", "show scene"]):
-            info = self._bridge.get_scene_info()
-            self._append_ai(f"Scene: {json.dumps(info, indent=2, ensure_ascii=False)}")
-            return True
+        # Launch AI worker thread for execution
+        self._ai_worker = _AIWorker(
+            prompt, self._bridge, self._nl_parser,
+            self._intent_router, self._error_handler,
+            self._conversation,
+        )
+        self._ai_worker.finished.connect(self._on_ai_finished)
+        self._ai_worker.start()
+        self._append_system(f"🤖 AI: 解析中... ({intent.intent_type.value})")
+        return True
 
-        # Cost query
-        if any(kw in lower for kw in ["cost", "total cost", "how much"]):
-            summary = self._bridge.get_cost_summary()
-            total = summary.get("total_cost", 0)
-            self._append_ai(f"C++ CostCalculator: Total NT${total:,.0f}")
-            return True
-
-        return False
+    def _on_ai_finished(self, message: str, success: bool) -> None:
+        """Handle AI worker completion."""
+        self._ai_worker = None
+        if success:
+            self._append_ai(message)
+        else:
+            self._append_system(message)
 
     def _start_generate(self, prompt: str) -> None:
         logger.debug("Pipeline start: generate — prompt=%r", prompt)
