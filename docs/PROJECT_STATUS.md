@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.7
+# PROJECT_STATUS v2.8
 
-> Last updated: 2026-03-31 | HEAD: (S-PTB-GUI-CONNECT)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-AI-LAYER)
 
 ## Current State
 
-**Version:** mvp-v0.8.0-gui (S-PTB-GUI-CONNECT complete)
+**Version:** mvp-v0.9.0-ai (S-PTB-AI-LAYER complete)
 **Build:** ✅ cmake clean build | ctest 69/69 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (95/100) — PTB-FAR-GUI-001
-**Next Sprint:** S-PTB-AI-LAYER v0.9.0
+**Audit:** A (96/100) — PTB-FAR-AI-001
+**Next Sprint:** S-PTB-INTEGRATION v0.10.0
 
 ## Sprint History
 
@@ -25,8 +25,9 @@
 | 9 | S-PTB-RESTRUCTURE | 25T | mvp-v0.7.0-restructure | 2026-03-31 | ✅ |
 | 10 | S-PTB-CODE-AUDIT | 20T | mvp-v0.7.1-codeaudit | 2026-03-31 | ✅ |
 | 11 | S-PTB-GUI-CONNECT | 20T | mvp-v0.8.0-gui | 2026-03-31 | ✅ |
+| 12 | S-PTB-AI-LAYER | 15T | mvp-v0.9.0-ai | 2026-04-01 | ✅ |
 
-**Total completed: 270 Tasks across 11 Sprints**
+**Total completed: 285 Tasks across 12 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -177,3 +178,25 @@
   - 22-entity TSMC demo scene
   - BIMCoreBridge singleton for shared state
   - AgentBridge JSON action routing from ChatPanel
+
+### Sprint S-PTB-AI-LAYER 執行結果 — 2026-04-01 07:55
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.9.0-ai
+- **Tasks:** 15/15
+- **ctest:** 69/69 PASS (⛔零pytest)
+- **記憶體:** 9.2/16.0GB(free:6.7GB)
+- **AuditReport:** PTB-FAR-AI-001 (A 96/100)
+- **新增檔案:**
+  - `src/promptbim/ai/__init__.py` — AI package exports
+  - `src/promptbim/ai/nl_parser.py` — Two-stage NL parser (regex+LLM), 22 entity types, CJK/EN
+  - `src/promptbim/ai/claude_client.py` — Anthropic SDK wrapper with mock mode
+  - `src/promptbim/ai/intent_router.py` — 14 IntentTypes → 13 AgentBridge JSON actions
+  - `src/promptbim/ai/conversation_history.py` — Rolling context window, token trimming
+  - `src/promptbim/ai/error_handler.py` — Bilingual error recovery + suggestions
+- **修改檔案:**
+  - `chat_panel.py` — _AIWorker thread, NLParser→IntentRouter→AgentBridge pipeline
+- **關鍵改善:**
+  - NL→Intent→bim_core 完整接通 (13 actions)
+  - 雙語支援 (中文+英文)
+  - Claude LLM fallback for ambiguous inputs
+  - Mock mode for API-free testing
