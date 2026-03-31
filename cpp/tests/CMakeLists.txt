@@ -19,6 +19,7 @@ add_executable(bim_core_tests
     test_scenegraph.cpp
     test_agent_actions.cpp
     test_binding.cpp
+    test_tsmc_demo.cpp
 )
 
 target_link_libraries(bim_core_tests PRIVATE
