@@ -34,5 +34,5 @@ endif()
 
 # === BIM Core Library (standalone, no Qt) ===
 add_subdirectory(core)
-# Alias to avoid name collision with pybind11 module
-add_library(bim_core_lib ALIAS bim_core)
+# Alias for backward compatibility
+add_library(bim_core_lib ALIAS bim_core_static)

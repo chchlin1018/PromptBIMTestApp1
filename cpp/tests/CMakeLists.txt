@@ -22,7 +22,7 @@ add_executable(bim_core_tests
 )
 
 target_link_libraries(bim_core_tests PRIVATE
-    bim_core
+    bim_core_static
     GTest::gtest_main
 )
 

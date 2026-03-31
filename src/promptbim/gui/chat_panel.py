@@ -87,17 +87,21 @@ class _ModifyWorker(QThread):
 
 
 class ChatPanel(QWidget):
-    """Bottom chat panel with message history, input, and generate button."""
+    """Bottom chat panel with message history, input, and generate button.
+
+    Integrates with bim_core.AgentBridge for C++ scene actions.
+    """
 
     generation_finished = Signal(object)  # GenerationResult
     plan_ready = Signal(object)  # BuildingPlan
     modification_done = Signal(object, object)  # (BuildingPlan, ModificationRecord)
     undo_done = Signal(object)  # BuildingPlan
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, bridge=None) -> None:
         super().__init__(parent)
         self._worker: _PipelineWorker | None = None
         self._modify_worker: _ModifyWorker | None = None
+        self._bridge = bridge  # BIMCoreBridge
 
         from promptbim.agents.orchestrator import Orchestrator
 
@@ -194,11 +198,56 @@ class ChatPanel(QWidget):
         self._append_user(prompt)
         self._input.clear()
 
+        # Try C++ bim_core action first (scene commands)
+        if self._bridge and self._bridge.available and self._try_core_action(prompt):
+            return
+
         # If we already have a plan, treat as modification
         if self._has_plan and self._orchestrator is not None:
             self._start_modify(prompt)
         else:
             self._start_generate(prompt)
+
+    def _try_core_action(self, prompt: str) -> bool:
+        """Try to execute a bim_core AgentBridge action from natural language.
+
+        Returns True if the command was handled by bim_core.
+        Routes JSON scene commands directly; otherwise returns False
+        so the Python orchestrator handles it.
+        """
+        import json
+
+        lower = prompt.strip().lower()
+
+        # Direct JSON action passthrough
+        if prompt.strip().startswith("{"):
+            try:
+                json.loads(prompt)  # validate JSON
+                result = self._bridge.execute_action(prompt)
+                success = result.get("success", False)
+                msg = result.get("message", "")
+                if success:
+                    self._append_ai(f"C++ Core: {msg}")
+                else:
+                    self._append_system(f"C++ Core error: {msg}")
+                return True
+            except json.JSONDecodeError:
+                return False
+
+        # Scene info command
+        if any(kw in lower for kw in ["scene info", "scene status", "show scene"]):
+            info = self._bridge.get_scene_info()
+            self._append_ai(f"Scene: {json.dumps(info, indent=2, ensure_ascii=False)}")
+            return True
+
+        # Cost query
+        if any(kw in lower for kw in ["cost", "total cost", "how much"]):
+            summary = self._bridge.get_cost_summary()
+            total = summary.get("total_cost", 0)
+            self._append_ai(f"C++ CostCalculator: Total NT${total:,.0f}")
+            return True
+
+        return False
 
     def _start_generate(self, prompt: str) -> None:
         logger.debug("Pipeline start: generate — prompt=%r", prompt)

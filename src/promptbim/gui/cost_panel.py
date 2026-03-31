@@ -19,16 +19,21 @@ from promptbim.bim.cost.estimator import CostEstimate, CostEstimator
 from promptbim.viz.cost_charts import CostBarChart, CostPieChart
 
 if TYPE_CHECKING:
+    from promptbim.gui.bim_core_bridge import BIMCoreBridge
     from promptbim.schemas.plan import BuildingPlan
 
 
 class CostPanel(QWidget):
-    """Displays cost estimation results with charts and table."""
+    """Displays cost estimation results with charts and table.
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    Also integrates with bim_core.CostCalculator when available.
+    """
+
+    def __init__(self, parent: QWidget | None = None, bridge: "BIMCoreBridge | None" = None) -> None:
         super().__init__(parent)
         self._estimator = CostEstimator()
         self._estimate: CostEstimate | None = None
+        self._bridge = bridge
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -111,3 +116,15 @@ class CostPanel(QWidget):
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
             self._table.setItem(row, 3, per_sqm_item)
+
+    def update_from_core(self) -> None:
+        """Update cost display from bim_core.CostCalculator if available."""
+        if not self._bridge or not self._bridge.available:
+            return
+        summary = self._bridge.get_cost_summary()
+        total = summary.get("total_cost", 0)
+        if total:
+            self._summary.setText(
+                f"C++ Core Total: NT${total:,.0f} | "
+                f"Entities: {self._bridge.scene.entity_count()}"
+            )

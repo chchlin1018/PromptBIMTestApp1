@@ -1,6 +1,6 @@
 # bim_core — Standalone BIM C++ core library (no Qt dependency)
 
-add_library(bim_core STATIC
+add_library(bim_core_static STATIC
     BIMEntity.cpp
     BIMSceneGraph.cpp
     AgentBridge.cpp
@@ -9,15 +9,15 @@ add_library(bim_core STATIC
     CostCalculator.cpp
 )
 
-target_include_directories(bim_core PUBLIC
+target_include_directories(bim_core_static PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(bim_core PUBLIC nlohmann_json::nlohmann_json)
-target_compile_features(bim_core PUBLIC cxx_std_17)
+target_link_libraries(bim_core_static PUBLIC nlohmann_json::nlohmann_json)
+target_compile_features(bim_core_static PUBLIC cxx_std_17)
 
 if(MSVC)
-    target_compile_options(bim_core PRIVATE /W4 /WX- /utf-8)
+    target_compile_options(bim_core_static PRIVATE /W4 /WX- /utf-8)
 else()
-    target_compile_options(bim_core PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(bim_core_static PRIVATE -Wall -Wextra -Wpedantic)
 endif()

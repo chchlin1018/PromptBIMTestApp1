@@ -15,15 +15,20 @@ from PySide6.QtWidgets import (
 )
 
 from promptbim import __version__
+from promptbim.gui.bim_core_bridge import BIMCoreBridge
 from promptbim.gui.chat_panel import ChatPanel
 from promptbim.gui.cost_panel import CostPanel
 from promptbim.gui.dialogs.import_land import ImportLandDialog
+from promptbim.gui.entity_list_view import EntityListView
 from promptbim.gui.land_panel import LandPanel
 from promptbim.gui.map_view import MapView
 from promptbim.gui.model_view import ModelView
 from promptbim.gui.modification_panel import ModificationPanel
+from promptbim.gui.property_panel import PropertyPanel
+from promptbim.gui.scene_graph_widget import SceneGraphWidget
 from promptbim.gui.simulation_tab import SimulationTab
 from promptbim.gui.delta_panel import DeltaPanel
+from promptbim.gui.viewport_3d import Viewport3D
 from promptbim.gui.workflow_controller import WorkflowController, WorkflowProgressBar
 from promptbim.land.setback import compute_setback
 from promptbim.schemas.land import LandParcel
@@ -43,20 +48,39 @@ class MainWindow(QMainWindow):
         self._parcel: LandParcel | None = None
         self._zoning = ZoningRules()
 
+        # C++ bim_core bridge — shared by all widgets
+        self._bridge = BIMCoreBridge(self)
+
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Main splitter: left panel | center view
+        # Main splitter: left panel | center view | right panel
         splitter = QSplitter(Qt.Orientation.Horizontal)
         layout.addWidget(splitter, stretch=1)
 
-        # Left panel — land info
+        # Left panel — land info + scene graph tree + entity list
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
         self._land_panel = LandPanel()
         self._land_panel.setMaximumWidth(350)
         self._land_panel.import_button.clicked.connect(self._show_import_dialog)
-        splitter.addWidget(self._land_panel)
+        left_layout.addWidget(self._land_panel)
+
+        # Scene graph tree (reads from bim_core.SceneGraph)
+        self._scene_graph_widget = SceneGraphWidget(self._bridge)
+        self._scene_graph_widget.entity_selected.connect(self._on_entity_selected)
+        left_layout.addWidget(self._scene_graph_widget)
+
+        # Entity list view
+        self._entity_list = EntityListView(self._bridge)
+        self._entity_list.entity_selected.connect(self._on_entity_selected)
+        left_layout.addWidget(self._entity_list)
+
+        left_widget.setMaximumWidth(350)
+        splitter.addWidget(left_widget)
 
         # Center tab view
         self._tabs = QTabWidget()
@@ -64,6 +88,11 @@ class MainWindow(QMainWindow):
         self._tabs.addTab(self._map_view, "2D Map")
         self._model_view = ModelView()
         self._tabs.addTab(self._model_view, "3D Model")
+
+        # 3D Viewport (bim_core SceneGraph geometry)
+        self._viewport_3d = Viewport3D(self._bridge)
+        self._tabs.addTab(self._viewport_3d, "C++ 3D View")
+
         self._site_plan = SitePlanView()
         self._tabs.addTab(self._site_plan, "Site Plan")
         self._cost_panel = CostPanel()
@@ -72,11 +101,17 @@ class MainWindow(QMainWindow):
         self._sim_tab.day_changed.connect(self._on_sim_day_changed)
         self._tabs.addTab(self._sim_tab, "4D Simulation")
 
-        # Tab 5: Delta (change comparison)
+        # Tab: Delta (change comparison)
         self._delta_panel = DeltaPanel()
         self._delta_panel.undo_requested.connect(self._on_delta_undo)
-        self._tabs.addTab(self._delta_panel, "🔄 Delta")
+        self._tabs.addTab(self._delta_panel, "Delta")
         splitter.addWidget(self._tabs)
+
+        # Right panel — property panel from bim_core.PropertyManager
+        self._property_panel = PropertyPanel(self._bridge)
+        self._property_panel.setMaximumWidth(300)
+        self._bridge.entity_selected.connect(self._property_panel.show_entity)
+        splitter.addWidget(self._property_panel)
 
         # Modification impact panel
         self._mod_panel = ModificationPanel()
@@ -104,9 +139,19 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"PromptBIM v{__version__} ready")
         logger.debug("MainWindow.__init__ complete — %d tabs", self._tabs.count())
 
+        # Connect bridge signals to refresh widgets
+        self._bridge.scene_changed.connect(self._scene_graph_widget.refresh)
+        self._bridge.scene_changed.connect(self._entity_list.refresh)
+        self._bridge.scene_changed.connect(self._viewport_3d.refresh)
+        self._bridge.cost_updated.connect(self._on_core_cost_updated)
+
         # Load demo data if no existing project
         self._demo_loaded = False
         self._try_load_demo()
+
+        # Load bim_core demo scene
+        if self._bridge.available:
+            self._bridge.load_demo_scene()
 
     def _try_load_demo(self):
         """Load demo data on startup — including 3D model generation."""
@@ -280,6 +325,21 @@ class MainWindow(QMainWindow):
         self._mod_panel.update_history_count(history_count)
         if history_count == 0:
             self._mod_panel.clear_panel()
+
+    def _on_entity_selected(self, entity_id: str) -> None:
+        """Handle entity selection from scene graph or entity list."""
+        self._bridge.entity_selected.emit(entity_id)
+        self._viewport_3d.highlight_entity(entity_id)
+        self.statusBar().showMessage(f"Selected: {entity_id}")
+
+    def _on_core_cost_updated(self) -> None:
+        """Update status bar with C++ core cost info."""
+        summary = self._bridge.get_cost_summary()
+        total = summary.get("total_cost", 0)
+        if total:
+            self.statusBar().showMessage(
+                f"C++ Core Cost: NT${total:,.0f} | Entities: {self._bridge.scene.entity_count()}"
+            )
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
