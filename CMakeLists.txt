@@ -3,8 +3,8 @@
 
 cmake_minimum_required(VERSION 3.25)
 project(PromptBIMCppCore
-    VERSION 3.0.0
-    DESCRIPTION "PromptBIM C++ Core — Compliance Engine + Cost Engine"
+    VERSION 3.1.0
+    DESCRIPTION "PromptBIM C++ Core — BIM Core + Compliance + Cost Engines"
     LANGUAGES CXX
 )
 
@@ -46,7 +46,7 @@ endif()
 if(BUILD_PYTHON_BINDINGS)
     find_package(pybind11 CONFIG QUIET)
     if(pybind11_FOUND)
-        add_subdirectory(cpp/bindings)
+        add_subdirectory(cpp/binding)
     else()
         message(WARNING "pybind11 not found — Python bindings will not be built.")
     endif()

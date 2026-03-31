@@ -1,0 +1,5 @@
+# S-PTB-RESTRUCTURE PROMPT v1.0
+# Fetched from Notion: 334f154a6472812fba45d678e5429f4e
+# Job: 334f154a-6472-81d3-bfa1-e175d8a51819
+# Claimed: 2026-03-31T22:20:47+08:00
+Sprint: S-PTB-RESTRUCTURE | 25T/4P | mvp-v0.7.0-restructure
