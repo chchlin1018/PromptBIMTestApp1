@@ -14,15 +14,15 @@ public:
     BIMEntity(const std::string& id, EntityType type, const std::string& name);
 
     // Accessors
-    const std::string& id() const { return m_id; }
-    EntityType type() const { return m_type; }
-    const std::string& typeName() const { return m_typeName; }
-    const std::string& name() const { return m_name; }
-    const Vec3& position() const { return m_position; }
-    const Vec3& rotation() const { return m_rotation; }
-    const Vec3& dimensions() const { return m_dimensions; }
-    const std::map<std::string, std::string>& properties() const { return m_properties; }
-    const std::vector<std::string>& connections() const { return m_connections; }
+    [[nodiscard]] const std::string& id() const noexcept { return m_id; }
+    [[nodiscard]] EntityType type() const noexcept { return m_type; }
+    [[nodiscard]] const std::string& typeName() const noexcept { return m_typeName; }
+    [[nodiscard]] const std::string& name() const noexcept { return m_name; }
+    [[nodiscard]] const Vec3& position() const noexcept { return m_position; }
+    [[nodiscard]] const Vec3& rotation() const noexcept { return m_rotation; }
+    [[nodiscard]] const Vec3& dimensions() const noexcept { return m_dimensions; }
+    [[nodiscard]] const std::map<std::string, std::string>& properties() const noexcept { return m_properties; }
+    [[nodiscard]] const std::vector<std::string>& connections() const noexcept { return m_connections; }
 
     // Mutators
     void setId(const std::string& id) { m_id = id; }
@@ -34,23 +34,23 @@ public:
 
     // Properties
     void setProperty(const std::string& key, const std::string& value);
-    std::string getProperty(const std::string& key, const std::string& defaultVal = "") const;
-    bool hasProperty(const std::string& key) const;
+    [[nodiscard]] std::string getProperty(const std::string& key, const std::string& defaultVal = "") const;
+    [[nodiscard]] bool hasProperty(const std::string& key) const;
     void removeProperty(const std::string& key);
 
     // Connections
     void addConnection(const std::string& targetId);
     void removeConnection(const std::string& targetId);
-    bool isConnectedTo(const std::string& targetId) const;
+    [[nodiscard]] bool isConnectedTo(const std::string& targetId) const;
 
     // Geometry
-    double distanceTo(const BIMEntity& other) const;
-    double volume() const;
-    double surfaceArea() const;
+    [[nodiscard]] double distanceTo(const BIMEntity& other) const;
+    [[nodiscard]] double volume() const;
+    [[nodiscard]] double surfaceArea() const;
 
     // Serialization (JSON string)
-    std::string toJson() const;
-    static BIMEntity fromJson(const std::string& json);
+    [[nodiscard]] std::string toJson() const;
+    [[nodiscard]] static BIMEntity fromJson(const std::string& json);
 
 private:
     std::string m_id;

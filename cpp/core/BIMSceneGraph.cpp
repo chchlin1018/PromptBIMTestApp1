@@ -34,6 +34,7 @@ bool BIMSceneGraph::hasEntity(const std::string& id) const {
 
 std::vector<const BIMEntity*> BIMSceneGraph::queryByType(EntityType type) const {
     std::vector<const BIMEntity*> result;
+    result.reserve(m_entities.size() / 4); // Heuristic: ~25% match rate
     for (const auto& [_, e] : m_entities) {
         if (e.type() == type) result.push_back(&e);
     }

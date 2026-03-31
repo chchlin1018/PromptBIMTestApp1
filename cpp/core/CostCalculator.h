@@ -33,28 +33,28 @@ public:
     explicit CostCalculator(const PropertyManager& props);
 
     // Calculate cost for a single entity
-    CostItem calculateEntityCost(const BIMEntity& entity) const;
+    [[nodiscard]] CostItem calculateEntityCost(const BIMEntity& entity) const;
 
     // Calculate cost for all entities
-    std::vector<CostItem> calculateAll(const std::vector<const BIMEntity*>& entities) const;
+    [[nodiscard]] std::vector<CostItem> calculateAll(const std::vector<const BIMEntity*>& entities) const;
 
     // Summary
-    CostSummary summarize(const std::vector<CostItem>& items, double totalFloorArea = 0.0) const;
+    [[nodiscard]] CostSummary summarize(const std::vector<CostItem>& items, double totalFloorArea = 0.0) const;
 
     // Pipe cost between two entities
-    double pipeCost(const BIMEntity& from, const BIMEntity& to, double costPerMeter = 3500.0) const;
+    [[nodiscard]] double pipeCost(const BIMEntity& from, const BIMEntity& to, double costPerMeter = 3500.0) const;
 
     // Cost delta
-    CostSummary costDelta(const CostSummary& before, const CostSummary& after) const;
+    [[nodiscard]] CostSummary costDelta(const CostSummary& before, const CostSummary& after) const;
 
     // Serialization
-    static std::string toJson(const CostSummary& summary);
-    static std::string itemsToJson(const std::vector<CostItem>& items);
+    [[nodiscard]] static std::string toJson(const CostSummary& summary);
+    [[nodiscard]] static std::string itemsToJson(const std::vector<CostItem>& items);
 
 private:
     const PropertyManager& m_props;
-    double lookupUnitPrice(const BIMEntity& entity) const;
-    std::string categorize(EntityType type) const;
+    [[nodiscard]] double lookupUnitPrice(const BIMEntity& entity) const;
+    [[nodiscard]] std::string categorize(EntityType type) const;
 };
 
 } // namespace bim

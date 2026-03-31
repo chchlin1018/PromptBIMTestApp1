@@ -38,14 +38,14 @@ public:
     explicit AgentBridge(BIMSceneGraph& scene);
 
     // Execute an action request
-    ActionResult execute(const ActionRequest& req);
+    [[nodiscard]] ActionResult execute(const ActionRequest& req);
 
     // Convenience methods for all 13 actions
-    ActionResult queryByType(const std::string& type);
-    ActionResult queryByName(const std::string& name);
-    ActionResult getPosition(const std::string& id);
-    ActionResult getNearby(const std::string& id, double radius);
-    ActionResult getSceneInfo();
+    [[nodiscard]] ActionResult queryByType(const std::string& type);
+    [[nodiscard]] ActionResult queryByName(const std::string& name);
+    [[nodiscard]] ActionResult getPosition(const std::string& id);
+    [[nodiscard]] ActionResult getNearby(const std::string& id, double radius);
+    [[nodiscard]] ActionResult getSceneInfo();
 
     ActionResult moveEntity(const std::string& id, const Vec3& pos);
     ActionResult rotateEntity(const std::string& id, const Vec3& rot);
@@ -54,11 +54,11 @@ public:
     ActionResult deleteEntity(const std::string& id);
     ActionResult connectEntities(const std::string& fromId, const std::string& toId);
 
-    ActionResult getCostDelta();
-    ActionResult getScheduleImpact();
+    [[nodiscard]] ActionResult getCostDelta();
+    [[nodiscard]] ActionResult getScheduleImpact();
 
     // Parse action from JSON string, execute, return JSON
-    std::string executeJson(const std::string& requestJson);
+    [[nodiscard]] std::string executeJson(const std::string& requestJson);
 
 private:
     BIMSceneGraph& m_scene;

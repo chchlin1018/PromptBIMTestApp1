@@ -5,14 +5,6 @@
 
 namespace bim {
 
-double Vec3::length() const {
-    return std::sqrt(x * x + y * y + z * z);
-}
-
-double Vec3::distanceTo(const Vec3& o) const {
-    return (*this - o).length();
-}
-
 BIMEntity::BIMEntity(const std::string& id, EntityType type, const std::string& name)
     : m_id(id), m_type(type), m_typeName(entityTypeName(type)), m_name(name) {}
 

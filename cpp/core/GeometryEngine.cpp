@@ -4,28 +4,28 @@
 
 namespace bim {
 
-AABB::AABB(const Vec3& center, const Vec3& dims) {
+AABB::AABB(const Vec3& center, const Vec3& dims) noexcept {
     Vec3 half{std::abs(dims.x) / 2.0, std::abs(dims.y) / 2.0, std::abs(dims.z) / 2.0};
     min = center - half;
     max = center + half;
 }
 
-bool AABB::intersects(const AABB& other) const {
+bool AABB::intersects(const AABB& other) const noexcept {
     return min.x <= other.max.x && max.x >= other.min.x &&
            min.y <= other.max.y && max.y >= other.min.y &&
            min.z <= other.max.z && max.z >= other.min.z;
 }
 
-double AABB::volume() const {
+double AABB::volume() const noexcept {
     return (max.x - min.x) * (max.y - min.y) * (max.z - min.z);
 }
 
-double AABB::surfaceArea() const {
+double AABB::surfaceArea() const noexcept {
     double w = max.x - min.x, h = max.y - min.y, d = max.z - min.z;
     return 2.0 * (w * h + h * d + w * d);
 }
 
-Vec3 AABB::center() const {
+Vec3 AABB::center() const noexcept {
     return {(min.x + max.x) / 2.0, (min.y + max.y) / 2.0, (min.z + max.z) / 2.0};
 }
 
@@ -58,29 +58,29 @@ double GeometryEngine::polygonPerimeter(const std::vector<Vec3>& vertices) {
     return perimeter;
 }
 
-double GeometryEngine::boxVolume(const Vec3& d) {
+double GeometryEngine::boxVolume(const Vec3& d) noexcept {
     return std::abs(d.x * d.y * d.z);
 }
 
-double GeometryEngine::cylinderVolume(double radius, double height) {
+double GeometryEngine::cylinderVolume(double radius, double height) noexcept {
     return M_PI * radius * radius * std::abs(height);
 }
 
-double GeometryEngine::sphereVolume(double radius) {
+double GeometryEngine::sphereVolume(double radius) noexcept {
     return (4.0 / 3.0) * M_PI * radius * radius * radius;
 }
 
-double GeometryEngine::boxSurfaceArea(const Vec3& d) {
+double GeometryEngine::boxSurfaceArea(const Vec3& d) noexcept {
     double w = std::abs(d.x), h = std::abs(d.y), depth = std::abs(d.z);
     return 2.0 * (w * h + h * depth + w * depth);
 }
 
-double GeometryEngine::cylinderSurfaceArea(double radius, double height) {
+double GeometryEngine::cylinderSurfaceArea(double radius, double height) noexcept {
     return 2.0 * M_PI * radius * (radius + std::abs(height));
 }
 
 bool GeometryEngine::checkCollision(const Vec3& pos1, const Vec3& dims1,
-                                     const Vec3& pos2, const Vec3& dims2) {
+                                     const Vec3& pos2, const Vec3& dims2) noexcept {
     AABB a(pos1, dims1), b(pos2, dims2);
     return a.intersects(b);
 }
@@ -109,7 +109,7 @@ double GeometryEngine::pointToLineDistance(const Vec3& point, const Vec3& lineSt
     return point.distanceTo(proj);
 }
 
-double GeometryEngine::entityDistance(const Vec3& pos1, const Vec3& pos2) {
+double GeometryEngine::entityDistance(const Vec3& pos1, const Vec3& pos2) noexcept {
     return pos1.distanceTo(pos2);
 }
 

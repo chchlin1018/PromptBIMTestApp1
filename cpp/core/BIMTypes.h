@@ -2,7 +2,7 @@
 // BIMTypes.h — Common BIM type definitions (no Qt dependency)
 
 #include <string>
-#include <array>
+#include <cmath>
 
 namespace bim {
 
@@ -17,7 +17,7 @@ enum class EntityType {
 
 constexpr int ENTITY_TYPE_COUNT = 22;
 
-inline const char* entityTypeName(EntityType t) {
+[[nodiscard]] inline const char* entityTypeName(EntityType t) noexcept {
     switch (t) {
         case EntityType::Wall:          return "Wall";
         case EntityType::Slab:          return "Slab";
@@ -45,7 +45,7 @@ inline const char* entityTypeName(EntityType t) {
     return "Unknown";
 }
 
-inline EntityType entityTypeFromString(const std::string& s) {
+[[nodiscard]] inline EntityType entityTypeFromString(const std::string& s) noexcept {
     if (s == "Wall")          return EntityType::Wall;
     if (s == "Slab")          return EntityType::Slab;
     if (s == "Column")        return EntityType::Column;
@@ -73,17 +73,17 @@ inline EntityType entityTypeFromString(const std::string& s) {
 struct Vec3 {
     double x = 0.0, y = 0.0, z = 0.0;
 
-    Vec3() = default;
-    Vec3(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
+    Vec3() noexcept = default;
+    Vec3(double x_, double y_, double z_) noexcept : x(x_), y(y_), z(z_) {}
 
-    Vec3 operator+(const Vec3& o) const { return {x + o.x, y + o.y, z + o.z}; }
-    Vec3 operator-(const Vec3& o) const { return {x - o.x, y - o.y, z - o.z}; }
-    Vec3 operator*(double s) const { return {x * s, y * s, z * s}; }
+    [[nodiscard]] Vec3 operator+(const Vec3& o) const noexcept { return {x + o.x, y + o.y, z + o.z}; }
+    [[nodiscard]] Vec3 operator-(const Vec3& o) const noexcept { return {x - o.x, y - o.y, z - o.z}; }
+    [[nodiscard]] Vec3 operator*(double s) const noexcept { return {x * s, y * s, z * s}; }
 
-    double length() const;
-    double distanceTo(const Vec3& o) const;
-    double dot(const Vec3& o) const { return x * o.x + y * o.y + z * o.z; }
-    Vec3 cross(const Vec3& o) const {
+    [[nodiscard]] double length() const noexcept { return std::sqrt(x * x + y * y + z * z); }
+    [[nodiscard]] double distanceTo(const Vec3& o) const noexcept { return (*this - o).length(); }
+    [[nodiscard]] double dot(const Vec3& o) const noexcept { return x * o.x + y * o.y + z * o.z; }
+    [[nodiscard]] Vec3 cross(const Vec3& o) const noexcept {
         return {y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x};
     }
 };

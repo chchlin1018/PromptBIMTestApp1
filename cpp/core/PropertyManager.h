@@ -28,25 +28,25 @@ public:
 
     // Material management
     void registerMaterial(const std::string& id, const MaterialSpec& spec);
-    std::optional<MaterialSpec> getMaterial(const std::string& id) const;
-    std::vector<std::string> getMaterialsByCategory(const std::string& category) const;
+    [[nodiscard]] std::optional<MaterialSpec> getMaterial(const std::string& id) const;
+    [[nodiscard]] std::vector<std::string> getMaterialsByCategory(const std::string& category) const;
 
     // Property templates for entity types
     void registerTemplate(EntityType type, const std::map<std::string, std::string>& defaults);
-    std::map<std::string, std::string> getDefaultProperties(EntityType type) const;
+    [[nodiscard]] std::map<std::string, std::string> getDefaultProperties(EntityType type) const;
 
     // Property validation
-    static bool isValidProperty(const std::string& key, const std::string& value);
-    static double parseNumericProperty(const std::string& value, double defaultVal = 0.0);
+    [[nodiscard]] static bool isValidProperty(const std::string& key, const std::string& value);
+    [[nodiscard]] static double parseNumericProperty(const std::string& value, double defaultVal = 0.0);
 
     // Cost lookup for material
-    double materialCost(const std::string& materialId, double quantity) const;
+    [[nodiscard]] double materialCost(const std::string& materialId, double quantity) const;
 
     // Built-in material count
-    int materialCount() const { return static_cast<int>(m_materials.size()); }
+    [[nodiscard]] int materialCount() const noexcept { return static_cast<int>(m_materials.size()); }
 
     // Serialization
-    std::string toJson() const;
+    [[nodiscard]] std::string toJson() const;
 
 private:
     void registerBuiltinMaterials();
