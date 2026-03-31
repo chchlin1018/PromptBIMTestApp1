@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.9
+# PROJECT_STATUS v3.0
 
-> Last updated: 2026-04-01 | HEAD: (S-PTB-INTEGRATION)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-DEMO-TSMC)
 
 ## Current State
 
-**Version:** mvp-v0.10.0-integration (S-PTB-INTEGRATION complete)
-**Build:** ✅ cmake clean build | ctest 69/69 PASS | E2E 53/53 PASS | pytest N/A (ISS-042)
+**Version:** mvp-v1.0.0-demo (S-PTB-DEMO-TSMC complete)
+**Build:** ✅ cmake clean build | ctest 90/90 PASS | E2E 65/65 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (95/100) — PTB-FAR-INTEGRATION-001
-**Next Sprint:** S-PTB-DEMO-TSMC v1.0.0
+**Audit:** A (96/100) — PTB-FAR-DEMO-001
+**Next Sprint:** S-PTB-WIN-BUILD v1.0.0-win (Windows, ProArt13)
 
 ## Sprint History
 
@@ -27,8 +27,9 @@
 | 11 | S-PTB-GUI-CONNECT | 20T | mvp-v0.8.0-gui | 2026-03-31 | ✅ |
 | 12 | S-PTB-AI-LAYER | 15T | mvp-v0.9.0-ai | 2026-04-01 | ✅ |
 | 13 | S-PTB-INTEGRATION | 15T | mvp-v0.10.0-integration | 2026-04-01 | ✅ |
+| 14 | S-PTB-DEMO-TSMC | 20T | mvp-v1.0.0-demo | 2026-04-01 | ✅ |
 
-**Total completed: 300 Tasks across 13 Sprints**
+**Total completed: 320 Tasks across 14 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -222,3 +223,27 @@
   - Memory stability: RAM growth <2% after 60 ops
   - Undo/rollback via JSON serialize/restore
   - Offline mode: regex + mock + error handler
+
+### Sprint S-PTB-DEMO-TSMC 執行結果 — 2026-04-01 08:30
+- **狀態:** ✅ 完成
+- **版本:** mvp-v1.0.0-demo
+- **Tasks:** 20/20
+- **ctest:** 90/90 PASS (69 original + 21 TSMC demo)
+- **E2E:** 65/65 PASS (T09-T14: safety, cost, 4D, AI, full-flow, error-recovery)
+- **AuditReport:** PTB-FAR-DEMO-001 (A 96/100)
+- **新增檔案:**
+  - `src/promptbim/demo/tsmc_factory.py` — TSMC factory scene (48 entities + safety + cost + 4D + AI prompts)
+  - `cpp/tests/test_tsmc_demo.cpp` — 21 C++ TSMC demo tests
+  - `tests/test_tsmc_demo_e2e.py` — 65 E2E verification checks
+  - `docs/DEMO.md` — 5-minute demo script
+  - `docs/PTB-FAR-DEMO-001.md` — Audit report (A 96/100)
+- **修改檔案:**
+  - `cpp/tests/CMakeLists.txt` — Added test_tsmc_demo.cpp
+  - `CHANGELOG.md` — Added mvp-v1.0.0-demo entry
+  - `docs/PROJECT_STATUS.md` — v2.9 → v3.0
+- **關鍵成果:**
+  - TSMC 半導體廠房完整 BIM 模型 (30+ entities)
+  - 安全設備建模 + 合規審計 PASS
+  - 4D 施工排程 (5 階段 / 220 天)
+  - 10 個 AI 對話情境全部通過
+  - 5 分鐘 Demo 流程不中斷

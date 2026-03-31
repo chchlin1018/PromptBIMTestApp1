@@ -6,6 +6,31 @@
 
 ---
 
+## [mvp-v1.0.0-demo] - 2026-04-01
+
+### Added (Sprint S-PTB-DEMO-TSMC: TSMC Demo Preparation)
+- TSMC factory BIM model (`src/promptbim/demo/tsmc_factory.py`) — 48 entities (structural/MEP/safety)
+- Safety equipment: fire hydrants x4, sprinklers x6, safety nets x4, emergency exits x2
+- Collision detection (AABB) + safety compliance audit
+- TSMC cost template — 20+ materials with NT$ pricing
+- 4D construction schedule — 5 phases / 220 days, entity-phase mapping
+- 10 TSMC AI dialogue scenarios (Chinese/English)
+- 5-minute demo script (`docs/DEMO.md`)
+- Presentation template (7 slides)
+- C++ TSMC demo tests (`cpp/tests/test_tsmc_demo.cpp`) — 21 tests
+- E2E demo verification (`tests/test_tsmc_demo_e2e.py`) — 65 checks
+
+### Verified
+- ctest: 90/90 PASS (69 original + 21 new TSMC demo)
+- E2E: 65/65 PASS (T09-T14: safety, cost, 4D, AI, full-flow, error-recovery)
+- Full NL→AI→C++→Result pipeline for all 10 TSMC scenarios
+- Zero crashes, zero OOM
+
+### Audit
+- PTB-FAR-DEMO-001: Score A (96/100) — 90/90 ctest + 65/65 E2E
+
+---
+
 ## [mvp-v0.10.0-integration] - 2026-04-01
 
 ### Added (Sprint S-PTB-INTEGRATION: End-to-End NL→AI→C++→Qt Integration)
