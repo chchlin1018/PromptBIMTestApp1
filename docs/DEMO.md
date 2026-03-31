@@ -75,7 +75,7 @@ python -m promptbim.gui.main_window
 **Commands:**
 ```
 > 目前場景的總成本是多少
-> 把冰水主機A移到座標 (30, 25, -3)
+> 移動冰水主機A到座標 (30, 25, -3)
 > 成本變了多少
 ```
 
@@ -124,7 +124,7 @@ python -m promptbim.gui.main_window
 ```
 > 在座標 (60, 35, 0.5) 新增一台 AHU
 > 檢查冰水主機附近有沒有碰撞
-> 把冷水泵A連接到冰水主機A
+> 連接冷水泵A和冰水主機A
 ```
 
 **Expected Result:**

@@ -420,7 +420,7 @@ TSMC_AI_PROMPTS: list[dict[str, str]] = [
     },
     {
         "scenario": "設備搬遷",
-        "user": "把冰水主機A移到座標 (30, 25, -3)",
+        "user": "移動冰水主機A到座標 (30, 25, -3)",
         "expected_action": "move",
         "expected_response": "已將冰水主機 A (chiller-1) 從 (20,20,-3) 移動到 (30,25,-3)。管路長度變更: 冷水管 A 需要重新配置。",
     },
@@ -444,7 +444,7 @@ TSMC_AI_PROMPTS: list[dict[str, str]] = [
     },
     {
         "scenario": "設備連接",
-        "user": "把冷水泵A連接到冰水主機A",
+        "user": "連接冷水泵A和冰水主機A",
         "expected_action": "connect",
         "expected_response": "已建立連接: pump-1 ↔ chiller-1。管路距離 5.0m，預估管材成本 NT$ 17,500。",
     },
