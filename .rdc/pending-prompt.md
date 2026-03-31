@@ -1,25 +1,15 @@
-# S-PTB-AI-LAYER PROMPT v1.0 — AI/LLM 語義解析→bim_core [15T/3P]
+# S-PTB-INTEGRATION PROMPT v1.0
+Sprint: S-PTB-INTEGRATION | 專案: PTB | 機器: Mac Mini
+目標: mvp-v0.10.0-integration | 規格: 15T/3P
+Job Queue DB: fec7584f-8257-40bd-b017-b3f909d4acaa
+Job Page: 334f154a-6472-812e-8560-fb317d123233
+PROMPT Page: 334f154a-6472-8124-8626-ee33421f3b8a
 
-Sprint: S-PTB-AI-LAYER | 專案: PTB | 機器: Mac Mini
-目標: mvp-v0.9.0-ai | 規格: 15T/3P | ⛔ pytest 禁止
+## P1/3: 整合測試 (6T)
+T01-T06
 
-## P1/3: AI 層實作 (7T)
-- T01: NLParser class
-- T02: Claude API client
-- T03: IntentRouter
-- T04: 13 actions 全部接通
-- T05: ConversationHistory
-- T06: ErrorHandler
-- T07: ChatPanel 整合
-
-## P2/3: 驗證 (4T)
-- T08: ctest ALL PASS
-- T09: python -c 驗證 NLParser
-- T10: python -c 驗證 Claude API (mock)
-- T11: 端到端驗證
+## P2/3: 穩定性 (5T)
+T07-T11
 
 ## P3/3: Finalize (4T)
-- T12: cmake --build + ctest
-- T13: AuditReport
-- T14: git tag mvp-v0.9.0-ai
-- T15: 完成通知
+T12-T15
