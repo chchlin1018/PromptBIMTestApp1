@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.4
+# PROJECT_STATUS v2.5
 
-> Last updated: 2026-03-31 | HEAD: (S-PTBWIN-2)
+> Last updated: 2026-03-31 | HEAD: (S-PTB-RESTRUCTURE)
 
 ## Current State
 
-**Version:** mvp-v0.5.1-win (S-PTBWIN-2 complete)
-**Build:** ✅ MSVC 2022 Release | ctest 14/14 PASS | pytest 806/884 PASS
-**Repo:** C:\Dev\PromptBIMTestApp1 (ProArt13 Win11) + ~/Dev/ (Mac Mini)
-**Audit:** B (76/100) — Full 8-dimension audit completed
-**Next Sprint:** P30-USD-REVIT or further audit remediation
+**Version:** mvp-v0.7.0-restructure (S-PTB-RESTRUCTURE complete)
+**Build:** ✅ cmake clean build | ctest 69/69 PASS | pytest N/A (ISS-042)
+**Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
+**Audit:** A (98/100) — PTB-FAR-RESTRUCTURE-001
+**Next Sprint:** TBD
 
 ## Sprint History
 
@@ -22,8 +22,9 @@
 | 6 | M2-ENTITY | 20T | mvp-v0.4.0-entity | 2026-03-30 | ✅ |
 | 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0-demo | 2026-03-30 | ✅ |
 | 8 | S-PTBWIN-2 | 25T | mvp-v0.5.1-win | 2026-03-31 | ✅ |
+| 9 | S-PTB-RESTRUCTURE | 25T | mvp-v0.7.0-restructure | 2026-03-31 | ✅ |
 
-**Total completed: 205 Tasks across 8 Sprints**
+**Total completed: 230 Tasks across 9 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -115,5 +116,26 @@
 |------|---------|
 | CLAUDE.md | v1.23.3 |
 | SKILL.md | v4.3 |
-| PROJECT_STATUS.md | v2.3 (this) |
+| PROJECT_STATUS.md | v2.5 (this) |
 | Context Prompt | v5.7 |
+
+### Sprint S-PTB-RESTRUCTURE 執行結果 — 2026-03-31
+
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.7.0-restructure
+- **Tasks:** 25/25
+- **ctest:** 69/69 PASS (14 legacy + 55 new bim_core)
+- **記憶體:** 8.9/16.0GB(free:7.0GB)
+- **AuditReport:** PTB-FAR-RESTRUCTURE-001 (A 98/100)
+- **新增 C++ 模組:**
+  - `cpp/core/BIMEntity.h/.cpp` — 22 entity types, JSON serialization
+  - `cpp/core/BIMSceneGraph.h/.cpp` — Scene management, spatial queries
+  - `cpp/core/AgentBridge.h/.cpp` — 13 agent actions
+  - `cpp/core/GeometryEngine.h/.cpp` — Area/volume/AABB collision
+  - `cpp/core/PropertyManager.h/.cpp` — Materials, property templates
+  - `cpp/core/CostCalculator.h/.cpp` — NT$ cost estimation
+  - `cpp/core/BIMTypes.h` — EntityType enum, Vec3
+  - `cpp/binding/bim_core_module.cpp` — pybind11 Python binding
+- **新增測試:** 4 test files (55 tests)
+- **新增文檔:** ARCHITECTURE.md
+- **CEO決策執行:** 全面重構完成，pytest 完全消除
