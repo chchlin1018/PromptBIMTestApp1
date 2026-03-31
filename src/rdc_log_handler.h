@@ -112,6 +112,7 @@ private:
         request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
         request.setTransferTimeout(3000);
         QNetworkReply *reply = m_nam->post(request, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+        if (!reply) { m_pendingRequest = false; return; }
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             reply->deleteLater();
             m_pendingRequest = false;

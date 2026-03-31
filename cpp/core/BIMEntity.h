@@ -28,9 +28,9 @@ public:
     void setId(const std::string& id) { m_id = id; }
     void setType(EntityType type);
     void setName(const std::string& name) { m_name = name; }
-    void setPosition(const Vec3& pos) { m_position = pos; }
-    void setRotation(const Vec3& rot) { m_rotation = rot; }
-    void setDimensions(const Vec3& dims) { m_dimensions = dims; }
+    void setPosition(const Vec3& pos) noexcept { m_position = pos; }
+    void setRotation(const Vec3& rot) noexcept { m_rotation = rot; }
+    void setDimensions(const Vec3& dims) noexcept { m_dimensions = dims; }
 
     // Properties
     void setProperty(const std::string& key, const std::string& value);

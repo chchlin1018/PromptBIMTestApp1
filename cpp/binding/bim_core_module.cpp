@@ -104,7 +104,7 @@ PYBIND11_MODULE(bim_core, m) {
         .def_readonly("data", &bim::ActionResult::data);
 
     py::class_<bim::AgentBridge>(m, "AgentBridge")
-        .def(py::init<bim::BIMSceneGraph&>())
+        .def(py::init<bim::BIMSceneGraph&>(), py::keep_alive<1, 2>())
         .def("query_by_type", &bim::AgentBridge::queryByType)
         .def("query_by_name", &bim::AgentBridge::queryByName)
         .def("get_position", &bim::AgentBridge::getPosition)
@@ -157,6 +157,6 @@ PYBIND11_MODULE(bim_core, m) {
         .def_readonly("currency", &bim::CostSummary::currency);
 
     py::class_<bim::CostCalculator>(m, "CostCalculator")
-        .def(py::init<const bim::PropertyManager&>())
+        .def(py::init<const bim::PropertyManager&>(), py::keep_alive<1, 2>())
         .def("pipe_cost", &bim::CostCalculator::pipeCost, py::arg("from_entity"), py::arg("to_entity"), py::arg("cost_per_meter") = 3500.0);
 }

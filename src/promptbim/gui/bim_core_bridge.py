@@ -182,7 +182,7 @@ class BIMCoreBridge(QObject):
         try:
             result_json = self._agent.get_cost_delta()
             return json.loads(result_json.data) if result_json.data else {}
-        except Exception:
+        except (json.JSONDecodeError, TypeError, AttributeError, RuntimeError):
             return {"total_cost": self._scene.total_cost(), "currency": "NT$"}
 
     def get_scene_info(self) -> dict:

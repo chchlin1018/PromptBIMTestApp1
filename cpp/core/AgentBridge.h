@@ -47,12 +47,12 @@ public:
     [[nodiscard]] ActionResult getNearby(const std::string& id, double radius);
     [[nodiscard]] ActionResult getSceneInfo();
 
-    ActionResult moveEntity(const std::string& id, const Vec3& pos);
-    ActionResult rotateEntity(const std::string& id, const Vec3& rot);
-    ActionResult resizeEntity(const std::string& id, const Vec3& dims);
-    ActionResult addEntity(const std::string& id, EntityType type, const std::string& name, const Vec3& pos);
-    ActionResult deleteEntity(const std::string& id);
-    ActionResult connectEntities(const std::string& fromId, const std::string& toId);
+    [[nodiscard]] ActionResult moveEntity(const std::string& id, const Vec3& pos);
+    [[nodiscard]] ActionResult rotateEntity(const std::string& id, const Vec3& rot);
+    [[nodiscard]] ActionResult resizeEntity(const std::string& id, const Vec3& dims);
+    [[nodiscard]] ActionResult addEntity(const std::string& id, EntityType type, const std::string& name, const Vec3& pos);
+    [[nodiscard]] ActionResult deleteEntity(const std::string& id);
+    [[nodiscard]] ActionResult connectEntities(const std::string& fromId, const std::string& toId);
 
     [[nodiscard]] ActionResult getCostDelta();
     [[nodiscard]] ActionResult getScheduleImpact();

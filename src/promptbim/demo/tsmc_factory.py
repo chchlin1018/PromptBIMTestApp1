@@ -280,7 +280,10 @@ def calculate_scene_cost(entities: list[EntityDef]) -> dict:
     for e in entities:
         cost_str = e.properties.get("cost", "")
         if cost_str:
-            cost = float(cost_str)
+            try:
+                cost = float(cost_str)
+            except (ValueError, TypeError):
+                cost = _estimate_cost(e)
         else:
             cost = _estimate_cost(e)
         cat = _categorize(e)

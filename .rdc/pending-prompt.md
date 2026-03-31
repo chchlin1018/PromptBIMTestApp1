@@ -1,32 +1,30 @@
-# S-PTB-DEMO-TSMC PROMPT v1.0 — TSMC Demo 準備
-Sprint: S-PTB-DEMO-TSMC | 專案: PTB | 機器: Mac Mini
-目標: mvp-v1.0.0-demo | 規格: 20T/3P | ⛔ pytest 禁止
-Job Queue DB: fec7584f-8257-40bd-b017-b3f909d4acaa
-Job Page: 334f154a-6472-81e1-9dff-e736775ccf4e
-PROMPT Page: 334f154a-6472-8153-9b21-c1869f96fa59
+# S-PTB-FINAL-AUDIT PROMPT v1.0 — PTB 最終全面品質審查 [15T/3P] [Mac Mini]
 
-## P1/3: Demo 情境建立 (8T)
-T01: TSMC 工廠模型
-T02: 安全設備 entities
-T03: 碰撞檢測
-T04: 成本模板
-T05: 4D 時間軸
-T06: AI Prompt 範例
-T07: Demo 腳本
-T08: 簡報模板
+Sprint: S-PTB-FINAL-AUDIT | 專案: PTB | 機器: Mac Mini
+目標: mvp-v1.0.1-audit | 規格: 15T/3P
+角色: 資深品質總監 最終審查
+⛔ pytest 禁止 | ctest only
 
-## P2/3: Demo 驗證 (7T)
-T09: 安全巡檢流程
-T10: 成本變更即時更新
-T11: 4D時間軸播放
-T12: AI對話完整流程
-T13: 全流程演練
-T14: 錯誤復原測試
-T15: ctest ALL PASS
+## P1/3: 品質掃描 (6T)
+T01: C++ 品質全掃描 (const/RAII/naming)
+T02: 安全性掃描 (buffer/null/pybind11)
+T03: 記憶體掃描 (leak/pool/copy)
+T04: Python 層品質 (import清理/廢棄代碼)
+T05: CMake 品質 (不必要依賴/編譯時間)
+T06: Demo 腳本檢查 (5分鐘流程完整性)
 
-## P3/3: Finalize (5T)
-T16: AuditReport
-T17: DEMO.md
-T18: PROJECT.md + CHANGELOG.md
-T19: git tag mvp-v1.0.0-demo
-T20: 完成通知
+## P2/3: 修復+優化 (5T)
+T07: 修復所有安全問題
+T08: 修復記憶體問題
+T09: 效能優化
+T10: 清理死代碼
+T11: ctest ALL PASS
+
+## P3/3: Finalize (4T)
+T12: FinalAuditReport PTB-FAR-FINAL-001 (6維度+Demo穩定性)
+T13: ARCHITECTURE.md + CHANGELOG.md 最終版
+T14: git tag mvp-v1.0.1-audit
+T15: 完成通知 + tmux kill
+
+Source: https://www.notion.so/334f154a6472810999f0ee73a2b3837c
+Job Queue: 334f154a-6472-813b-b90a-ec5c85548074

@@ -106,7 +106,7 @@ double BIMSceneGraph::totalCost() const {
     double total = 0.0;
     for (const auto& [_, e] : m_entities) {
         std::string costStr = e.getProperty("cost", "0");
-        try { total += std::stod(costStr); } catch (...) {}
+        try { total += std::stod(costStr); } catch (const std::exception&) { /* non-numeric cost ignored */ }
     }
     return total;
 }

@@ -14,7 +14,7 @@ target_include_directories(bim_core_static PUBLIC
 )
 
 target_link_libraries(bim_core_static PUBLIC nlohmann_json::nlohmann_json)
-target_compile_features(bim_core_static PUBLIC cxx_std_17)
+target_compile_features(bim_core_static PUBLIC cxx_std_20)
 
 if(MSVC)
     target_compile_options(bim_core_static PRIVATE /W4 /WX- /utf-8)
