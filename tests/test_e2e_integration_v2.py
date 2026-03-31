@@ -193,17 +193,137 @@ def t06_error_handling():
     check("UNKNOWN→None", router.route(intent_bad) is None)
 
 
+def t07_stability_20ops():
+    """T07: 20 consecutive operations without crash."""
+    print("T07: 20 consecutive operations stability")
+    sg, bridge, parser, router = setup_scene()
+
+    operations = [
+        "建立一面牆在 (0, 0, 0)", "建立一根柱子在 (5, 5, 0)",
+        "建立一台冰水主機在 (10, 10, 0)", "查詢所有的牆", "場景概覽",
+        "成本是多少", "建立一面牆在 (15, 0, 0)", "建立一根柱子在 (20, 5, 0)",
+        "查詢所有的柱子", "建立一台泵在 (25, 10, 0)", "場景概覽",
+        "成本是多少", "建立一面牆在 (30, 0, 0)", "查詢所有的冰水主機",
+        "建立一根梁在 (35, 5, 0)", "建立一扇門在 (40, 0, 0)",
+        "場景概覽", "成本是多少", "查詢所有的泵", "場景概覽",
+    ]
+
+    success = 0
+    for i, cmd in enumerate(operations):
+        try:
+            intent = parser.parse(cmd)
+            if intent.is_valid:
+                r = json.loads(bridge.execute_json(router.route_json(intent)))
+                if r.get("success"):
+                    success += 1
+        except Exception as e:
+            check(f"op {i+1} no crash", False, str(e))
+            return
+
+    check(f"20/20 ops completed ({success} success)", success == 20)
+    check(f"entities created", sg.entity_count() > 0)
+
+
+def t08_memory_stability():
+    """T08: RAM growth < 10% after 60 operations."""
+    import resource
+    print("T08: Memory stability")
+    sg, bridge, parser, router = setup_scene()
+
+    def rss_mb():
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 * 1024)
+
+    baseline = rss_mb()
+    for i in range(20):
+        for cmd in [f"建立一面牆在 ({i*5}, 0, 0)", "查詢所有的牆", "場景概覽"]:
+            intent = parser.parse(cmd)
+            if intent.is_valid:
+                bridge.execute_json(router.route_json(intent))
+
+    after = rss_mb()
+    growth = ((after - baseline) / baseline * 100) if baseline > 0 else 0
+    check(f"RAM growth {growth:.1f}% < 10%", growth < 10)
+
+
+def t09_undo_rollback():
+    """T09: Undo via JSON serialization/restore."""
+    print("T09: Undo/rollback")
+    sg, bridge, parser, router = setup_scene()
+
+    wall = bim_core.BIMEntity("wall-1", bim_core.EntityType.Wall, "Wall 1")
+    wall.set_position(bim_core.Vec3(5, 5, 0))
+    wall.set_dimensions(bim_core.Vec3(10, 0.3, 3))
+    sg.add_entity(wall)
+
+    state_before = sg.to_json()
+    bridge.execute_json(router.route_json(parser.parse("建立一根柱子在 (30, 30, 0)")))
+    check("2 entities after add", sg.entity_count() == 2)
+
+    sg2 = bim_core.BIMSceneGraph.from_json(state_before)
+    check("rollback → 1 entity", sg2.entity_count() == 1)
+    check("rollback has wall-1", sg2.has_entity("wall-1"))
+
+    sg3 = bim_core.BIMSceneGraph.from_json(sg.to_json())
+    check("JSON round-trip intact", sg3.entity_count() == 2)
+
+
+def t10_offline_mode():
+    """T10: Graceful behavior when Claude API unavailable."""
+    print("T10: Offline / API unavailable")
+    from promptbim.ai.claude_client import ClaudeClient
+
+    parser_offline = NLParser(use_llm=False)
+    intent = parser_offline.parse("建立一面牆")
+    check("regex works offline", intent.intent_type == IntentType.CREATE)
+
+    mock = ClaudeClient(mock_mode=True)
+    r = mock.parse_intent("create a wall")
+    check("mock parse works", r is not None and r.intent_type == IntentType.CREATE)
+
+    chat_r = mock.chat([{"role": "user", "content": "hi"}])
+    check("mock chat works", "mock" in chat_r.lower())
+
+    eh = ErrorHandler()
+    msg = eh.handle_parse_failure("ambiguous request")
+    check("error handler offline", len(msg) > 10)
+
+
+def t11_ctest_pass():
+    """T11: ctest ALL PASS (verified externally, record here)."""
+    print("T11: ctest verification")
+    import subprocess
+    r = subprocess.run(
+        ["ctest", "--test-dir", "build", "--output-on-failure"],
+        capture_output=True, text=True, timeout=60,
+    )
+    passed = "tests passed" in r.stdout and "0 tests failed" in r.stdout
+    check("ctest ALL PASS", passed, r.stdout[-200:] if not passed else "")
+    if passed:
+        import re
+        m = re.search(r"(\d+)/(\d+).*tests passed", r.stdout)
+        if m:
+            check(f"ctest {m.group(1)}/{m.group(2)}", True)
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("S-PTB-INTEGRATION E2E Tests v2 — NL→AI→C++→Result")
     print("=" * 60)
 
+    # Part 1: Integration (T01-T06)
     t01_create_wall()
     t02_modify_property()
     t03_cost_calculation()
     t04_delete_entity()
     t05_multi_turn()
     t06_error_handling()
+
+    # Part 2: Stability (T07-T11)
+    t07_stability_20ops()
+    t08_memory_stability()
+    t09_undo_rollback()
+    t10_offline_mode()
+    t11_ctest_pass()
 
     print("=" * 60)
     total = PASSED + FAILED
