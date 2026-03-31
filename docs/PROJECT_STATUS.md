@@ -1,14 +1,14 @@
-# PROJECT_STATUS v2.5
+# PROJECT_STATUS v2.6
 
-> Last updated: 2026-03-31 | HEAD: (S-PTB-RESTRUCTURE)
+> Last updated: 2026-03-31 | HEAD: (S-PTB-CODE-AUDIT)
 
 ## Current State
 
-**Version:** mvp-v0.7.0-restructure (S-PTB-RESTRUCTURE complete)
+**Version:** mvp-v0.7.1-codeaudit (S-PTB-CODE-AUDIT complete)
 **Build:** ✅ cmake clean build | ctest 69/69 PASS | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (98/100) — PTB-FAR-RESTRUCTURE-001
-**Next Sprint:** TBD
+**Audit:** A (97/100) — PTB-CAR-001
+**Next Sprint:** S-PTB-GUI-CONNECT v0.8.0
 
 ## Sprint History
 
@@ -23,8 +23,9 @@
 | 7 | M2-MEP-DEMO | 25T | mvp-v0.5.0-demo | 2026-03-30 | ✅ |
 | 8 | S-PTBWIN-2 | 25T | mvp-v0.5.1-win | 2026-03-31 | ✅ |
 | 9 | S-PTB-RESTRUCTURE | 25T | mvp-v0.7.0-restructure | 2026-03-31 | ✅ |
+| 10 | S-PTB-CODE-AUDIT | 20T | mvp-v0.7.1-codeaudit | 2026-03-31 | ✅ |
 
-**Total completed: 230 Tasks across 9 Sprints**
+**Total completed: 250 Tasks across 10 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -139,3 +140,16 @@
 - **新增測試:** 4 test files (55 tests)
 - **新增文檔:** ARCHITECTURE.md
 - **CEO決策執行:** 全面重構完成，pytest 完全消除
+
+### Sprint S-PTB-CODE-AUDIT 執行結果 — 2026-03-31 23:22
+- **狀態:** ✅ 完成
+- **版本:** mvp-v0.7.1-codeaudit
+- **Tasks:** 20/20
+- **ctest:** 69/69 PASS (⛔零pytest)
+- **記憶體:** 9.7/16.0GB(free:6.2GB)
+- **AuditReport:** PTB-CAR-001 (A 97/100)
+- **修改:** 11 core files, 2 dead files deleted
+- **關鍵改善:**
+  - [[nodiscard]] + noexcept 50+ methods
+  - Buffer overflow fix in executeJson
+  - Removed duplicate cpp/bindings/

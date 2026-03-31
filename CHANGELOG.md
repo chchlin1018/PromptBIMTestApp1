@@ -6,6 +6,23 @@
 
 ---
 
+## [mvp-v0.7.1-codeaudit] - 2026-03-31
+
+### Changed (Sprint S-PTB-CODE-AUDIT: C++ Quality + Security Audit)
+- Added `[[nodiscard]]` to 50+ core API methods for return-value safety
+- Added `noexcept` to Vec3, AABB, and trivial accessor methods
+- Moved Vec3::length/distanceTo inline to header (zero-overhead)
+- Added bounds-checking `parseVec3()` in AgentBridge::executeJson
+- Added `reserve()` in BIMSceneGraph::queryByType for reduced allocations
+
+### Removed
+- Deleted duplicate `cpp/bindings/` directory (exact copy of `cpp/binding/pybind_module.cpp`)
+
+### Audit
+- PTB-CAR-001: Score A (97/100) — ctest 69/69 PASS
+
+---
+
 ## [2.12.0] - 2026-03-27
 
 ### Added (Sprint P25: Performance + Windows + Documentation)

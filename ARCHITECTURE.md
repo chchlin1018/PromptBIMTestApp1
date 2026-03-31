@@ -1,6 +1,6 @@
 # PromptBIM Architecture — C++ Core + Python Binding
 
-> Version: mvp-v0.7.0-restructure | Updated: 2026-03-31
+> Version: mvp-v0.7.1-codeaudit | Updated: 2026-03-31
 
 ## Overview
 
@@ -104,3 +104,5 @@ PromptBIMTestApp1/
 | pybind11 | Python binding | Seamless C++↔Python |
 | EntityType enum | 22 types | Matches zigma/ BIMEntity spec |
 | AABB collision | GeometryEngine | Fast O(n²) broad-phase detection |
+| [[nodiscard]] | Core API safety | Prevent silent discard of results |
+| noexcept | Vec3/AABB/trivial | Enables compiler optimizations |
