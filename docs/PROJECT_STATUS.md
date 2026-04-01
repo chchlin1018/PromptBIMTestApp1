@@ -1,14 +1,14 @@
-# PROJECT_STATUS v3.1
+# PROJECT_STATUS v3.2
 
-> Last updated: 2026-04-01 | HEAD: (S-PTB-FINAL-AUDIT)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-WIN-BUILD)
 
 ## Current State
 
-**Version:** mvp-v1.0.1-audit (S-PTB-FINAL-AUDIT complete)
-**Build:** ✅ cmake clean build | ctest 90/90 PASS | pytest N/A (ISS-042)
+**Version:** mvp-v1.0.0-win (S-PTB-WIN-BUILD complete)
+**Build:** ✅ cmake clean build | ctest 90/90 PASS (Mac + Win) | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (95/100) — PTB-FAR-FINAL-001 (6-dimension quality)
-**Next Sprint:** S-PTB-WIN-BUILD v1.0.0-win (Windows, ProArt13)
+**Audit:** A (94/100) — PTB-FAR-WIN-001 (Windows build verification)
+**Cross-Platform:** ✅ macOS + Windows parity 100%
 
 ## Sprint History
 
@@ -29,8 +29,9 @@
 | 13 | S-PTB-INTEGRATION | 15T | mvp-v0.10.0-integration | 2026-04-01 | ✅ |
 | 14 | S-PTB-DEMO-TSMC | 20T | mvp-v1.0.0-demo | 2026-04-01 | ✅ |
 | 15 | S-PTB-FINAL-AUDIT | 15T | mvp-v1.0.1-audit | 2026-04-01 | ✅ |
+| 16 | S-PTB-WIN-BUILD | 15T | mvp-v1.0.0-win | 2026-04-01 | ✅ |
 
-**Total completed: 335 Tasks across 15 Sprints**
+**Total completed: 350 Tasks across 16 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -271,3 +272,23 @@
 - **6維度評分:**
   - C++ Quality: 18/20 | Security: 16/20 | Memory: 17/20
   - Performance: 15/20 | Demo Stability: 15/15 | CMake: 14/15
+
+### Sprint S-PTB-WIN-BUILD 執行結果 — 2026-04-01
+- **狀態:** ✅ 完成
+- **版本:** mvp-v1.0.0-win
+- **機器:** ProArt13 (Windows 11, MSVC 17.14)
+- **Tasks:** 15/15
+- **ctest:** 90/90 PASS (Windows)
+- **pybind11:** ✅ bim_core.cp311-win_amd64.pyd import OK
+- **Demo:** 13/14 JSON actions PASS
+- **AuditReport:** PTB-FAR-WIN-001 (A 94/100)
+- **修復檔案:**
+  - `cpp/core/GeometryEngine.cpp` — M_PI → std::numbers::pi (MSVC C++20 fix)
+  - `cpp/tests/test_binding.cpp` — M_PI → std::numbers::pi (MSVC C++20 fix)
+- **新增檔���:**
+  - `docs/PTB-FAR-WIN-001.md` — Windows build audit report
+  - `docs/BUILDING.md` — Cross-platform build guide
+- **跨平台一致性:** Mac/Win ctest 90/90 parity 100%
+- **5維度評分:**
+  - Build Correctness: 19/20 | Test Coverage: 19/20 | Cross-Platform: 20/20
+  - pybind11 Binding: 18/20 | Code Quality: 18/20

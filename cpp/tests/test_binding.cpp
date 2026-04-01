@@ -1,6 +1,7 @@
 // test_binding.cpp — Test that bim_core C++ API is usable (integration test)
 // This tests the C++ layer that pybind11 would bind to
 #include <gtest/gtest.h>
+#include <numbers>
 #include "BIMEntity.h"
 #include "BIMSceneGraph.h"
 #include "AgentBridge.h"
@@ -111,10 +112,10 @@ TEST(BindingTest, GeometryPolygon) {
 
 TEST(BindingTest, GeometryCylinder) {
     double vol = GeometryEngine::cylinderVolume(1.0, 10.0);
-    EXPECT_NEAR(vol, M_PI * 10.0, 1e-6);
+    EXPECT_NEAR(vol, std::numbers::pi * 10.0, 1e-6);
 
     double sa = GeometryEngine::cylinderSurfaceArea(1.0, 10.0);
-    EXPECT_NEAR(sa, 2.0 * M_PI * 1.0 * 11.0, 1e-6);
+    EXPECT_NEAR(sa, 2.0 * std::numbers::pi * 1.0 * 11.0, 1e-6);
 }
 
 TEST(BindingTest, CollisionDetection) {

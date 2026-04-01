@@ -1,5 +1,6 @@
 #include "GeometryEngine.h"
 #include <cmath>
+#include <numbers>
 #include <algorithm>
 
 namespace bim {
@@ -63,11 +64,11 @@ double GeometryEngine::boxVolume(const Vec3& d) noexcept {
 }
 
 double GeometryEngine::cylinderVolume(double radius, double height) noexcept {
-    return M_PI * radius * radius * std::abs(height);
+    return std::numbers::pi * radius * radius * std::abs(height);
 }
 
 double GeometryEngine::sphereVolume(double radius) noexcept {
-    return (4.0 / 3.0) * M_PI * radius * radius * radius;
+    return (4.0 / 3.0) * std::numbers::pi * radius * radius * radius;
 }
 
 double GeometryEngine::boxSurfaceArea(const Vec3& d) noexcept {
@@ -76,7 +77,7 @@ double GeometryEngine::boxSurfaceArea(const Vec3& d) noexcept {
 }
 
 double GeometryEngine::cylinderSurfaceArea(double radius, double height) noexcept {
-    return 2.0 * M_PI * radius * (radius + std::abs(height));
+    return 2.0 * std::numbers::pi * radius * (radius + std::abs(height));
 }
 
 bool GeometryEngine::checkCollision(const Vec3& pos1, const Vec3& dims1,
