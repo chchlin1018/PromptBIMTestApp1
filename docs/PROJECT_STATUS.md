@@ -1,13 +1,13 @@
-# PROJECT_STATUS v3.2
+# PROJECT_STATUS v3.3
 
-> Last updated: 2026-04-01 | HEAD: (S-PTB-WIN-BUILD)
+> Last updated: 2026-04-02 | HEAD: (S-PTB-FULL-AUDIT)
 
 ## Current State
 
-**Version:** mvp-v1.0.0-win (S-PTB-WIN-BUILD complete)
+**Version:** mvp-v1.0.2-fullaudit (S-PTB-FULL-AUDIT complete)
 **Build:** ✅ cmake clean build | ctest 90/90 PASS (Mac + Win) | pytest N/A (ISS-042)
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** A (94/100) — PTB-FAR-WIN-001 (Windows build verification)
+**Audit:** 8 AuditReports all A-grade (94-98/100) | All synced to Notion
 **Cross-Platform:** ✅ macOS + Windows parity 100%
 
 ## Sprint History
@@ -30,8 +30,9 @@
 | 14 | S-PTB-DEMO-TSMC | 20T | mvp-v1.0.0-demo | 2026-04-01 | ✅ |
 | 15 | S-PTB-FINAL-AUDIT | 15T | mvp-v1.0.1-audit | 2026-04-01 | ✅ |
 | 16 | S-PTB-WIN-BUILD | 15T | mvp-v1.0.0-win | 2026-04-01 | ✅ |
+| 17 | S-PTB-FULL-AUDIT | 37T | mvp-v1.0.2-fullaudit | 2026-04-02 | ✅ |
 
-**Total completed: 350 Tasks across 16 Sprints**
+**Total completed: 387 Tasks across 17 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -292,3 +293,20 @@
 - **5維度評分:**
   - Build Correctness: 19/20 | Test Coverage: 19/20 | Cross-Platform: 20/20
   - pybind11 Binding: 18/20 | Code Quality: 18/20
+
+### Sprint S-PTB-FULL-AUDIT 執行結果 — 2026-04-02
+- **狀態:** ✅ 完成
+- **版本:** mvp-v1.0.2-fullaudit
+- **Tasks:** 37/37
+- **ctest:** 90/90 PASS (⛔零pytest)
+- **稽核範圍:** 97 C++ + 175 Python + 7 CMake files
+- **修復:**
+  - PropertyManager/CostCalculator bare catch(...) → catch(const std::exception&)
+  - CostCalculator::calculateAll null pointer check
+  - CostCalculator::categorize noexcept
+- **Notion 同步:**
+  - PTB-FAR-AI-001 (A96) → 建立 Notion 頁面
+  - PTB-FAR-WIN-001 (A94) → 建立 Notion 頁面
+  - 文檔索引檔 → 建立 Notion 頁面
+- **AuditReport:** PTB-FAR-FULLAUDIT-002
+- **架構驗證:** 13 actions, 22 entity types, 64+ pybind11 exports, 全部符合設計意圖

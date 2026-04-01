@@ -6,6 +6,31 @@
 
 ---
 
+## [mvp-v1.0.2-fullaudit] - 2026-04-02
+
+### Fixed (Sprint S-PTB-FULL-AUDIT: Full Code & Doc Audit)
+- Bare `catch(...)` in PropertyManager::parseNumericProperty — replaced with `catch (const std::exception&)`
+- Bare `catch(...)` in CostCalculator::lookupUnitPrice — replaced with `catch (const std::exception&)`
+- Missing null check in CostCalculator::calculateAll for nullptr entity pointers
+- Added `noexcept` to CostCalculator::categorize
+
+### Added
+- **Notion 文檔索引** — comprehensive index of all PTB Notion pages with relationships
+- PTB-FAR-AI-001 synced to Notion (A 96/100)
+- PTB-FAR-WIN-001 synced to Notion (A 94/100)
+- AuditReport PTB-FAR-FULLAUDIT-002
+
+### Verified
+- ctest: 90/90 PASS
+- Architecture conformity: 13 actions, 22 entity types, 64+ pybind11 exports
+- All 8 AuditReports synced GitHub↔Notion
+- TRAP-008: No forbidden permission keys in Info.plist
+
+### Audit
+- PTB-FAR-FULLAUDIT-002: Full code + documentation audit across 97 C++ + 175 Python + 7 CMake files
+
+---
+
 ## [mvp-v1.0.1-audit] - 2026-04-01
 
 ### Fixed (Sprint S-PTB-FINAL-AUDIT: Final Quality Audit)
