@@ -1,13 +1,13 @@
-# PROJECT_STATUS v3.3
+# PROJECT_STATUS v3.4
 
-> Last updated: 2026-04-02 | HEAD: (S-PTB-FULL-AUDIT)
+> Last updated: 2026-04-01 | HEAD: (S-PTB-PYTHON-TEST)
 
 ## Current State
 
-**Version:** mvp-v1.0.2-fullaudit (S-PTB-FULL-AUDIT complete)
-**Build:** ✅ cmake clean build | ctest 90/90 PASS (Mac + Win) | pytest N/A (ISS-042)
+**Version:** mvp-v1.1.0-pytest (S-PTB-PYTHON-TEST complete)
+**Build:** ✅ cmake clean build | ctest 90/90 PASS (Mac + Win) | pytest 64/64 PASS
 **Repo:** ~/Dev/PromptBIMTestApp1 (Mac Mini) + C:\Dev\ (ProArt13 Win11)
-**Audit:** 8 AuditReports all A-grade (94-98/100) | All synced to Notion
+**Audit:** 9 AuditReports all A-grade (94-98/100) | All synced to Notion
 **Cross-Platform:** ✅ macOS + Windows parity 100%
 
 ## Sprint History
@@ -31,8 +31,9 @@
 | 15 | S-PTB-FINAL-AUDIT | 15T | mvp-v1.0.1-audit | 2026-04-01 | ✅ |
 | 16 | S-PTB-WIN-BUILD | 15T | mvp-v1.0.0-win | 2026-04-01 | ✅ |
 | 17 | S-PTB-FULL-AUDIT | 37T | mvp-v1.0.2-fullaudit | 2026-04-02 | ✅ |
+| 18 | S-PTB-PYTHON-TEST | 12T | mvp-v1.1.0-pytest | 2026-04-01 | ✅ |
 
-**Total completed: 387 Tasks across 17 Sprints**
+**Total completed: 399 Tasks across 18 Sprints**
 
 ### Sprint M2-BRIDGE 執行結果 — 2026-03-29
 
@@ -310,3 +311,23 @@
   - 文檔索引檔 → 建立 Notion 頁面
 - **AuditReport:** PTB-FAR-FULLAUDIT-002
 - **架構驗證:** 13 actions, 22 entity types, 64+ pybind11 exports, 全部符合設計意圖
+
+### Sprint S-PTB-PYTHON-TEST 執行結果 — 2026-04-01
+- **狀態:** ✅ 完成
+- **版本:** mvp-v1.1.0-pytest
+- **Tasks:** 12/12
+- **ctest:** 90/90 PASS
+- **pytest:** 64/64 PASS (NLParser 21 + IntentRouter 16 + ErrorHandler 12 + ConvHistory 15)
+- **記憶體:** 9.6/16.0GB(free:6.3GB)
+- **AuditReport:** PTB-FAR-PYTEST-001 (A 96/100)
+- **新增檔案:**
+  - `tests/test_nl_parser.py` — 21 tests (create/delete/move/query/edge cases/entity map)
+  - `tests/test_intent_router.py` — 16 tests (all 13 actions + edge cases + JSON)
+  - `tests/test_error_handler.py` — 12 tests (parse failure/execution error/low confidence/missing info)
+  - `tests/test_conversation_history.py` — 15 tests (add/clear/trim/tokens/system message)
+  - `docs/PTB-FAR-PYTEST-001.md` — Audit report (A 96/100)
+- **修改檔案:**
+  - `cpp/core/AgentBridge.h` — Full Doxygen on 13 public methods + structs
+  - `cpp/core/BIMEntity.h` — Full Doxygen on all accessors/mutators/geometry
+  - `cpp/core/BIMTypes.h` — 22 EntityType enum members with category grouping
+  - `cpp/core/CostCalculator.h` — Full Doxygen on all methods + CostItem/CostSummary

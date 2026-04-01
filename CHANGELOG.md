@@ -6,6 +6,27 @@
 
 ---
 
+## [mvp-v1.1.0-pytest] - 2026-04-01
+
+### Added (Sprint S-PTB-PYTHON-TEST: Python Agent pytest + API Annotations)
+- **Python AI agent pytest suite** — 64 tests across 4 test files
+  - `test_nl_parser.py` (21 tests) — regex parsing, Chinese/English, entity name map, edge cases
+  - `test_intent_router.py` (16 tests) — all 13 actions, JSON output, edge cases
+  - `test_error_handler.py` (12 tests) — parse failure, execution error, low confidence, missing info
+  - `test_conversation_history.py` (15 tests) — add/clear/trim/tokens/system message
+- **Doxygen API annotations** on 4 C++ core headers
+  - AgentBridge.h — 13 public methods + ActionRequest/ActionResult structs
+  - BIMEntity.h — all accessors/mutators/geometry/serialization
+  - BIMTypes.h — 22 EntityType enum members with category grouping
+  - CostCalculator.h — all public methods + CostItem/CostSummary structs
+- AuditReport PTB-FAR-PYTEST-001 (A 96/100)
+
+### Verified
+- ctest: 90/90 PASS (zero regressions)
+- pytest: 64/64 PASS
+
+---
+
 ## [mvp-v1.0.2-fullaudit] - 2026-04-02
 
 ### Fixed (Sprint S-PTB-FULL-AUDIT: Full Code & Doc Audit)
