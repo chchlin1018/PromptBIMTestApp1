@@ -1,18 +1,44 @@
 #pragma once
-// BIMTypes.h — Common BIM type definitions (no Qt dependency)
+/// @file BIMTypes.h
+/// @brief Common BIM type definitions — EntityType enum, Vec3, and utilities.
+/// No Qt dependency. Used by all bim_core modules.
 
 #include <string>
 #include <cmath>
 
 namespace bim {
 
-/// 22 BIM Entity Types matching the PROMPT specification
+/// @brief 22 BIM Entity Types covering structural, architectural, and MEP categories.
+///
+/// Structural: Wall, Slab, Column, Beam, Roof (load-bearing elements)
+/// Architectural: Door, Window, Stair, Elevator, Ramp (access & enclosure)
+/// MEP - HVAC: Chiller, CoolingTower, AHU, Fan (heating/ventilation/cooling)
+/// MEP - Piping: Pump, Pipe, Valve (fluid transport)
+/// MEP - Electrical: Duct, Cable, Sensor, ExhaustStack (distribution & monitoring)
+/// Generic: fallback for unclassified entities
 enum class EntityType {
-    Wall, Slab, Column, Beam, Roof,
-    Door, Window, Stair, Elevator, Ramp,
-    Chiller, CoolingTower, AHU, Pump, Fan,
-    Pipe, Duct, Cable, Valve, Sensor,
-    ExhaustStack, Generic
+    Wall,          ///< Vertical structural/partition element
+    Slab,          ///< Horizontal floor/ceiling element
+    Column,        ///< Vertical load-bearing member
+    Beam,          ///< Horizontal spanning member
+    Roof,          ///< Top enclosure element
+    Door,          ///< Openable access element
+    Window,        ///< Glazed opening element
+    Stair,         ///< Vertical circulation (steps)
+    Elevator,      ///< Vertical mechanical transport
+    Ramp,          ///< Inclined access surface
+    Chiller,       ///< Refrigeration unit (HVAC)
+    CoolingTower,  ///< Heat rejection equipment (HVAC)
+    AHU,           ///< Air Handling Unit (HVAC)
+    Pump,          ///< Fluid circulation device
+    Fan,           ///< Air circulation device
+    Pipe,          ///< Fluid conduit
+    Duct,          ///< Air conduit
+    Cable,         ///< Electrical conductor
+    Valve,         ///< Flow control device
+    Sensor,        ///< Monitoring/measurement device
+    ExhaustStack,  ///< Ventilation exhaust outlet
+    Generic        ///< Unclassified fallback type
 };
 
 constexpr int ENTITY_TYPE_COUNT = 22;
