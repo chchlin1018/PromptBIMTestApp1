@@ -6,7 +6,7 @@ namespace bim {
 
 CostCalculator::CostCalculator(const PropertyManager& props) : m_props(props) {}
 
-std::string CostCalculator::categorize(EntityType type) const {
+std::string CostCalculator::categorize(EntityType type) const noexcept {
     switch (type) {
         case EntityType::Wall: case EntityType::Column: case EntityType::Beam:
         case EntityType::Slab: case EntityType::Roof:
@@ -28,7 +28,7 @@ double CostCalculator::lookupUnitPrice(const BIMEntity& entity) const {
     // Check entity's own cost property first
     std::string costStr = entity.getProperty("cost", "");
     if (!costStr.empty()) {
-        try { return std::stod(costStr); } catch (...) {}
+        try { return std::stod(costStr); } catch (const std::exception&) {}
     }
 
     // Lookup material cost
@@ -89,6 +89,7 @@ std::vector<CostItem> CostCalculator::calculateAll(const std::vector<const BIMEn
     std::vector<CostItem> items;
     items.reserve(entities.size());
     for (const auto* e : entities) {
+        if (!e) continue;
         items.push_back(calculateEntityCost(*e));
     }
     return items;

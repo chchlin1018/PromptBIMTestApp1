@@ -54,7 +54,7 @@ public:
 private:
     const PropertyManager& m_props;
     [[nodiscard]] double lookupUnitPrice(const BIMEntity& entity) const;
-    [[nodiscard]] std::string categorize(EntityType type) const;
+    [[nodiscard]] std::string categorize(EntityType type) const noexcept;
 };
 
 } // namespace bim

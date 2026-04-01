@@ -76,7 +76,7 @@ bool PropertyManager::isValidProperty(const std::string& key, const std::string&
 }
 
 double PropertyManager::parseNumericProperty(const std::string& value, double defaultVal) {
-    try { return std::stod(value); } catch (...) { return defaultVal; }
+    try { return std::stod(value); } catch (const std::exception&) { return defaultVal; }
 }
 
 double PropertyManager::materialCost(const std::string& materialId, double quantity) const {
