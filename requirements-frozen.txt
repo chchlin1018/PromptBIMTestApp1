@@ -52,7 +52,7 @@ munkres==1.1.4
 narwhals==2.18.1
 packageurl-python==0.17.6
 pandas==2.3.3
-pdfminer.six==20251230
+pdfminer.six==20260107
 pdfplumber==0.11.9
 pip-api==0.0.34
 pip-requirements-parser==32.0.1
