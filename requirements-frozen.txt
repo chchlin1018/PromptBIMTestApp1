@@ -51,7 +51,7 @@ mdurl==0.1.2
 munkres==1.1.4
 narwhals==2.18.1
 packageurl-python==0.17.6
-pandas==2.3.3
+pandas==3.0.1
 pdfminer.six==20251230
 pdfplumber==0.11.9
 pip-api==0.0.34
